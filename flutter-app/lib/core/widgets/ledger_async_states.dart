@@ -150,7 +150,7 @@ class LedgerEmptyState extends StatelessWidget {
           ),
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: LedgerGap.lg),
-            FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+            ElevatedButton(onPressed: onAction, child: Text(actionLabel!)),
           ],
         ],
       ),

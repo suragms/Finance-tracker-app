@@ -11,7 +11,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  testWidgets('shows branded login when logged out', (WidgetTester tester) async {
+  testWidgets('shows branded login when logged out', (
+    WidgetTester tester,
+  ) async {
     SharedPreferences.setMockInitialValues({});
     final storage = await TokenStorage.create();
     await tester.pumpWidget(
@@ -22,6 +24,6 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    expect(find.text('MoneyFlow AI'), findsOneWidget);
+    expect(find.text('MONEYFLOW AI'), findsOneWidget);
   });
 }

@@ -1,40 +1,52 @@
-import 'dart:async';
+import 'dart:async' show unawaited;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/navigation/ledger_page_routes.dart';
 import '../../../core/theme/ledger_tokens.dart';
+import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/widgets/ledger_async_states.dart';
-import '../application/dashboard_providers.dart';
 import '../../expenses/application/expense_providers.dart';
 import '../../expenses/presentation/add_expense_screen.dart';
 import '../../income/application/income_providers.dart';
 import '../../income/presentation/add_income_screen.dart';
+import '../application/dashboard_providers.dart';
 import 'dashboard_quick_access.dart';
 
 /// Fintech accent colors (paired with theme).
 const _incomeGreen = Color(0xFF0D9F6E);
 const _expenseRose = Color(0xFFE11D48);
 const _savingsViolet = Color(0xFF6D28D9);
-const _heroGradientStart = Color(0xFF000B60);
-const _heroGradientEnd = Color(0xFF1E3A5F);
 
-Map<String, String> _categoryIdToName(WidgetRef ref) {
-  final list = ref.watch(expensesProvider).value ?? const <Map<String, dynamic>>[];
+final _compactCurrencyFormatter = NumberFormat.compact(locale: 'en_IN');
+
+final categoryNameMapProvider = Provider<Map<String, String>>((ref) {
+  final list =
+      ref.watch(expensesProvider).value ?? const <Map<String, dynamic>>[];
   final m = <String, String>{};
   for (final e in list) {
     final c = e['category'];
     if (c is Map) {
       final id = c['id']?.toString();
       final n = c['name']?.toString();
-      if (id != null && n != null && n.isNotEmpty) m[id] = n;
+      if (id != null && id.isNotEmpty && n != null && n.isNotEmpty) {
+        m[id] = n;
+      }
     }
   }
   return m;
+});
+
+String _formatCompactCurrency(dynamic raw, {bool negative = false}) {
+  final value = double.tryParse(raw?.toString() ?? '') ?? 0;
+  final body =
+      '${MfCurrency.symbol}${_compactCurrencyFormatter.format(value.abs())}';
+  return negative || value < 0 ? '-$body' : body;
 }
 
 class DashboardScreen extends ConsumerWidget {
@@ -44,7 +56,20 @@ class DashboardScreen extends ConsumerWidget {
     final p = key.split('-');
     if (p.length < 2) return key;
     final mi = int.tryParse(p[1]) ?? 1;
-    const names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const names = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return names[(mi - 1).clamp(0, 11)];
   }
 
@@ -53,11 +78,14 @@ class DashboardScreen extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final mq = MediaQuery.sizeOf(context);
     const maxContent = 720.0;
-    final hPad = mq.width > maxContent + 32 ? (mq.width - maxContent) / 2 : 16.0;
+    final hPad = mq.width > maxContent + 32
+        ? (mq.width - maxContent) / 2
+        : 16.0;
     final overview = ref.watch(dashboardOverviewProvider);
     final breakdown = ref.watch(categoryBreakdownProvider);
     final expenses = ref.watch(expensesProvider);
     final incomes = ref.watch(incomesProvider);
+    final catNames = ref.watch(categoryNameMapProvider);
 
     void refreshAll() {
       unawaited(ref.read(ledgerSyncServiceProvider).pullAndFlush());
@@ -78,17 +106,28 @@ class DashboardScreen extends ConsumerWidget {
         await ref.read(dashboardOverviewProvider.future);
       },
       child: ListView(
-        padding: EdgeInsets.fromLTRB(hPad, LedgerGap.sm, hPad, 88),
+        padding: EdgeInsets.fromLTRB(
+          hPad,
+          LedgerGap.sm,
+          hPad,
+          MediaQuery.of(context).padding.bottom + 72,
+        ),
         children: [
           overview.when(
             data: (dash) {
               final nw = dash['netWorth'];
-              final nwMap = nw is Map ? Map<String, dynamic>.from(nw) : <String, dynamic>{};
+              final nwMap = nw is Map
+                  ? Map<String, dynamic>.from(nw)
+                  : <String, dynamic>{};
               final tmRaw = dash['thisMonth'];
-              final tm = tmRaw is Map ? Map<String, dynamic>.from(tmRaw) : <String, dynamic>{};
+              final tm = tmRaw is Map
+                  ? Map<String, dynamic>.from(tmRaw)
+                  : <String, dynamic>{};
               final trendRaw = dash['savingsTrend'];
               final trend = trendRaw is List
-                  ? trendRaw.map((e) => Map<String, dynamic>.from(e as Map)).toList()
+                  ? trendRaw
+                        .map((e) => Map<String, dynamic>.from(e as Map))
+                        .toList()
                   : <Map<String, dynamic>>[];
               return AnimatedSwitcher(
                 duration: LedgerMotion.medium,
@@ -98,13 +137,22 @@ class DashboardScreen extends ConsumerWidget {
                   key: ValueKey('dash-${trend.length}-${nwMap['netWorth']}'),
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _NetWorthHero(netWorth: nwMap),
+                    _DashboardHeroCard(
+                      balance: _formatCompactCurrency(nwMap['netWorth']),
+                      income: _formatCompactCurrency(tm['totalIncome']),
+                      expenses: _formatCompactCurrency(tm['totalExpenses']),
+                      incomeChange: '+0%',
+                      expenseChange: '+0%',
+                    ),
                     const SizedBox(height: LedgerGap.lg),
                     _MetricCardsRow(thisMonth: tm),
                     const SizedBox(height: LedgerGap.lg),
                     const DashboardQuickAccess(),
                     const SizedBox(height: LedgerGap.xl),
-                    _FintechSectionTitle(title: 'Income vs expenses', subtitle: 'Last ${trend.length} months'),
+                    _FintechSectionTitle(
+                      title: 'Income vs expenses',
+                      subtitle: 'Last ${trend.length} months',
+                    ),
                     const SizedBox(height: LedgerGap.md),
                     _IncomeExpenseChart(
                       trend: trend,
@@ -120,7 +168,10 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: LedgerGap.md),
-                    _FintechSectionTitle(title: 'Savings trend', subtitle: 'Monthly net (income − expenses)'),
+                    _FintechSectionTitle(
+                      title: 'Savings trend',
+                      subtitle: 'Monthly net (income − expenses)',
+                    ),
                     const SizedBox(height: LedgerGap.md),
                     _SavingsTrendChart(
                       trend: trend,
@@ -141,22 +192,27 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: LedgerGap.sm),
           breakdown.when(
             data: (rows) {
-              final catNames = _categoryIdToName(ref);
               if (rows.isEmpty) {
                 return LedgerEmptyState(
                   title: 'No spending categories yet',
-                  subtitle: 'Once you log expenses, you’ll see which categories drive your month.',
+                  subtitle:
+                      'Once you log expenses, you’ll see which categories drive your month.',
                   icon: Icons.pie_chart_outline_rounded,
                 );
               }
-              final sorted = [...rows]..sort((a, b) {
-                  final da = double.tryParse(a['total']?.toString() ?? '0') ?? 0;
-                  final db = double.tryParse(b['total']?.toString() ?? '0') ?? 0;
+              final sorted = [...rows]
+                ..sort((a, b) {
+                  final da =
+                      double.tryParse(a['total']?.toString() ?? '0') ?? 0;
+                  final db =
+                      double.tryParse(b['total']?.toString() ?? '0') ?? 0;
                   return db.compareTo(da);
                 });
               final top = sorted.take(5).toList();
               final maxV = top
-                  .map((e) => double.tryParse(e['total']?.toString() ?? '0') ?? 0)
+                  .map(
+                    (e) => double.tryParse(e['total']?.toString() ?? '0') ?? 0,
+                  )
                   .fold<double>(0, (a, b) => a > b ? a : b);
               return _FintechCard(
                 child: Column(
@@ -190,9 +246,15 @@ class DashboardScreen extends ConsumerWidget {
                               x: i,
                               barRods: [
                                 BarChartRodData(
-                                  toY: double.tryParse(top[i]['total']?.toString() ?? '0') ?? 0,
+                                  toY:
+                                      double.tryParse(
+                                        top[i]['total']?.toString() ?? '0',
+                                      ) ??
+                                      0,
                                   width: 18,
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(8),
+                                  ),
                                   gradient: LinearGradient(
                                     begin: Alignment.bottomCenter,
                                     end: Alignment.topCenter,
@@ -209,16 +271,21 @@ class DashboardScreen extends ConsumerWidget {
                           barTouchData: BarTouchData(
                             touchTooltipData: BarTouchTooltipData(
                               getTooltipColor: (_) => cs.surfaceContainerHigh,
-                              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                                final i = group.x.toInt();
-                                if (i < 0 || i >= top.length) return null;
-                                final id = top[i]['categoryId']?.toString() ?? '';
-                                final name = catNames[id] ?? id;
-                                return BarTooltipItem(
-                                  '$name\n${rod.toY.toStringAsFixed(0)}',
-                                  GoogleFonts.inter(color: cs.onSurface, fontSize: 11),
-                                );
-                              },
+                              getTooltipItem:
+                                  (group, groupIndex, rod, rodIndex) {
+                                    final i = group.x.toInt();
+                                    if (i < 0 || i >= top.length) return null;
+                                    final id =
+                                        top[i]['categoryId']?.toString() ?? '';
+                                    final name = catNames[id] ?? id;
+                                    return BarTooltipItem(
+                                      '$name\n${rod.toY.toStringAsFixed(0)}',
+                                      GoogleFonts.inter(
+                                        color: cs.onSurface,
+                                        fontSize: 11,
+                                      ),
+                                    );
+                                  },
                             ),
                           ),
                           titlesData: FlTitlesData(
@@ -227,15 +294,25 @@ class DashboardScreen extends ConsumerWidget {
                                 showTitles: true,
                                 getTitlesWidget: (v, _) {
                                   final i = v.toInt();
-                                  if (i < 0 || i >= top.length) return const SizedBox();
-                                  final id = top[i]['categoryId']?.toString() ?? '';
+                                  if (i < 0 || i >= top.length) {
+                                    return const SizedBox();
+                                  }
+                                  final id =
+                                      top[i]['categoryId']?.toString() ?? '';
                                   final raw = catNames[id] ?? id;
-                                  final short = raw.length > 8 ? '${raw.substring(0, 7)}…' : raw;
+                                  final short = raw.length > 8
+                                      ? '${raw.substring(0, 7)}…'
+                                      : raw;
                                   return Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Text(
                                       short,
-                                      style: GoogleFonts.inter(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.55)),
+                                      style: GoogleFonts.inter(
+                                        fontSize: 10,
+                                        color: cs.onSurface.withValues(
+                                          alpha: 0.55,
+                                        ),
+                                      ),
                                     ),
                                   );
                                 },
@@ -247,12 +324,19 @@ class DashboardScreen extends ConsumerWidget {
                                 reservedSize: 36,
                                 getTitlesWidget: (v, _) => Text(
                                   v.toInt().toString(),
-                                  style: GoogleFonts.inter(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.45)),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: cs.onSurface.withValues(alpha: 0.45),
+                                  ),
                                 ),
                               ),
                             ),
-                            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                           ),
                           gridData: FlGridData(
                             show: true,
@@ -276,7 +360,10 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const _FintechSectionTitle(title: 'Top spending', subtitle: 'Loading categories…'),
+                  const _FintechSectionTitle(
+                    title: 'Top spending',
+                    subtitle: 'Loading categories…',
+                  ),
                   const SizedBox(height: LedgerGap.md),
                   const LedgerChartSkeleton(height: 208),
                 ],
@@ -294,23 +381,47 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               Text(
                 'Recent expenses',
-                style: GoogleFonts.manrope(fontSize: 17, fontWeight: FontWeight.w700, color: cs.onSurface),
+                style: GoogleFonts.manrope(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AddIncomeScreen()));
+                      Navigator.of(context).push(
+                        LedgerPageRoutes.fadeSlide<void>(
+                          const AddIncomeScreen(),
+                        ),
+                      );
                     },
-                    child: Text('Income', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: _incomeGreen)),
+                    child: Text(
+                      'Income',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: _incomeGreen,
+                      ),
+                    ),
                   ),
                   TextButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AddExpenseScreen()));
+                      Navigator.of(context).push(
+                        LedgerPageRoutes.fadeSlide<void>(
+                          const AddExpenseScreen(),
+                        ),
+                      );
                     },
                     icon: Icon(Icons.add, size: 20, color: cs.primary),
-                    label: Text('Expense', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: cs.primary)),
+                    label: Text(
+                      'Expense',
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -323,11 +434,16 @@ class DashboardScreen extends ConsumerWidget {
               if (recent.isEmpty) {
                 return LedgerEmptyState(
                   title: 'No expenses this period',
-                  subtitle: 'Add a transaction to see it here and feed your charts.',
+                  subtitle:
+                      'Add a transaction to see it here and feed your charts.',
                   icon: Icons.receipt_long_outlined,
                   actionLabel: 'Add expense',
                   onAction: () {
-                    Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AddExpenseScreen()));
+                    Navigator.of(context).push(
+                      LedgerPageRoutes.fadeSlide<void>(
+                        const AddExpenseScreen(),
+                      ),
+                    );
                   },
                 );
               }
@@ -335,13 +451,20 @@ class DashboardScreen extends ConsumerWidget {
                 children: recent.map((e) {
                   final id = e['id']?.toString() ?? '';
                   final amt = e['amount']?.toString() ?? '0';
-                  final cat = (e['category'] is Map) ? (e['category'] as Map)['name']?.toString() ?? '' : '';
+                  final cat = (e['category'] is Map)
+                      ? (e['category'] as Map)['name']?.toString() ?? ''
+                      : '';
                   final d = e['date']?.toString() ?? '';
-                  final letter = cat.isNotEmpty ? cat.substring(0, 1).toUpperCase() : '?';
+                  final letter = cat.isNotEmpty
+                      ? cat.substring(0, 1).toUpperCase()
+                      : '?';
                   return Padding(
                     padding: const EdgeInsets.only(bottom: LedgerGap.md),
                     child: _FintechCard(
-                      padding: const EdgeInsets.symmetric(horizontal: LedgerGap.lg, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: LedgerGap.lg,
+                        vertical: 14,
+                      ),
                       child: Row(
                         children: [
                           Hero(
@@ -386,8 +509,11 @@ class DashboardScreen extends ConsumerWidget {
                                 const SizedBox(height: LedgerGap.xs),
                                 Text(
                                   d.length >= 10 ? d.substring(0, 10) : d,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: cs.onSurface.withValues(alpha: 0.5),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: cs.onSurface.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                 ),
                               ],
@@ -398,11 +524,11 @@ class DashboardScreen extends ConsumerWidget {
                             child: Material(
                               color: Colors.transparent,
                               child: Text(
-                                amt,
+                                _formatCompactCurrency(amt, negative: true),
                                 style: GoogleFonts.manrope(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
-                                  color: cs.onSurface,
+                                  color: _expenseRose,
                                 ),
                               ),
                             ),
@@ -430,13 +556,25 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               Text(
                 'Recent income',
-                style: GoogleFonts.manrope(fontSize: 17, fontWeight: FontWeight.w700, color: cs.onSurface),
+                style: GoogleFonts.manrope(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AddIncomeScreen()));
+                  Navigator.of(context).push(
+                    LedgerPageRoutes.fadeSlide<void>(const AddIncomeScreen()),
+                  );
                 },
-                child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: _incomeGreen)),
+                child: Text(
+                  'Add',
+                  style: GoogleFonts.inter(
+                    fontWeight: FontWeight.w600,
+                    color: _incomeGreen,
+                  ),
+                ),
               ),
             ],
           ),
@@ -447,11 +585,14 @@ class DashboardScreen extends ConsumerWidget {
               if (recent.isEmpty) {
                 return LedgerEmptyState(
                   title: 'No income logged',
-                  subtitle: 'Track salary or other inflows to see cash flow next to spending.',
+                  subtitle:
+                      'Track salary or other inflows to see cash flow next to spending.',
                   icon: Icons.savings_outlined,
                   actionLabel: 'Add income',
                   onAction: () {
-                    Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AddIncomeScreen()));
+                    Navigator.of(context).push(
+                      LedgerPageRoutes.fadeSlide<void>(const AddIncomeScreen()),
+                    );
                   },
                 );
               }
@@ -460,34 +601,63 @@ class DashboardScreen extends ConsumerWidget {
                   final amt = e['amount']?.toString() ?? '0';
                   final src = e['source']?.toString() ?? '';
                   final d = e['date']?.toString() ?? '';
-                  final label = src.isEmpty ? 'Income' : '${src[0].toUpperCase()}${src.substring(1)}';
+                  final label = src.isEmpty
+                      ? 'Income'
+                      : '${src[0].toUpperCase()}${src.substring(1)}';
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.only(bottom: MfSpace.sm),
                     child: _FintechCard(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: MfSpace.lg,
+                        vertical: MfSpace.md + 2,
+                      ),
                       child: Row(
                         children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              gradient: incomeGradient(),
+                              borderRadius: BorderRadius.circular(MfRadius.sm),
+                            ),
+                            child: Text(
+                              (src.isNotEmpty ? src[0] : '?').toUpperCase(),
+                              style: GoogleFonts.dmSans(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: LedgerGap.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(label, style: Theme.of(context).textTheme.titleSmall),
+                                Text(
+                                  label,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
                                   d.length >= 10 ? d.substring(0, 10) : d,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: cs.onSurface.withValues(alpha: 0.5),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: cs.onSurface.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                 ),
                               ],
                             ),
                           ),
                           Text(
-                            amt,
-                            style: GoogleFonts.manrope(
+                            _formatCompactCurrency(amt),
+                            style: GoogleFonts.dmMono(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
-                              color: _incomeGreen,
+                              color: MfPalette.incomeGreen,
                             ),
                           ),
                         ],
@@ -539,12 +709,18 @@ class _ChartLegend extends StatelessWidget {
                   Container(
                     width: 8,
                     height: 8,
-                    decoration: BoxDecoration(color: e.color, borderRadius: BorderRadius.circular(2)),
+                    decoration: BoxDecoration(
+                      color: e.color,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     e.label,
-                    style: GoogleFonts.inter(fontSize: 11, color: cs.onSurface.withValues(alpha: 0.6)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: cs.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                 ],
               ),
@@ -569,16 +745,16 @@ class _FintechSectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.manrope(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
+          style: GoogleFonts.dmSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
             color: cs.onSurface,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: MfSpace.xs - 2),
         Text(
           subtitle,
-          style: GoogleFonts.inter(
+          style: GoogleFonts.dmSans(
             fontSize: 12,
             color: cs.onSurface.withValues(alpha: 0.5),
           ),
@@ -589,7 +765,10 @@ class _FintechSectionTitle extends StatelessWidget {
 }
 
 class _FintechCard extends StatelessWidget {
-  const _FintechCard({required this.child, this.padding = const EdgeInsets.all(18)});
+  const _FintechCard({
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+  });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -597,16 +776,19 @@ class _FintechCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final brightness = Theme.of(context).brightness;
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(MfRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.06),
+            color: cs.shadow.withValues(
+              alpha: brightness == Brightness.dark ? 0.28 : 0.06,
+            ),
             blurRadius: 24,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, MfSpace.sm + 2),
           ),
         ],
       ),
@@ -616,98 +798,74 @@ class _FintechCard extends StatelessWidget {
   }
 }
 
-class _NetWorthHero extends StatelessWidget {
-  const _NetWorthHero({required this.netWorth});
+class _DashboardHeroCard extends StatelessWidget {
+  const _DashboardHeroCard({
+    required this.balance,
+    required this.income,
+    required this.expenses,
+    required this.incomeChange,
+    required this.expenseChange,
+  });
 
-  final Map<String, dynamic> netWorth;
+  final String balance;
+  final String income;
+  final String expenses;
+  final String incomeChange;
+  final String expenseChange;
 
   @override
   Widget build(BuildContext context) {
-    final total = netWorth['netWorth']?.toString() ?? '—';
-    final bank = netWorth['bankAndCash']?.toString() ?? '0';
-    final inv = netWorth['investments']?.toString() ?? '0';
-    final credit = netWorth['creditCardDebt']?.toString() ?? '0';
-    final liab = netWorth['otherLiabilities']?.toString() ?? '0';
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Stack(
+    return Container(
+      decoration: heroCardDecoration(),
+      padding: const EdgeInsets.all(MfSpace.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [_heroGradientStart, _heroGradientEnd],
-              ),
-            ),
-            child: SizedBox(height: 200, width: double.infinity),
-          ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.07),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
+          Text(
+            'Total Balance',
+            style: GoogleFonts.dmSans(
+              fontSize: 12,
+              color: MfPalette.textMuted,
+              letterSpacing: 0.04,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(22, 22, 22, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Net worth',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    letterSpacing: 0.3,
-                  ),
+          const SizedBox(height: MfSpace.xs),
+          Hero(
+            tag: 'ledger-networth-hero',
+            child: Material(
+              color: Colors.transparent,
+              child: Text(
+                balance,
+                style: GoogleFonts.dmMono(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w600,
+                  color: MfPalette.textPrimary,
+                  letterSpacing: -0.5,
                 ),
-                const SizedBox(height: 6),
-                Hero(
-                  tag: 'ledger-networth-hero',
-                  child: Material(
-                    color: Colors.transparent,
-                    child: Text(
-                      total,
-                      style: GoogleFonts.manrope(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Accounts + investments − liabilities',
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: Colors.white.withValues(alpha: 0.65),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _HeroChip(label: 'Bank & cash', value: bank),
-                    _HeroChip(label: 'Investments', value: inv),
-                    _HeroChip(label: 'Credit', value: credit),
-                    _HeroChip(label: 'Loans', value: liab),
-                  ],
-                ),
-              ],
+              ),
             ),
+          ),
+          const SizedBox(height: MfSpace.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _DashboardHeroStatChip(
+                  label: 'Income',
+                  value: income,
+                  change: incomeChange,
+                  isUp: true,
+                ),
+              ),
+              const SizedBox(width: MfSpace.md),
+              Expanded(
+                child: _DashboardHeroStatChip(
+                  label: 'Expenses',
+                  value: expenses,
+                  change: expenseChange,
+                  isUp: false,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -715,39 +873,75 @@ class _NetWorthHero extends StatelessWidget {
   }
 }
 
-class _HeroChip extends StatelessWidget {
-  const _HeroChip({required this.label, required this.value});
+class _DashboardHeroStatChip extends StatelessWidget {
+  const _DashboardHeroStatChip({
+    required this.label,
+    required this.value,
+    required this.change,
+    required this.isUp,
+  });
 
   final String label;
   final String value;
+  final String change;
+  final bool isUp;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        color: const Color(0x0FFFFFFF),
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        border: Border.all(color: const Color(0x12FFFFFF)),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: MfSpace.lg,
+        vertical: MfSpace.md,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              color: Colors.white.withValues(alpha: 0.75),
+            style: GoogleFonts.dmSans(
+              fontSize: 11,
+              color: MfPalette.textMuted,
             ),
           ),
-          Text(
-            value,
-            style: GoogleFonts.manrope(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
+          const SizedBox(height: MfSpace.xs - 1),
+          Row(
+            children: [
+              Flexible(
+                child: Text(
+                  value,
+                  style: GoogleFonts.dmMono(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: MfPalette.textPrimary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: MfSpace.sm - 2),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: MfSpace.sm - 2, vertical: MfSpace.xs - 2),
+                decoration: BoxDecoration(
+                  color: isUp
+                      ? MfPalette.incomeGreen.withValues(alpha: 0.18)
+                      : MfPalette.expenseRed.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(MfSpace.xl),
+                ),
+                child: Text(
+                  change,
+                  style: GoogleFonts.dmMono(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isUp ? MfPalette.incomeGreen : MfPalette.expenseRed,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -763,9 +957,11 @@ class _MetricCardsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final income = thisMonth['totalIncome']?.toString() ?? '0';
-    final expense = thisMonth['totalExpenses']?.toString() ?? '0';
-    final savings = thisMonth['netSavings']?.toString() ?? thisMonth['netCashFlow']?.toString() ?? '0';
+    final income = _formatCompactCurrency(thisMonth['totalIncome']);
+    final expense = _formatCompactCurrency(thisMonth['totalExpenses']);
+    final savings = _formatCompactCurrency(
+      thisMonth['netSavings']?.toString() ?? thisMonth['netCashFlow'],
+    );
 
     Widget tile(String title, String value, Color accent) {
       return Expanded(
@@ -863,12 +1059,19 @@ class _IncomeExpenseChart extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     if (trend.isEmpty) {
       return _FintechCard(
-        child: Text('Not enough history yet.', style: Theme.of(context).textTheme.bodyMedium),
+        child: Text(
+          'Not enough history yet.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
       );
     }
 
-    final incomes = trend.map((t) => double.tryParse(t['income']?.toString() ?? '0') ?? 0).toList();
-    final expenses = trend.map((t) => double.tryParse(t['expenses']?.toString() ?? '0') ?? 0).toList();
+    final incomes = trend
+        .map((t) => double.tryParse(t['income']?.toString() ?? '0') ?? 0)
+        .toList();
+    final expenses = trend
+        .map((t) => double.tryParse(t['expenses']?.toString() ?? '0') ?? 0)
+        .toList();
     final maxY = [
       ...incomes,
       ...expenses,
@@ -909,7 +1112,10 @@ class _IncomeExpenseChart extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         monthLabel(m),
-                        style: GoogleFonts.inter(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.55)),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: cs.onSurface.withValues(alpha: 0.55),
+                        ),
                       ),
                     );
                   },
@@ -920,13 +1126,22 @@ class _IncomeExpenseChart extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 40,
                   getTitlesWidget: (v, _) => Text(
-                    v >= 1000 ? '${(v / 1000).toStringAsFixed(0)}k' : v.toInt().toString(),
-                    style: GoogleFonts.inter(fontSize: 9, color: cs.onSurface.withValues(alpha: 0.45)),
+                    v >= 1000
+                        ? '${(v / 1000).toStringAsFixed(0)}k'
+                        : v.toInt().toString(),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      color: cs.onSurface.withValues(alpha: 0.45),
+                    ),
                   ),
                 ),
               ),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             gridData: FlGridData(
               show: true,
@@ -946,7 +1161,9 @@ class _IncomeExpenseChart extends StatelessWidget {
                   BarChartRodData(
                     toY: incomes[i],
                     width: 7,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(6),
+                    ),
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
@@ -959,7 +1176,9 @@ class _IncomeExpenseChart extends StatelessWidget {
                   BarChartRodData(
                     toY: expenses[i],
                     width: 7,
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(6),
+                    ),
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
@@ -996,11 +1215,16 @@ class _SavingsTrendChart extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     if (trend.isEmpty) {
       return _FintechCard(
-        child: Text('Not enough history yet.', style: Theme.of(context).textTheme.bodyMedium),
+        child: Text(
+          'Not enough history yet.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
       );
     }
 
-    final nets = trend.map((t) => double.tryParse(t['netSavings']?.toString() ?? '0') ?? 0).toList();
+    final nets = trend
+        .map((t) => double.tryParse(t['netSavings']?.toString() ?? '0') ?? 0)
+        .toList();
     var minY = nets.reduce((a, b) => a < b ? a : b);
     var maxY = nets.reduce((a, b) => a > b ? a : b);
     final span = (maxY - minY).abs();
@@ -1035,7 +1259,10 @@ class _SavingsTrendChart extends StatelessWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
                         monthLabel(m),
-                        style: GoogleFonts.inter(fontSize: 10, color: cs.onSurface.withValues(alpha: 0.55)),
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: cs.onSurface.withValues(alpha: 0.55),
+                        ),
                       ),
                     );
                   },
@@ -1046,13 +1273,22 @@ class _SavingsTrendChart extends StatelessWidget {
                   showTitles: true,
                   reservedSize: 44,
                   getTitlesWidget: (v, _) => Text(
-                    v.abs() >= 1000 ? '${(v / 1000).toStringAsFixed(1)}k' : v.toInt().toString(),
-                    style: GoogleFonts.inter(fontSize: 9, color: cs.onSurface.withValues(alpha: 0.45)),
+                    v.abs() >= 1000
+                        ? '${(v / 1000).toStringAsFixed(1)}k'
+                        : v.toInt().toString(),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      color: cs.onSurface.withValues(alpha: 0.45),
+                    ),
                   ),
                 ),
               ),
-              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             borderData: FlBorderData(show: false),
             lineBarsData: [

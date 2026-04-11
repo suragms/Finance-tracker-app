@@ -15,11 +15,11 @@ ColorScheme _lightScheme() {
     onSecondary: Colors.white,
     secondaryContainer: const Color(0xFFEEF2FF),
     onSecondaryContainer: const Color(0xFF3730A3),
-    tertiary: MfPalette.warning,
+    tertiary: MfPalette.warningAmber,
     onTertiary: const Color(0xFF422006),
     tertiaryContainer: const Color(0xFFFFE7C2),
     onTertiaryContainer: const Color(0xFF713F12),
-    error: MfPalette.error,
+    error: MfPalette.expenseRed,
     onError: Colors.white,
     surface: MfPalette.lightBg,
     onSurface: const Color(0xFF0F172A),
@@ -42,64 +42,62 @@ ColorScheme _lightScheme() {
 }
 
 ColorScheme _darkScheme() {
-  const p = Color(0xFF818CF8);
-  return ColorScheme(
+  return const ColorScheme(
     brightness: Brightness.dark,
-    primary: p,
-    onPrimary: const Color(0xFF1E1B4B),
-    primaryContainer: const Color(0xFF3730A3),
-    onPrimaryContainer: const Color(0xFFE0E7FF),
-    secondary: const Color(0xFFA5B4FC),
-    onSecondary: const Color(0xFF1E1B4B),
-    secondaryContainer: const Color(0xFF312E81),
-    onSecondaryContainer: const Color(0xFFE0E7FF),
-    tertiary: const Color(0xFFFBBF24),
-    onTertiary: const Color(0xFF422006),
-    tertiaryContainer: const Color(0xFF713F12),
-    onTertiaryContainer: const Color(0xFFFFE7C2),
-    error: const Color(0xFFF87171),
-    onError: const Color(0xFF450A0A),
-    surface: MfPalette.darkBg,
-    onSurface: const Color(0xFFF1F5F9),
-    surfaceContainerLowest: const Color(0xFF020617),
-    surfaceContainerLow: const Color(0xFF1E293B),
-    surfaceContainer: const Color(0xFF334155),
-    surfaceContainerHigh: const Color(0xFF475569),
-    surfaceContainerHighest: const Color(0xFF64748B),
-    outline: const Color(0xFF475569),
-    outlineVariant: const Color(0xFF334155),
+    primary: Color(0xFF818CF8),
+    onPrimary: Color(0xFF1E1B4B),
+    primaryContainer: Color(0xFF3730A3),
+    onPrimaryContainer: Color(0xFFE0E7FF),
+    secondary: Color(0xFFA259FF),
+    onSecondary: Color(0xFF1E1B4B),
+    secondaryContainer: Color(0xFF2D1B69),
+    onSecondaryContainer: Color(0xFFE9D5FF),
+    tertiary: Color(0xFFFB923C),
+    onTertiary: Color(0xFF431407),
+    tertiaryContainer: Color(0xFF6B2D0B),
+    onTertiaryContainer: Color(0xFFFFDBCC),
+    error: Color(0xFFF87171),
+    onError: Color(0xFF450A0A),
+    surface: Color(0xFF0D1120),
+    onSurface: Color(0xFFFFFFFF),
+    surfaceContainerLowest: Color(0xFF0A0E1A),
+    surfaceContainerLow: Color(0x14FFFFFF),
+    surfaceContainer: Color(0x1FFFFFFF),
+    surfaceContainerHigh: Color(0x29FFFFFF),
+    surfaceContainerHighest: Color(0xFF334155),
+    outline: Color(0x26FFFFFF),
+    outlineVariant: Color(0x14FFFFFF),
     shadow: Colors.black,
-    scrim: Colors.black87,
-    inverseSurface: MfPalette.lightBg,
-    onInverseSurface: const Color(0xFF0F172A),
-    inversePrimary: MfPalette.primary,
-    surfaceTint: p,
-    surfaceDim: const Color(0xFF0F172A),
-    surfaceBright: const Color(0xFF334155),
+    scrim: Color(0xCC000000),
+    inverseSurface: Color(0xFFF8FAFC),
+    onInverseSurface: Color(0xFF0F172A),
+    inversePrimary: Color(0xFF5B4CEC),
+    surfaceTint: Color(0xFF5B4CEC),
+    surfaceDim: Color(0xFF0A0E1A),
+    surfaceBright: Color(0xFF1E293B),
   );
 }
 
 TextTheme _textTheme(ColorScheme cs, Brightness b) {
   final base = ThemeData(brightness: b, colorScheme: cs).textTheme;
-  final jakarta = GoogleFonts.plusJakartaSansTextTheme(base);
-  final inter = GoogleFonts.interTextTheme(jakarta);
+  final dmSans = GoogleFonts.dmSansTextTheme(base);
 
-  return inter.copyWith(
-    displayLarge: GoogleFonts.plusJakartaSans(textStyle: jakarta.displayLarge, fontWeight: FontWeight.w700, color: cs.onSurface),
-    displayMedium: GoogleFonts.plusJakartaSans(textStyle: jakarta.displayMedium, fontWeight: FontWeight.w700, color: cs.onSurface),
-    displaySmall: GoogleFonts.plusJakartaSans(textStyle: jakarta.displaySmall, fontWeight: FontWeight.w700, color: cs.onSurface),
-    headlineLarge: GoogleFonts.plusJakartaSans(textStyle: jakarta.headlineLarge, fontWeight: FontWeight.w700, color: cs.onSurface),
-    headlineMedium: GoogleFonts.plusJakartaSans(textStyle: jakarta.headlineMedium, fontWeight: FontWeight.w700, color: cs.onSurface),
-    headlineSmall: GoogleFonts.plusJakartaSans(textStyle: jakarta.headlineSmall, fontWeight: FontWeight.w700, color: cs.onSurface),
-    titleLarge: GoogleFonts.plusJakartaSans(textStyle: jakarta.titleLarge, fontWeight: FontWeight.w600, color: cs.onSurface),
-    titleMedium: GoogleFonts.plusJakartaSans(textStyle: jakarta.titleMedium, fontWeight: FontWeight.w600, color: cs.onSurface),
-    titleSmall: GoogleFonts.plusJakartaSans(textStyle: jakarta.titleSmall, fontWeight: FontWeight.w600, color: cs.onSurface),
-    bodyLarge: GoogleFonts.inter(textStyle: inter.bodyLarge, color: cs.onSurface),
-    bodyMedium: GoogleFonts.inter(textStyle: inter.bodyMedium, color: cs.onSurface),
-    bodySmall: GoogleFonts.inter(textStyle: inter.bodySmall?.copyWith(fontSize: 12), color: cs.onSurface.withValues(alpha: 0.75)),
-    labelLarge: GoogleFonts.inter(textStyle: inter.labelLarge, fontWeight: FontWeight.w600),
-    labelMedium: GoogleFonts.inter(textStyle: inter.labelMedium, fontSize: 12, fontWeight: FontWeight.w500),
-    labelSmall: GoogleFonts.inter(textStyle: inter.labelSmall, fontSize: 11, fontWeight: FontWeight.w500),
+  return dmSans.copyWith(
+    displayLarge: GoogleFonts.dmSans(textStyle: dmSans.displayLarge, fontWeight: FontWeight.w700, color: cs.onSurface),
+    displayMedium: GoogleFonts.dmSans(textStyle: dmSans.displayMedium, fontWeight: FontWeight.w700, color: cs.onSurface),
+    displaySmall: GoogleFonts.dmSans(textStyle: dmSans.displaySmall, fontWeight: FontWeight.w700, color: cs.onSurface),
+    headlineLarge: GoogleFonts.dmSans(textStyle: dmSans.headlineLarge, fontWeight: FontWeight.w700, color: cs.onSurface),
+    headlineMedium: GoogleFonts.dmSans(textStyle: dmSans.headlineMedium, fontWeight: FontWeight.w700, color: cs.onSurface),
+    headlineSmall: GoogleFonts.dmSans(textStyle: dmSans.headlineSmall, fontWeight: FontWeight.w600, color: cs.onSurface),
+    titleLarge: GoogleFonts.dmSans(textStyle: dmSans.titleLarge, fontWeight: FontWeight.w600, color: cs.onSurface),
+    titleMedium: GoogleFonts.dmSans(textStyle: dmSans.titleMedium, fontWeight: FontWeight.w600, color: cs.onSurface),
+    titleSmall: GoogleFonts.dmSans(textStyle: dmSans.titleSmall, fontWeight: FontWeight.w500, color: cs.onSurface),
+    bodyLarge: GoogleFonts.dmSans(textStyle: dmSans.bodyLarge, color: cs.onSurface),
+    bodyMedium: GoogleFonts.dmSans(textStyle: dmSans.bodyMedium, color: cs.onSurface),
+    bodySmall: GoogleFonts.dmSans(textStyle: dmSans.bodySmall, fontSize: 12, color: cs.onSurface.withValues(alpha: 0.65)),
+    labelLarge: GoogleFonts.dmSans(textStyle: dmSans.labelLarge, fontWeight: FontWeight.w600),
+    labelMedium: GoogleFonts.dmMono(textStyle: dmSans.labelMedium, fontSize: 13, fontWeight: FontWeight.w500),
+    labelSmall: GoogleFonts.dmMono(textStyle: dmSans.labelSmall, fontSize: 11, fontWeight: FontWeight.w400),
   );
 }
 
@@ -128,8 +126,8 @@ InputDecorationTheme _inputTheme(ColorScheme cs) {
       borderSide: BorderSide(color: cs.error, width: 2),
     ),
     contentPadding: const EdgeInsets.symmetric(horizontal: MfSpace.lg, vertical: MfSpace.md + 2),
-    labelStyle: GoogleFonts.inter(color: cs.onSurface.withValues(alpha: 0.65)),
-    floatingLabelStyle: GoogleFonts.inter(color: cs.primary, fontWeight: FontWeight.w600),
+    labelStyle: GoogleFonts.dmSans(color: cs.onSurface.withValues(alpha: 0.65)),
+    floatingLabelStyle: GoogleFonts.dmSans(color: cs.primary, fontWeight: FontWeight.w600),
   );
 }
 
@@ -148,7 +146,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: GoogleFonts.plusJakartaSans(
+      titleTextStyle: GoogleFonts.dmSans(
         fontSize: 20,
         fontWeight: FontWeight.w700,
         color: colorScheme.onSurface,
@@ -166,8 +164,8 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.primaryContainer,
       disabledColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-      labelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
-      secondaryLabelStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+      labelStyle: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w500, color: colorScheme.onSurface),
+      secondaryLabelStyle: GoogleFonts.dmSans(fontSize: 13, fontWeight: FontWeight.w500),
       padding: const EdgeInsets.symmetric(horizontal: MfSpace.md, vertical: MfSpace.sm),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm + 4)),
       side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
@@ -178,7 +176,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
         elevation: 0,
         padding: const EdgeInsets.symmetric(vertical: MfSpace.md + 2, horizontal: MfSpace.xl),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
-        textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 15),
+        textStyle: GoogleFonts.dmSans(fontWeight: FontWeight.w600, fontSize: 15),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
@@ -192,7 +190,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm)),
-        textStyle: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600, fontSize: 14),
+        textStyle: GoogleFonts.dmSans(fontWeight: FontWeight.w600, fontSize: 14),
       ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -211,7 +209,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       indicatorColor: colorScheme.primaryContainer.withValues(alpha: 0.55),
       labelTextStyle: WidgetStateProperty.resolveWith((s) {
         final selected = s.contains(WidgetState.selected);
-        return GoogleFonts.inter(
+        return GoogleFonts.dmSans(
           fontSize: 11,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           letterSpacing: 0.2,
@@ -226,11 +224,10 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       }),
     ),
     snackBarTheme: SnackBarThemeData(
-      // Fixed avoids "floating SnackBar off screen" when a child route has a FAB and the shell has a bottom bar.
       behavior: SnackBarBehavior.fixed,
       elevation: 0,
       backgroundColor: colorScheme.inverseSurface,
-      contentTextStyle: GoogleFonts.inter(color: colorScheme.onInverseSurface),
+      contentTextStyle: GoogleFonts.dmSans(color: colorScheme.onInverseSurface),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
     ),
     dividerTheme: DividerThemeData(
@@ -243,7 +240,50 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
 
 ThemeData buildAppTheme() => _buildTheme(_lightScheme(), MoneyFlowThemeExtension.light);
 
-ThemeData buildAppDarkTheme() => _buildTheme(_darkScheme(), MoneyFlowThemeExtension.dark);
+ThemeData buildAppDarkTheme() {
+  final cs = _darkScheme();
+  final base = _buildTheme(cs, MoneyFlowThemeExtension.dark);
+  return base.copyWith(
+    scaffoldBackgroundColor: MfPalette.phoneBg,
+    appBarTheme: base.appBarTheme.copyWith(
+      backgroundColor: MfPalette.phoneBg,
+      surfaceTintColor: Colors.transparent,
+      titleTextStyle: GoogleFonts.dmSans(
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: cs.onSurface,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: MfPalette.cardBg,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
+      margin: EdgeInsets.zero,
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      elevation: 0,
+      height: 60,
+      backgroundColor: const Color(0xF00D1120),
+      indicatorColor: const Color(0x335B4CEC),
+      labelTextStyle: WidgetStateProperty.resolveWith((s) {
+        final selected = s.contains(WidgetState.selected);
+        return GoogleFonts.dmSans(
+          fontSize: 11,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          letterSpacing: 0.2,
+        );
+      }),
+      iconTheme: WidgetStateProperty.resolveWith((s) {
+        final selected = s.contains(WidgetState.selected);
+        return IconThemeData(
+          color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.45),
+          size: 24,
+        );
+      }),
+    ),
+  );
+}
 
 List<BoxShadow> ledgerAmbientFabShadows(ColorScheme cs) => [
       BoxShadow(

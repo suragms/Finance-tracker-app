@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/dio_errors.dart';
 import '../../../core/providers.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/widgets/ledger_ui.dart';
 import '../application/session_notifier.dart';
 import '../data/auth_api.dart';
@@ -30,6 +31,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _upConfirm = TextEditingController();
   final _upPhone = TextEditingController();
 
+  bool _signInPasswordVisible = false;
+  bool _upPasswordVisible = false;
+  bool _upConfirmVisible = false;
   bool _loading = false;
 
   static const double _splitBreakpoint = 880;
@@ -46,7 +50,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _saveSession(({String access, String refresh, String? sessionId}) tokens, {String? userEmail}) async {
+  Future<void> _saveSession(
+    ({String access, String refresh, String? sessionId}) tokens, {
+    String? userEmail,
+  }) async {
     final storage = ref.read(tokenStorageProvider);
     await storage.saveTokens(
       access: tokens.access,
@@ -62,17 +69,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _signInWithEmail() async {
     final email = _signInEmail.text.trim();
     if (email.isEmpty || _signInPassword.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter email and password')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter email and password')));
       return;
     }
     setState(() => _loading = true);
     try {
-      final tokens = await ref.read(authApiProvider).login(
-            email,
-            _signInPassword.text,
-          );
+      final tokens = await ref
+          .read(authApiProvider)
+          .login(email, _signInPassword.text);
       await _saveSession(tokens, userEmail: email);
     } on DioException catch (e) {
       if (mounted) _showErr(e);
@@ -83,9 +89,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _register() async {
     if (_upName.text.trim().isEmpty || _upEmail.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter name and email')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter name and email')));
       return;
     }
     if (_upPassword.text.length < 8) {
@@ -95,14 +101,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     if (_upPassword.text != _upConfirm.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
     setState(() => _loading = true);
     try {
-      final tokens = await ref.read(authApiProvider).register(
+      final tokens = await ref
+          .read(authApiProvider)
+          .register(
             name: _upName.text,
             email: _upEmail.text.trim(),
             password: _upPassword.text,
@@ -118,7 +126,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _showErr(DioException e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(dioErrorMessage(e)), duration: const Duration(seconds: 6)),
+      SnackBar(
+        content: Text(dioErrorMessage(e)),
+        duration: const Duration(seconds: 6),
+      ),
     );
   }
 
@@ -126,7 +137,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: MfPalette.canvas,
+      resizeToAvoidBottomInset: true,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= _splitBreakpoint;
@@ -139,7 +151,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   flex: 54,
                   child: Center(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 32),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 40,
+                        horizontal: 32,
+                      ),
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 440),
                         child: _AuthCard(
@@ -157,12 +172,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
             );
           }
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: _BrandHeader(cs: cs)),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                sliver: SliverToBoxAdapter(
+          return SingleChildScrollView(
+            physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _BrandHeader(cs: cs),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
                   child: _AuthCard(
                     cs: cs,
                     authPage: _authPage,
@@ -172,8 +192,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     signUpBody: _buildSignUpFields(context),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -188,8 +208,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         Text(
           'Email & password',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: cs.onSurface.withValues(alpha: 0.85),
-              ),
+            color: cs.onSurface.withValues(alpha: 0.85),
+          ),
         ),
         const SizedBox(height: 14),
         TextField(
@@ -197,12 +217,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           decoration: const InputDecoration(labelText: 'Email'),
           keyboardType: TextInputType.emailAddress,
           autocorrect: false,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _signInPassword,
-          decoration: const InputDecoration(labelText: 'Password'),
-          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _signInPasswordVisible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 20,
+                color: MfPalette.textMuted,
+              ),
+              onPressed: () => setState(
+                () => _signInPasswordVisible = !_signInPasswordVisible,
+              ),
+            ),
+          ),
+          obscureText: !_signInPasswordVisible,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _signInWithEmail(),
         ),
         const SizedBox(height: 20),
         LedgerPrimaryGradientButton(
@@ -229,6 +267,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           controller: _upName,
           decoration: const InputDecoration(labelText: 'Full name'),
           textCapitalization: TextCapitalization.words,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 14),
         TextField(
@@ -236,26 +276,58 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           decoration: const InputDecoration(labelText: 'Email'),
           keyboardType: TextInputType.emailAddress,
           autocorrect: false,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _upPassword,
-          decoration: const InputDecoration(labelText: 'Password (min 8 characters)'),
-          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Password (min 8 characters)',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _upPasswordVisible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 20,
+                color: MfPalette.textMuted,
+              ),
+              onPressed: () =>
+                  setState(() => _upPasswordVisible = !_upPasswordVisible),
+            ),
+          ),
+          obscureText: !_upPasswordVisible,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _upConfirm,
-          decoration: const InputDecoration(labelText: 'Confirm password'),
-          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Confirm password',
+            suffixIcon: IconButton(
+              icon: Icon(
+                _upConfirmVisible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                size: 20,
+                color: MfPalette.textMuted,
+              ),
+              onPressed: () =>
+                  setState(() => _upConfirmVisible = !_upConfirmVisible),
+            ),
+          ),
+          obscureText: !_upConfirmVisible,
+          textInputAction: TextInputAction.next,
+          onSubmitted: (_) => FocusScope.of(context).nextFocus(),
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _upPhone,
-          decoration: const InputDecoration(
-            labelText: 'Mobile (optional)',
-          ),
+          decoration: const InputDecoration(labelText: 'Mobile (optional)'),
           keyboardType: TextInputType.phone,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _register(),
         ),
         const SizedBox(height: 22),
         LedgerPrimaryGradientButton(
@@ -287,11 +359,7 @@ class _BrandPanel extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF000B60),
-            Color(0xFF142283),
-            Color(0xFF0A1740),
-          ],
+          colors: [Color(0xFF000B60), Color(0xFF142283), Color(0xFF0A1740)],
         ),
       ),
       child: SafeArea(
@@ -359,10 +427,7 @@ class _BrandHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF000B60),
-            cs.primaryContainer,
-          ],
+          colors: [const Color(0xFF000B60), cs.primaryContainer],
         ),
       ),
       child: SafeArea(
@@ -370,13 +435,17 @@ class _BrandHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'MONEYFLOW AI',
-              style: GoogleFonts.manrope(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.4,
-                color: Colors.white.withValues(alpha: 0.75),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'MONEYFLOW AI',
+                style: GoogleFonts.dmMono(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2.4,
+                  color: MfPalette.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -465,10 +534,12 @@ class _AuthCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            authPage == 0 ? 'Sign in to continue' : 'Set up your account in a minute',
+            authPage == 0
+                ? 'Sign in to continue'
+                : 'Set up your account in a minute',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: cs.onSurface.withValues(alpha: 0.58),
-                ),
+              color: cs.onSurface.withValues(alpha: 0.58),
+            ),
           ),
           const SizedBox(height: 22),
           _AuthPills(
@@ -527,7 +598,9 @@ class _AuthPills extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: on ? FontWeight.w700 : FontWeight.w500,
-                    color: on ? cs.primary : cs.onSurface.withValues(alpha: 0.55),
+                    color: on
+                        ? cs.primary
+                        : cs.onSurface.withValues(alpha: 0.55),
                   ),
                 ),
               ),
@@ -543,12 +616,7 @@ class _AuthPills extends StatelessWidget {
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
-        children: [
-          pill(0, 'Sign in'),
-          pill(1, 'Sign up'),
-        ],
-      ),
+      child: Row(children: [pill(0, 'Sign in'), pill(1, 'Sign up')]),
     );
   }
 }

@@ -26,20 +26,109 @@ abstract final class MfMotion {
 
 /// Brand + semantic colors (use with [ColorScheme] in theme).
 abstract final class MfPalette {
-  static const Color primary = Color(0xFF4F46E5);
-  static const Color primaryDark = Color(0xFF4338CA);
-  static const Color success = Color(0xFF10B981);
-  static const Color error = Color(0xFFEF4444);
-  static const Color warning = Color(0xFFF59E0B);
+  // Canvas
+  static const Color canvas = Color(0xFF0A0E1A);
+  static const Color phoneBg = Color(0xFF0D1120);
+  static const Color cardBg = Color(0x0AFFFFFF);
+  static const Color cardBorder = Color(0x0FFFFFFF);
 
+  // Brand
+  static const Color primary = Color(0xFF5B4CEC);
+  static const Color primaryLight = Color(0xFF818CF8);
+  static const Color primaryGlow = Color(0xFFA259FF);
+
+  // Semantic
+  static const Color incomeGreen = Color(0xFF4ADE80);
+  static const Color expenseRed = Color(0xFFF87171);
+  static const Color warningAmber = Color(0xFFFB923C);
+
+  // Hero card gradient stops
+  static const Color heroStart = Color(0xFF1A2460);
+  static const Color heroMid = Color(0xFF0F1A50);
+  static const Color heroEnd = Color(0xFF121F6E);
+
+  // Text
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textMuted = Color(0x73FFFFFF);
+  static const Color textHint = Color(0x40FFFFFF);
+
+  // Legacy aliases (keep for non-redesigned screens)
   static const Color lightBg = Color(0xFFF8FAFC);
   static const Color lightBgElevated = Color(0xFFFFFFFF);
   static const Color lightMuted = Color(0xFF64748B);
-
   static const Color darkBg = Color(0xFF0F172A);
   static const Color darkBgElevated = Color(0xFF1E293B);
   static const Color darkMuted = Color(0xFF94A3B8);
+
+  /// Backwards-compatible names used by older widgets / light theme.
+  static const Color success = incomeGreen;
+  static const Color error = expenseRed;
+  static const Color warning = warningAmber;
 }
+
+/// Indian Rupee symbol — use everywhere instead of hardcoded literals.
+abstract final class MfCurrency {
+  static const String symbol = '₹';
+
+  static String format(num value) =>
+      '$symbol${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 2)}';
+
+  static String formatCompact(num value) {
+    if (value >= 100000) return '$symbol${(value / 100000).toStringAsFixed(1)}L';
+    if (value >= 1000) return '$symbol${(value / 1000).toStringAsFixed(1)}K';
+    return format(value);
+  }
+}
+
+const String kCurrencySymbol = MfCurrency.symbol;
+
+/// Glass card decoration — use for ALL card widgets.
+BoxDecoration glassCard({
+  Color? color,
+  double borderRadius = MfRadius.lg,
+  Color? borderColor,
+}) =>
+    BoxDecoration(
+      color: color ?? MfPalette.cardBg,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: Border.all(
+        color: borderColor ?? MfPalette.cardBorder,
+        width: 1,
+      ),
+    );
+
+/// Hero gradient — for balance/summary cards.
+BoxDecoration heroCardDecoration() => BoxDecoration(
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [MfPalette.heroStart, MfPalette.heroMid, MfPalette.heroEnd],
+        stops: [0.0, 0.6, 1.0],
+      ),
+      borderRadius: BorderRadius.circular(MfRadius.xl),
+      border: Border.all(
+        color: const Color(0x2D6F82FF),
+        width: 1,
+      ),
+    );
+
+LinearGradient incomeGradient() => LinearGradient(
+      colors: [
+        MfPalette.incomeGreen.withValues(alpha: 0.85),
+        MfPalette.incomeGreen.withValues(alpha: 0.50),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+LinearGradient expenseGradient(Color categoryColor) => LinearGradient(
+      colors: [
+        categoryColor.withValues(alpha: 0.85),
+        categoryColor.withValues(alpha: 0.50),
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
 
 /// Optional theme extension for widgets that need explicit semantic colors.
 @immutable
@@ -57,16 +146,16 @@ class MoneyFlowThemeExtension extends ThemeExtension<MoneyFlowThemeExtension> {
   final double glassOpacity;
 
   static const light = MoneyFlowThemeExtension(
-    success: MfPalette.success,
+    success: MfPalette.incomeGreen,
     onSuccess: Colors.white,
-    warning: MfPalette.warning,
+    warning: MfPalette.warningAmber,
     glassOpacity: 0.72,
   );
 
   static const dark = MoneyFlowThemeExtension(
-    success: Color(0xFF34D399),
+    success: MfPalette.incomeGreen,
     onSuccess: Color(0xFF064E3B),
-    warning: Color(0xFFFBBF24),
+    warning: MfPalette.warningAmber,
     glassOpacity: 0.55,
   );
 
@@ -86,7 +175,10 @@ class MoneyFlowThemeExtension extends ThemeExtension<MoneyFlowThemeExtension> {
   }
 
   @override
-  MoneyFlowThemeExtension lerp(ThemeExtension<MoneyFlowThemeExtension>? other, double t) {
+  MoneyFlowThemeExtension lerp(
+    ThemeExtension<MoneyFlowThemeExtension>? other,
+    double t,
+  ) {
     if (other is! MoneyFlowThemeExtension) return this;
     return MoneyFlowThemeExtension(
       success: Color.lerp(success, other.success, t)!,
@@ -98,5 +190,7 @@ class MoneyFlowThemeExtension extends ThemeExtension<MoneyFlowThemeExtension> {
 }
 
 extension MoneyFlowThemeX on BuildContext {
-  MoneyFlowThemeExtension get mf => Theme.of(this).extension<MoneyFlowThemeExtension>() ?? MoneyFlowThemeExtension.light;
+  MoneyFlowThemeExtension get mf =>
+      Theme.of(this).extension<MoneyFlowThemeExtension>() ??
+      MoneyFlowThemeExtension.light;
 }
