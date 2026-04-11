@@ -10,4 +10,5 @@ backend/media/
 .env
 .env.local
 *.log
+flutter-app/analyze_out.txt
 .DS_Store
