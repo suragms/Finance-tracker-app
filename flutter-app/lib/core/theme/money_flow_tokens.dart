@@ -40,6 +40,11 @@ abstract final class MfPalette {
   static const Color primaryLight = Color(0xFF2236A8);
   static const Color primaryGlow = Color(0xFF7C8EFF);
 
+  /// Premium fintech neon accent (shell, CTAs, highlights).
+  static const Color neonGreen = Color(0xFFE6FF4D);
+  static const Color neonGreenSoft = Color(0xFFF3FD6F);
+  static const Color onNeonGreen = Color(0xFF0D0D0D);
+
   // Semantic
   static const Color incomeGreen = Color(0xFF10997A);
   static const Color expenseRed = Color(0xFFD06B5E);

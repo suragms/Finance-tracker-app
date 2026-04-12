@@ -107,8 +107,9 @@ class VehiclesScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             LedgerPrimaryGradientButton(
               onPressed: () async {
-                if (name.text.trim().isEmpty || number.text.trim().isEmpty)
+                if (name.text.trim().isEmpty || number.text.trim().isEmpty) {
                   return;
+                }
                 try {
                   await ref
                       .read(vehiclesApiProvider)

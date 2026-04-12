@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/application/theme_mode_provider.dart';
-import '../../../core/design_system/app_card.dart';
+import '../../../core/design_system/neon_glass_card.dart';
+import '../../../core/navigation/ledger_page_routes.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../accounts/presentation/accounts_screen.dart';
 import '../../auth/application/session_notifier.dart';
@@ -14,6 +15,8 @@ import '../../investments/presentation/investments_screen.dart';
 import '../../notifications/presentation/notifications_screen.dart';
 import '../../recurring/presentation/recurring_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
+import '../../send_money/presentation/receive_money_screen.dart';
+import '../../send_money/presentation/send_money_screen.dart';
 import '../../vehicles/presentation/vehicles_screen.dart';
 import '../../whatsapp/presentation/whatsapp_connect_screen.dart';
 import '../../insights/presentation/insights_screen.dart';
@@ -28,14 +31,32 @@ class ProfileScreen extends ConsumerWidget {
     ).push<void>(MaterialPageRoute<void>(builder: (_) => page));
   }
 
+  static void _pushFade(BuildContext context, Widget page) {
+    Navigator.of(context).push<void>(
+      LedgerPageRoutes.fadeSlide<void>(page),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final mode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      backgroundColor: cs.surface,
-      appBar: AppBar(title: const Text('Profile')),
+      backgroundColor: MfPalette.onNeonGreen,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
+        title: Text(
+          'Profile',
+          style: GoogleFonts.plusJakartaSans(
+            fontWeight: FontWeight.w800,
+            fontSize: 20,
+            color: Colors.white,
+          ),
+        ),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           MfSpace.xxl,
@@ -44,7 +65,7 @@ class ProfileScreen extends ConsumerWidget {
           100,
         ),
         children: [
-          AppCard(
+          NeonGlassCard(
             padding: const EdgeInsets.all(MfSpace.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,12 +75,23 @@ class ProfileScreen extends ConsumerWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontWeight: FontWeight.w700,
                     fontSize: 16,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: MfSpace.md),
                 SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<ThemeMode>(
+                    style: SegmentedButton.styleFrom(
+                      backgroundColor: Colors.white.withValues(alpha: 0.06),
+                      foregroundColor: Colors.white.withValues(alpha: 0.78),
+                      selectedForegroundColor: MfPalette.neonGreen,
+                      selectedBackgroundColor:
+                          MfPalette.neonGreen.withValues(alpha: 0.18),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                    ),
                     segments: const [
                       ButtonSegment(
                         value: ThemeMode.system,
@@ -113,6 +145,22 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ]),
           _section(context, 'Money', [
+            _tile(
+              context,
+              Icons.send_rounded,
+              'Send money',
+              'UPI & transfers',
+              MfPalette.neonGreen,
+              () => _pushFade(context, const SendMoneyScreen()),
+            ),
+            _tile(
+              context,
+              Icons.south_west_rounded,
+              'Receive money',
+              'Share UPI / QR',
+              MfPalette.neonGreenSoft,
+              () => _pushFade(context, const ReceiveMoneyScreen()),
+            ),
             _tile(
               context,
               Icons.account_balance_wallet_outlined,
@@ -212,15 +260,18 @@ class ProfileScreen extends ConsumerWidget {
           ListTile(
             leading: Icon(
               Icons.info_outline_rounded,
-              color: cs.onSurface.withValues(alpha: 0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             title: Text(
               'About MoneyFlow AI',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.9),
+              ),
             ),
             trailing: Icon(
               Icons.chevron_right_rounded,
-              color: cs.onSurface.withValues(alpha: 0.35),
+              color: MfPalette.neonGreen.withValues(alpha: 0.55),
             ),
             onTap: () => showAboutDialog(
               context: context,
@@ -250,7 +301,6 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   Widget _section(BuildContext context, String title, List<Widget> tiles) {
-    final cs = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: MfSpace.lg),
       child: Column(
@@ -267,11 +317,11 @@ class ProfileScreen extends ConsumerWidget {
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.6,
-                color: cs.onSurface.withValues(alpha: 0.45),
+                color: Colors.white.withValues(alpha: 0.42),
               ),
             ),
           ),
-          AppCard(
+          NeonGlassCard(
             padding: EdgeInsets.zero,
             child: Column(children: tiles),
           ),
@@ -288,7 +338,6 @@ class ProfileScreen extends ConsumerWidget {
     Color tint,
     VoidCallback onTap,
   ) {
-    final cs = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -304,10 +353,10 @@ class ProfileScreen extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: tint.withValues(alpha: 0.12),
+                  color: tint.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(MfRadius.sm),
                 ),
-                child: Icon(icon, color: tint.withValues(alpha: 0.9), size: 22),
+                child: Icon(icon, color: tint.withValues(alpha: 0.95), size: 22),
               ),
               const SizedBox(width: MfSpace.md),
               Expanded(
@@ -319,6 +368,7 @@ class ProfileScreen extends ConsumerWidget {
                       style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
+                        color: Colors.white.withValues(alpha: 0.94),
                       ),
                     ),
                     if (subtitle != null)
@@ -326,7 +376,7 @@ class ProfileScreen extends ConsumerWidget {
                         subtitle,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          color: cs.onSurface.withValues(alpha: 0.5),
+                          color: Colors.white.withValues(alpha: 0.48),
                         ),
                       ),
                   ],
@@ -334,7 +384,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: cs.onSurface.withValues(alpha: 0.35),
+                color: MfPalette.neonGreen.withValues(alpha: 0.55),
               ),
             ],
           ),

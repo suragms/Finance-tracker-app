@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/navigation/ledger_page_routes.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../accounts/presentation/accounts_screen.dart';
 import '../../budgets/presentation/budget_screen.dart';
@@ -12,6 +13,9 @@ import '../../insurance/presentation/insurance_screen.dart';
 import '../../investments/presentation/investments_screen.dart';
 import '../../notifications/presentation/notifications_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
+import '../../analytics/presentation/analytics_dashboard_screen.dart';
+import '../../send_money/presentation/receive_money_screen.dart';
+import '../../send_money/presentation/send_money_screen.dart';
 import '../../vehicles/presentation/vehicles_screen.dart';
 
 /// Premium quick links on the dashboard (same destinations as More, except log out).
@@ -35,6 +39,30 @@ class DashboardQuickAccess extends StatelessWidget {
         iconBgColor: MfPalette.primary.withValues(alpha: 0.22),
         iconColor: MfPalette.primaryLight,
         onTap: () => _push(context, const AccountsScreen()),
+      ),
+      _QuickLink(
+        icon: Icons.send_rounded,
+        title: 'Send money',
+        subtitle: 'UPI & transfers',
+        iconBgColor: MfPalette.neonGreen.withValues(alpha: 0.2),
+        iconColor: MfPalette.neonGreen,
+        onTap: () {
+          Navigator.of(context).push(
+            LedgerPageRoutes.fadeSlide<void>(const SendMoneyScreen()),
+          );
+        },
+      ),
+      _QuickLink(
+        icon: Icons.south_west_rounded,
+        title: 'Receive',
+        subtitle: 'Request UPI',
+        iconBgColor: MfPalette.neonGreen.withValues(alpha: 0.14),
+        iconColor: MfPalette.neonGreenSoft,
+        onTap: () {
+          Navigator.of(context).push(
+            LedgerPageRoutes.fadeSlide<void>(const ReceiveMoneyScreen()),
+          );
+        },
       ),
       _QuickLink(
         icon: Icons.savings_outlined,
@@ -101,9 +129,21 @@ class DashboardQuickAccess extends StatelessWidget {
         onTap: () => _push(context, const VehiclesScreen()),
       ),
       _QuickLink(
+        icon: Icons.insights_outlined,
+        title: 'Analytics',
+        subtitle: 'Weekly & categories',
+        iconBgColor: MfPalette.neonGreen.withValues(alpha: 0.16),
+        iconColor: MfPalette.neonGreen,
+        onTap: () {
+          Navigator.of(context).push(
+            LedgerPageRoutes.fadeSlide<void>(const AnalyticsDashboardScreen()),
+          );
+        },
+      ),
+      _QuickLink(
         icon: Icons.bar_chart_outlined,
         title: 'Reports',
-        subtitle: 'Analytics',
+        subtitle: 'Summaries',
         iconBgColor: MfPalette.heroMid.withValues(alpha: 0.35),
         iconColor: MfPalette.primaryLight,
         onTap: () => _push(context, const ReportsScreen()),

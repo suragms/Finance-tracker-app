@@ -24,8 +24,9 @@ class BudgetsApi {
   Future<List<Map<String, dynamic>>> list({String? month}) async {
     final res = await rawListResponse(month: month);
     final data = res.data;
-    if (data is List)
+    if (data is List) {
       return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    }
     if (data is Map<String, dynamic> &&
         data['success'] == true &&
         data['data'] is List) {
