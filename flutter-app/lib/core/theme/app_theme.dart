@@ -4,193 +4,198 @@ import 'package:google_fonts/google_fonts.dart';
 import 'money_flow_tokens.dart';
 
 ColorScheme _lightScheme() {
-  const p = MfPalette.primaryDark;
   return const ColorScheme(
     brightness: Brightness.light,
-    primary: Color(0xFF059669),
+    primary: Color(0xFF000B60),
     onPrimary: Colors.white,
-    primaryContainer: Color(0xFFD1FAE5),
-    onPrimaryContainer: Color(0xFF064E3B),
-    secondary: Color(0xFF34D399),
-    onSecondary: Color(0xFF022C1A),
-    secondaryContainer: Color(0xFFCCFBEF),
-    onSecondaryContainer: Color(0xFF065F46),
+    primaryContainer: Color(0xFF142283),
+    onPrimaryContainer: Color(0xFFF2F4FF),
+    secondary: Color(0xFF2C6BFF),
+    onSecondary: Colors.white,
+    secondaryContainer: Color(0xFFDCE7FF),
+    onSecondaryContainer: Color(0xFF07133B),
     tertiary: MfPalette.warningAmber,
-    onTertiary: Color(0xFF422006),
-    tertiaryContainer: Color(0xFFFFE7C2),
-    onTertiaryContainer: Color(0xFF713F12),
+    onTertiary: Color(0xFF41270B),
+    tertiaryContainer: Color(0xFFFBE7C2),
+    onTertiaryContainer: Color(0xFF5D3A0F),
     error: MfPalette.expenseRed,
     onError: Colors.white,
-    surface: Color(0xFFF0FDF4),
-    onSurface: Color(0xFF0A0F0D),
+    surface: Color(0xFFF8F9FA),
+    onSurface: Color(0xFF191C1D),
     surfaceContainerLowest: Color(0xFFFFFFFF),
-    surfaceContainerLow: Color(0xFFE7F8EE),
-    surfaceContainer: Color(0xFFD7F2E1),
-    surfaceContainerHigh: Color(0xFFC5E8D3),
-    surfaceContainerHighest: Color(0xFFACD7BF),
-    outline: Color(0xFFB8D7C3),
-    outlineVariant: Color(0xFFD6E9DC),
-    shadow: Color(0xFF0A0F0D),
-    scrim: Colors.black54,
-    inverseSurface: Color(0xFF111A14),
-    onInverseSurface: Color(0xFFF0FDF4),
-    inversePrimary: Color(0xFF34D399),
-    surfaceTint: p,
-    surfaceDim: Color(0xFFDCEFE4),
-    surfaceBright: Colors.white,
+    surfaceContainerLow: Color(0xFFF1F4F8),
+    surfaceContainer: Color(0xFFE8EDF5),
+    surfaceContainerHigh: Color(0xFFDDE4EE),
+    surfaceContainerHighest: Color(0xFFD0D8E4),
+    outline: Color(0xFFB6BFCD),
+    outlineVariant: Color(0xFFC8D0DD),
+    shadow: Color(0xFF0D1323),
+    scrim: Color(0x66000000),
+    inverseSurface: Color(0xFF2E3132),
+    onInverseSurface: Color(0xFFF7F8FB),
+    inversePrimary: Color(0xFF90A5FF),
+    surfaceTint: Color(0xFF000B60),
+    surfaceDim: Color(0xFFE2E7EF),
+    surfaceBright: Color(0xFFFFFFFF),
   );
 }
 
 ColorScheme _darkScheme() {
   return const ColorScheme(
     brightness: Brightness.dark,
-    primary: Color(0xFF10B981),
-    onPrimary: Color(0xFF022C1A),
-    primaryContainer: Color(0xFF065F46),
-    onPrimaryContainer: Color(0xFFD1FAE5),
-    secondary: Color(0xFF34D399),
-    onSecondary: Color(0xFF022C1A),
-    secondaryContainer: Color(0xFF1A2B1E),
-    onSecondaryContainer: Color(0xFFD1FAE5),
-    tertiary: Color(0xFFFBBF24),
-    onTertiary: Color(0xFF431407),
-    tertiaryContainer: Color(0xFF6B2D0B),
-    onTertiaryContainer: Color(0xFFFFDBCC),
-    error: Color(0xFFF87171),
-    onError: Color(0xFF450A0A),
-    surface: Color(0xFF0A0F0D),
-    onSurface: Color(0xFFFFFFFF),
-    surfaceContainerLowest: Color(0xFF060D08),
-    surfaceContainerLow: Color(0xFF111A14),
-    surfaceContainer: Color(0x1A34D399),
-    surfaceContainerHigh: Color(0xFF1A2B1E),
-    surfaceContainerHighest: Color(0xFF25402F),
-    outline: Color(0x2634D399),
-    outlineVariant: Color(0x1434D399),
+    primary: Color(0xFF9AA9FF),
+    onPrimary: Color(0xFF07113E),
+    primaryContainer: Color(0xFF142283),
+    onPrimaryContainer: Color(0xFFEFF2FF),
+    secondary: Color(0xFF78A8FF),
+    onSecondary: Color(0xFF071437),
+    secondaryContainer: Color(0xFF182655),
+    onSecondaryContainer: Color(0xFFDDE7FF),
+    tertiary: Color(0xFFF1BE66),
+    onTertiary: Color(0xFF3E2A0D),
+    tertiaryContainer: Color(0xFF5F4317),
+    onTertiaryContainer: Color(0xFFFBE5C1),
+    error: Color(0xFFF3A091),
+    onError: Color(0xFF43100B),
+    surface: Color(0xFF091227),
+    onSurface: Color(0xFFF1F4FB),
+    surfaceContainerLowest: Color(0xFF0C1630),
+    surfaceContainerLow: Color(0xFF101C3A),
+    surfaceContainer: Color(0xFF142244),
+    surfaceContainerHigh: Color(0xFF1A2A52),
+    surfaceContainerHighest: Color(0xFF223560),
+    outline: Color(0xFF566381),
+    outlineVariant: Color(0xFF33415F),
     shadow: Colors.black,
     scrim: Color(0xCC000000),
-    inverseSurface: Color(0xFFF0FDF4),
-    onInverseSurface: Color(0xFF0A0F0D),
-    inversePrimary: Color(0xFF059669),
-    surfaceTint: Color(0xFF10B981),
-    surfaceDim: Color(0xFF060D08),
-    surfaceBright: Color(0xFF1A2B1E),
+    inverseSurface: Color(0xFFF4F6FB),
+    onInverseSurface: Color(0xFF111625),
+    inversePrimary: Color(0xFF000B60),
+    surfaceTint: Color(0xFF9AA9FF),
+    surfaceDim: Color(0xFF060D1D),
+    surfaceBright: Color(0xFF16223F),
   );
 }
 
-TextTheme _textTheme(ColorScheme cs, Brightness b) {
-  final base = ThemeData(brightness: b, colorScheme: cs).textTheme;
-  final dmSans = GoogleFonts.dmSansTextTheme(base);
+TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
+  final base = ThemeData(brightness: brightness, colorScheme: cs).textTheme;
+  final inter = GoogleFonts.interTextTheme(base);
 
-  return dmSans.copyWith(
-    displayLarge: GoogleFonts.dmSans(
-      textStyle: dmSans.displayLarge,
-      fontWeight: FontWeight.w700,
+  return inter.copyWith(
+    displayLarge: GoogleFonts.manrope(
+      textStyle: inter.displayLarge,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -1.3,
       color: cs.onSurface,
     ),
-    displayMedium: GoogleFonts.dmSans(
-      textStyle: dmSans.displayMedium,
-      fontWeight: FontWeight.w700,
+    displayMedium: GoogleFonts.manrope(
+      textStyle: inter.displayMedium,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -1.1,
       color: cs.onSurface,
     ),
-    displaySmall: GoogleFonts.dmSans(
-      textStyle: dmSans.displaySmall,
-      fontWeight: FontWeight.w700,
+    displaySmall: GoogleFonts.manrope(
+      textStyle: inter.displaySmall,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.9,
       color: cs.onSurface,
     ),
-    headlineLarge: GoogleFonts.dmSans(
-      textStyle: dmSans.headlineLarge,
-      fontWeight: FontWeight.w700,
+    headlineLarge: GoogleFonts.manrope(
+      textStyle: inter.headlineLarge,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.8,
       color: cs.onSurface,
     ),
-    headlineMedium: GoogleFonts.dmSans(
-      textStyle: dmSans.headlineMedium,
+    headlineMedium: GoogleFonts.manrope(
+      textStyle: inter.headlineMedium,
       fontWeight: FontWeight.w700,
+      letterSpacing: -0.6,
       color: cs.onSurface,
     ),
-    headlineSmall: GoogleFonts.dmSans(
-      textStyle: dmSans.headlineSmall,
+    headlineSmall: GoogleFonts.manrope(
+      textStyle: inter.headlineSmall,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.4,
+      color: cs.onSurface,
+    ),
+    titleLarge: GoogleFonts.manrope(
+      textStyle: inter.titleLarge,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
+      color: cs.onSurface,
+    ),
+    titleMedium: GoogleFonts.inter(
+      textStyle: inter.titleMedium,
       fontWeight: FontWeight.w600,
       color: cs.onSurface,
     ),
-    titleLarge: GoogleFonts.dmSans(
-      textStyle: dmSans.titleLarge,
+    titleSmall: GoogleFonts.inter(
+      textStyle: inter.titleSmall,
       fontWeight: FontWeight.w600,
       color: cs.onSurface,
     ),
-    titleMedium: GoogleFonts.dmSans(
-      textStyle: dmSans.titleMedium,
+    bodyLarge: GoogleFonts.inter(
+      textStyle: inter.bodyLarge,
+      color: cs.onSurface,
+      height: 1.45,
+    ),
+    bodyMedium: GoogleFonts.inter(
+      textStyle: inter.bodyMedium,
+      color: cs.onSurface,
+      height: 1.45,
+    ),
+    bodySmall: GoogleFonts.inter(
+      textStyle: inter.bodySmall,
+      color: cs.onSurface.withValues(alpha: 0.62),
+      height: 1.4,
+    ),
+    labelLarge: GoogleFonts.inter(
+      textStyle: inter.labelLarge,
       fontWeight: FontWeight.w600,
       color: cs.onSurface,
     ),
-    titleSmall: GoogleFonts.dmSans(
-      textStyle: dmSans.titleSmall,
+    labelMedium: GoogleFonts.inter(
+      textStyle: inter.labelMedium,
+      fontWeight: FontWeight.w600,
+      color: cs.onSurface.withValues(alpha: 0.78),
+    ),
+    labelSmall: GoogleFonts.inter(
+      textStyle: inter.labelSmall,
       fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    ),
-    bodyLarge: GoogleFonts.dmSans(
-      textStyle: dmSans.bodyLarge,
-      color: cs.onSurface,
-    ),
-    bodyMedium: GoogleFonts.dmSans(
-      textStyle: dmSans.bodyMedium,
-      color: cs.onSurface,
-    ),
-    bodySmall: GoogleFonts.dmSans(
-      textStyle: dmSans.bodySmall,
-      fontSize: 12,
-      color: cs.onSurface.withValues(alpha: 0.65),
-    ),
-    labelLarge: GoogleFonts.dmSans(
-      textStyle: dmSans.labelLarge,
-      fontWeight: FontWeight.w600,
-    ),
-    labelMedium: GoogleFonts.dmMono(
-      textStyle: dmSans.labelMedium,
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-    ),
-    labelSmall: GoogleFonts.dmMono(
-      textStyle: dmSans.labelSmall,
-      fontSize: 11,
-      fontWeight: FontWeight.w400,
+      color: cs.onSurface.withValues(alpha: 0.6),
     ),
   );
 }
 
 InputDecorationTheme _inputTheme(ColorScheme cs) {
+  OutlineInputBorder border(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(18),
+        borderSide: BorderSide(color: color, width: width),
+      );
+
   return InputDecorationTheme(
     filled: true,
-    fillColor: cs.surfaceContainerLowest,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(
-        color: cs.primary.withValues(alpha: 0.85),
-        width: 2,
-      ),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(color: cs.error.withValues(alpha: 0.6)),
-    ),
-    focusedErrorBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(color: cs.error, width: 2),
-    ),
+    fillColor: cs.surfaceContainerHigh.withValues(alpha: 0.56),
+    border: border(Colors.transparent),
+    enabledBorder: border(Colors.transparent),
+    disabledBorder: border(Colors.transparent),
+    focusedBorder: border(cs.primary.withValues(alpha: 0.22), width: 2),
+    errorBorder: border(cs.error.withValues(alpha: 0.4)),
+    focusedErrorBorder: border(cs.error.withValues(alpha: 0.65), width: 2),
     contentPadding: const EdgeInsets.symmetric(
       horizontal: MfSpace.lg,
       vertical: MfSpace.md + 2,
     ),
-    labelStyle: GoogleFonts.dmSans(color: cs.onSurface.withValues(alpha: 0.65)),
-    floatingLabelStyle: GoogleFonts.dmSans(
+    hintStyle: GoogleFonts.inter(
+      color: cs.onSurface.withValues(alpha: 0.44),
+      fontSize: 14,
+    ),
+    labelStyle: GoogleFonts.inter(
+      color: cs.onSurface.withValues(alpha: 0.58),
+      fontWeight: FontWeight.w500,
+    ),
+    floatingLabelStyle: GoogleFonts.inter(
       color: cs.primary,
       fontWeight: FontWeight.w600,
     ),
@@ -199,22 +204,25 @@ InputDecorationTheme _inputTheme(ColorScheme cs) {
 
 ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
   final textTheme = _textTheme(colorScheme, colorScheme.brightness);
+  final isDark = colorScheme.brightness == Brightness.dark;
+
   return ThemeData(
     useMaterial3: true,
     colorScheme: colorScheme,
     textTheme: textTheme,
     extensions: [mf],
     scaffoldBackgroundColor: colorScheme.surface,
+    canvasColor: colorScheme.surface,
     appBarTheme: AppBarTheme(
       centerTitle: false,
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Colors.transparent,
       foregroundColor: colorScheme.onSurface,
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: GoogleFonts.dmSans(
+      titleTextStyle: GoogleFonts.manrope(
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: colorScheme.onSurface,
       ),
     ),
@@ -223,35 +231,31 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       color: colorScheme.surfaceContainerLowest,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MfRadius.md),
+        borderRadius: BorderRadius.circular(MfRadius.lg),
       ),
       margin: EdgeInsets.zero,
     ),
     inputDecorationTheme: _inputTheme(colorScheme),
     chipTheme: ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
-      selectedColor: colorScheme.primaryContainer,
-      disabledColor: colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.35,
-      ),
-      labelStyle: GoogleFonts.dmSans(
+      selectedColor: colorScheme.primaryContainer.withValues(alpha: 0.12),
+      disabledColor: colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
+      labelStyle: GoogleFonts.inter(
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: colorScheme.onSurface,
       ),
-      secondaryLabelStyle: GoogleFonts.dmSans(
+      secondaryLabelStyle: GoogleFonts.inter(
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: MfSpace.md,
         vertical: MfSpace.sm,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MfRadius.sm + 4),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       side: BorderSide(
-        color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        color: colorScheme.outlineVariant.withValues(alpha: 0.22),
       ),
       brightness: colorScheme.brightness,
     ),
@@ -259,74 +263,69 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       style: FilledButton.styleFrom(
         elevation: 0,
         padding: const EdgeInsets.symmetric(
-          vertical: MfSpace.md + 2,
+          vertical: MfSpace.md + 4,
           horizontal: MfSpace.xl,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.md),
-        ),
-        textStyle: GoogleFonts.dmSans(
-          fontWeight: FontWeight.w600,
-          fontSize: 15,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         elevation: 0,
         padding: const EdgeInsets.symmetric(
-          vertical: MfSpace.md + 2,
+          vertical: MfSpace.md + 4,
           horizontal: MfSpace.xl,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.md),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.55),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.36),
         ),
+        foregroundColor: colorScheme.onSurface,
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.sm),
-        ),
-        textStyle: GoogleFonts.dmSans(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        foregroundColor: colorScheme.primary,
+        textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14),
       ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      elevation: 2,
-      focusElevation: 2,
-      hoverElevation: 3,
-      highlightElevation: 2,
+      elevation: 0,
+      focusElevation: 0,
+      hoverElevation: 0,
+      highlightElevation: 0,
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MfRadius.lg),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
     navigationBarTheme: NavigationBarThemeData(
       elevation: 0,
-      height: 72,
+      height: 68,
       backgroundColor: Colors.transparent,
-      indicatorColor: colorScheme.primaryContainer.withValues(alpha: 0.55),
-      labelTextStyle: WidgetStateProperty.resolveWith((s) {
-        final selected = s.contains(WidgetState.selected);
-        return GoogleFonts.dmSans(
+      indicatorColor: colorScheme.primary.withValues(
+        alpha: isDark ? 0.22 : 0.1,
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return GoogleFonts.inter(
           fontSize: 11,
           fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          letterSpacing: 0.2,
+          letterSpacing: 0.1,
+          color: selected
+              ? colorScheme.primary
+              : colorScheme.onSurface.withValues(alpha: 0.52),
         );
       }),
-      iconTheme: WidgetStateProperty.resolveWith((s) {
-        final selected = s.contains(WidgetState.selected);
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
         return IconThemeData(
           color: selected
               ? colorScheme.primary
-              : colorScheme.onSurface.withValues(alpha: 0.45),
+              : colorScheme.onSurface.withValues(alpha: 0.48),
           size: 24,
         );
       }),
@@ -335,15 +334,21 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       behavior: SnackBarBehavior.floating,
       elevation: 0,
       backgroundColor: colorScheme.inverseSurface,
-      contentTextStyle: GoogleFonts.dmSans(color: colorScheme.onInverseSurface),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      contentTextStyle: GoogleFonts.inter(
+        color: colorScheme.onInverseSurface,
+        fontWeight: FontWeight.w500,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
     dividerTheme: DividerThemeData(
-      color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+      color: colorScheme.outlineVariant.withValues(alpha: 0.16),
       thickness: 1,
+      space: 1,
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: colorScheme.primary,
+      linearTrackColor: colorScheme.surfaceContainerHigh,
+      circularTrackColor: colorScheme.surfaceContainerHigh,
     ),
   );
 }
@@ -351,57 +356,18 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
 ThemeData buildAppTheme() =>
     _buildTheme(_lightScheme(), MoneyFlowThemeExtension.light);
 
-ThemeData buildAppDarkTheme() {
-  final cs = _darkScheme();
-  final base = _buildTheme(cs, MoneyFlowThemeExtension.dark);
-  return base.copyWith(
-    scaffoldBackgroundColor: MfPalette.phoneBg,
-    appBarTheme: base.appBarTheme.copyWith(
-      backgroundColor: MfPalette.phoneBg,
-      surfaceTintColor: Colors.transparent,
-      titleTextStyle: GoogleFonts.dmSans(
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
-        color: cs.onSurface,
-      ),
-    ),
-    cardTheme: CardThemeData(
-      elevation: 0,
-      color: MfPalette.cardBg,
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MfRadius.lg),
-      ),
-      margin: EdgeInsets.zero,
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      elevation: 0,
-      height: 60,
-      backgroundColor: const Color(0xF0111A14),
-      indicatorColor: cs.primaryContainer.withValues(alpha: 0.24),
-      labelTextStyle: WidgetStateProperty.resolveWith((s) {
-        final selected = s.contains(WidgetState.selected);
-        return GoogleFonts.dmSans(
-          fontSize: 11,
-          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-          letterSpacing: 0.2,
-        );
-      }),
-      iconTheme: WidgetStateProperty.resolveWith((s) {
-        final selected = s.contains(WidgetState.selected);
-        return IconThemeData(
-          color: selected ? cs.primary : cs.onSurface.withValues(alpha: 0.45),
-          size: 24,
-        );
-      }),
-    ),
-  );
-}
+ThemeData buildAppDarkTheme() =>
+    _buildTheme(_darkScheme(), MoneyFlowThemeExtension.dark);
 
 List<BoxShadow> ledgerAmbientFabShadows(ColorScheme cs) => [
   BoxShadow(
-    offset: const Offset(0, 10),
-    blurRadius: 28,
+    offset: const Offset(0, 14),
+    blurRadius: 36,
+    color: cs.shadow.withValues(alpha: 0.14),
+  ),
+  BoxShadow(
+    offset: const Offset(0, 4),
+    blurRadius: 12,
     color: cs.shadow.withValues(alpha: 0.08),
   ),
 ];

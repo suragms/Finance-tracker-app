@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/money_flow_tokens.dart';
 
-/// Premium card: soft shadow, rounded corners, optional glass border.
+/// Premium card: soft glass, layered highlights, optional tap state.
 class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
@@ -24,37 +24,55 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final blur = glass ? ImageFilter.blur(sigmaX: 20, sigmaY: 20) : null;
+    final background = glass
+        ? cs.surfaceContainerLowest.withValues(alpha: 0.72)
+        : cs.surfaceContainerLowest;
 
     Widget card = Container(
       margin: margin,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(MfRadius.md),
-        color: cs.surfaceContainerLowest.withValues(alpha: glass ? 0.65 : 1),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: glass ? 0.25 : 0.12),
-        ),
+        borderRadius: BorderRadius.circular(MfRadius.lg),
         boxShadow: [
           BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.06),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: cs.shadow.withValues(alpha: glass ? 0.12 : 0.08),
+            blurRadius: glass ? 32 : 24,
+            offset: const Offset(0, 16),
           ),
           BoxShadow(
-            color: cs.shadow.withValues(alpha: 0.03),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: cs.shadow.withValues(alpha: glass ? 0.06 : 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(MfRadius.md),
-        child: blur != null
-            ? BackdropFilter(
-                filter: blur,
-                child: Padding(padding: padding, child: child),
-              )
-            : Padding(padding: padding, child: child),
+        borderRadius: BorderRadius.circular(MfRadius.lg),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(
+            sigmaX: glass ? 28 : 0,
+            sigmaY: glass ? 28 : 0,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: BorderRadius.circular(MfRadius.lg),
+              border: Border.all(
+                color: glass
+                    ? cs.outlineVariant.withValues(alpha: 0.2)
+                    : cs.outlineVariant.withValues(alpha: 0.08),
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withValues(alpha: glass ? 0.2 : 0.08),
+                  Colors.white.withValues(alpha: 0),
+                ],
+              ),
+            ),
+            child: Padding(padding: padding, child: child),
+          ),
+        ),
       ),
     );
 
@@ -63,7 +81,9 @@ class AppCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(MfRadius.md),
+          borderRadius: BorderRadius.circular(MfRadius.lg),
+          splashColor: cs.primary.withValues(alpha: 0.06),
+          highlightColor: Colors.transparent,
           child: card,
         ),
       );

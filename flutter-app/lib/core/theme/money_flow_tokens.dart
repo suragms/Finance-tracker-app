@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 /// MoneyFlow AI - spacing, radii, motion.
 abstract final class MfRadius {
   static const double sm = 12;
   static const double md = 16;
-  static const double lg = 20;
-  static const double xl = 24;
+  static const double lg = 22;
+  static const double xl = 28;
 }
 
 abstract final class MfSpace {
@@ -21,45 +22,47 @@ abstract final class MfSpace {
 abstract final class MfMotion {
   static const Duration fast = Duration(milliseconds: 180);
   static const Duration medium = Duration(milliseconds: 320);
+  static const Duration slow = Duration(milliseconds: 460);
   static const Curve curve = Curves.easeOutCubic;
 }
 
 /// Brand + semantic colors (use with [ColorScheme] in theme).
 abstract final class MfPalette {
   // Canvas
-  static const Color canvas = Color(0xFF0A0F0D);
-  static const Color phoneBg = Color(0xFF0A0F0D);
-  static const Color cardBg = Color(0xCC111A14);
-  static const Color cardBorder = Color(0x2634D399);
+  static const Color canvas = Color(0xFF07112D);
+  static const Color phoneBg = Color(0xFF091227);
+  static const Color cardBg = Color(0xD9FFFFFF);
+  static const Color cardBorder = Color(0x24FFFFFF);
 
   // Brand
-  static const Color primary = Color(0xFF10B981);
-  static const Color primaryDark = Color(0xFF059669);
-  static const Color primaryLight = Color(0xFF34D399);
-  static const Color primaryGlow = Color(0xFF6EE7B7);
+  static const Color primary = Color(0xFF000B60);
+  static const Color primaryDark = Color(0xFF000844);
+  static const Color primaryLight = Color(0xFF2236A8);
+  static const Color primaryGlow = Color(0xFF7C8EFF);
 
   // Semantic
-  static const Color incomeGreen = Color(0xFF34D399);
-  static const Color expenseRed = Color(0xFFF87171);
-  static const Color warningAmber = Color(0xFFFBBF24);
+  static const Color incomeGreen = Color(0xFF10997A);
+  static const Color expenseRed = Color(0xFFD06B5E);
+  static const Color warningAmber = Color(0xFFE6A93D);
+  static const Color insightBlue = Color(0xFF4B79F8);
 
   // Hero card gradient stops
-  static const Color heroStart = Color(0xFF10B981);
-  static const Color heroMid = Color(0xFF0B8A65);
-  static const Color heroEnd = Color(0xFF059669);
+  static const Color heroStart = Color(0xFF000B60);
+  static const Color heroMid = Color(0xFF142283);
+  static const Color heroEnd = Color(0xFF3F68FF);
 
   // Text
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textMuted = Color(0xB3E5F7EF);
-  static const Color textHint = Color(0x66D1FAE5);
+  static const Color textMuted = Color(0xB3EDF1FF);
+  static const Color textHint = Color(0x66EDF1FF);
 
   // Legacy aliases (keep for non-redesigned screens)
-  static const Color lightBg = Color(0xFFF0FDF4);
+  static const Color lightBg = Color(0xFFF8F9FA);
   static const Color lightBgElevated = Color(0xFFFFFFFF);
-  static const Color lightMuted = Color(0xFF4B6355);
-  static const Color darkBg = Color(0xFF0A0F0D);
-  static const Color darkBgElevated = Color(0xFF111A14);
-  static const Color darkMuted = Color(0xFF8DA89A);
+  static const Color lightMuted = Color(0xFF5D6471);
+  static const Color darkBg = Color(0xFF091227);
+  static const Color darkBgElevated = Color(0xFF111A35);
+  static const Color darkMuted = Color(0xFF98A3C5);
 
   /// Backwards-compatible names used by older widgets / light theme.
   static const Color success = incomeGreen;
@@ -89,11 +92,22 @@ abstract final class MfCurrency {
     }
     return format(value);
   }
+
+  /// Indian grouping + ₹ (en_IN). Use for API/map numeric strings shown in UI.
+  static String formatInr(dynamic raw) {
+    final n = double.tryParse(raw?.toString() ?? '0') ?? 0;
+    final digits = n == n.roundToDouble() ? 0 : 2;
+    return NumberFormat.currency(
+      locale: 'en_IN',
+      symbol: symbol,
+      decimalDigits: digits,
+    ).format(n);
+  }
 }
 
 const String kCurrencySymbol = MfCurrency.symbol;
 
-/// Glass card decoration - use for ALL card widgets.
+/// Glass card decoration - use for premium list and summary cards.
 BoxDecoration glassCard({
   Color? color,
   double borderRadius = MfRadius.lg,
@@ -101,7 +115,11 @@ BoxDecoration glassCard({
 }) => BoxDecoration(
   color: color ?? MfPalette.cardBg,
   borderRadius: BorderRadius.circular(borderRadius),
-  border: Border.all(color: borderColor ?? MfPalette.cardBorder, width: 1),
+  border: Border.all(color: borderColor ?? const Color(0x26FFFFFF), width: 1),
+  boxShadow: const [
+    BoxShadow(offset: Offset(0, 18), blurRadius: 48, color: Color(0x12000B60)),
+    BoxShadow(offset: Offset(0, 6), blurRadius: 18, color: Color(0x100C152F)),
+  ],
 );
 
 /// Hero gradient - for balance/summary cards.
@@ -110,16 +128,19 @@ BoxDecoration heroCardDecoration() => BoxDecoration(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [MfPalette.heroStart, MfPalette.heroMid, MfPalette.heroEnd],
-    stops: [0.0, 0.6, 1.0],
+    stops: [0.0, 0.58, 1.0],
   ),
   borderRadius: BorderRadius.circular(MfRadius.xl),
-  border: Border.all(color: const Color(0x2634D399), width: 1),
+  border: Border.all(color: const Color(0x24FFFFFF), width: 1),
+  boxShadow: const [
+    BoxShadow(offset: Offset(0, 28), blurRadius: 52, color: Color(0x33000B60)),
+  ],
 );
 
 LinearGradient incomeGradient() => LinearGradient(
   colors: [
-    MfPalette.incomeGreen.withValues(alpha: 0.85),
-    MfPalette.incomeGreen.withValues(alpha: 0.50),
+    MfPalette.incomeGreen.withValues(alpha: 0.96),
+    MfPalette.incomeGreen.withValues(alpha: 0.62),
   ],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
@@ -127,8 +148,8 @@ LinearGradient incomeGradient() => LinearGradient(
 
 LinearGradient expenseGradient(Color categoryColor) => LinearGradient(
   colors: [
-    categoryColor.withValues(alpha: 0.85),
-    categoryColor.withValues(alpha: 0.50),
+    categoryColor.withValues(alpha: 0.94),
+    categoryColor.withValues(alpha: 0.58),
   ],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
@@ -153,14 +174,14 @@ class MoneyFlowThemeExtension extends ThemeExtension<MoneyFlowThemeExtension> {
     success: MfPalette.incomeGreen,
     onSuccess: Colors.white,
     warning: MfPalette.warningAmber,
-    glassOpacity: 0.72,
+    glassOpacity: 0.78,
   );
 
   static const dark = MoneyFlowThemeExtension(
     success: MfPalette.incomeGreen,
-    onSuccess: Color(0xFF022C1A),
+    onSuccess: Color(0xFF06120E),
     warning: MfPalette.warningAmber,
-    glassOpacity: 0.55,
+    glassOpacity: 0.48,
   );
 
   @override

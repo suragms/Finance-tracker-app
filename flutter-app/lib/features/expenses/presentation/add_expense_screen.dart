@@ -396,7 +396,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                                   (a) => DropdownMenuItem<String>(
                                     value: a['id']?.toString(),
                                     child: Text(
-                                      '${a['name']?.toString() ?? ''} (${a['balance']?.toString() ?? '0'})',
+                                      '${a['name']?.toString() ?? ''} (${MfCurrency.formatInr(a['balance'])})',
                                     ),
                                   ),
                                 )

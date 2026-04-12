@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dio_errors.dart';
+import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/widgets/ledger_ui.dart';
 import '../../accounts/application/account_providers.dart';
@@ -140,7 +141,7 @@ class _AddIncomeScreenState extends ConsumerState<AddIncomeScreen> {
                             (a) => DropdownMenuItem<String>(
                               value: a['id']?.toString(),
                               child: Text(
-                                '${a['name']?.toString() ?? ''} (${a['balance']?.toString() ?? '0'})',
+                                '${a['name']?.toString() ?? ''} (${MfCurrency.formatInr(a['balance'])})',
                               ),
                             ),
                           )

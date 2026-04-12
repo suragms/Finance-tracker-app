@@ -29,22 +29,26 @@ class AppButton extends StatefulWidget {
 
 class _AppButtonState extends State<AppButton>
     with SingleTickerProviderStateMixin {
-  late AnimationController _c;
-  late Animation<double> _scale;
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
 
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(vsync: this, duration: MfMotion.fast);
+    _controller = AnimationController(
+      vsync: this,
+      duration: MfMotion.fast,
+      reverseDuration: MfMotion.fast,
+    );
     _scale = Tween<double>(
       begin: 1,
-      end: 0.97,
-    ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
+      end: 0.98,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
   }
 
   @override
   void dispose() {
-    _c.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -53,238 +57,142 @@ class _AppButtonState extends State<AppButton>
     final cs = Theme.of(context).colorScheme;
     final disabled = widget.onPressed == null || widget.loading;
 
-    return GestureDetector(
-      onTapDown: (_) => _c.forward(),
-      onTapUp: (_) => _c.reverse(),
-      onTapCancel: () => _c.reverse(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: AnimatedOpacity(
-          duration: MfMotion.fast,
-          opacity: disabled ? 0.55 : 1,
-          child: switch (widget.variant) {
-            AppButtonVariant.primary => _Primary(
-              label: widget.label,
-              icon: widget.icon,
-              loading: widget.loading,
-              expand: widget.expand,
-              onPressed: disabled ? null : widget.onPressed,
-            ),
-            AppButtonVariant.secondary => _Secondary(
-              label: widget.label,
-              icon: widget.icon,
-              loading: widget.loading,
-              expand: widget.expand,
-              onPressed: disabled ? null : widget.onPressed,
-              cs: cs,
-            ),
-            AppButtonVariant.ghost => _Ghost(
-              label: widget.label,
-              icon: widget.icon,
-              loading: widget.loading,
-              expand: widget.expand,
-              onPressed: disabled ? null : widget.onPressed,
-              cs: cs,
-            ),
-          },
+    return ScaleTransition(
+      scale: _scale,
+      child: AnimatedOpacity(
+        duration: MfMotion.fast,
+        opacity: disabled ? 0.55 : 1,
+        child: _ButtonFrame(
+          variant: widget.variant,
+          expand: widget.expand,
+          onTap: disabled ? null : widget.onPressed,
+          onTapDown: () => _controller.forward(),
+          onTapEnd: () => _controller.reverse(),
+          child: widget.loading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: switch (widget.variant) {
+                      AppButtonVariant.primary => cs.onPrimary,
+                      AppButtonVariant.secondary => cs.primary,
+                      AppButtonVariant.ghost => cs.onSurface,
+                    },
+                  ),
+                )
+              : Row(
+                  mainAxisSize: widget.expand
+                      ? MainAxisSize.max
+                      : MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (widget.icon != null) ...[
+                      Icon(
+                        widget.icon,
+                        size: 18,
+                        color: switch (widget.variant) {
+                          AppButtonVariant.primary => cs.onPrimary,
+                          AppButtonVariant.secondary => cs.primary,
+                          AppButtonVariant.ghost => cs.onSurface,
+                        },
+                      ),
+                      const SizedBox(width: MfSpace.sm),
+                    ],
+                    Text(
+                      widget.label,
+                      style: GoogleFonts.inter(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: switch (widget.variant) {
+                          AppButtonVariant.primary => cs.onPrimary,
+                          AppButtonVariant.secondary => cs.primary,
+                          AppButtonVariant.ghost => cs.onSurface,
+                        },
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );
   }
 }
 
-class _Primary extends StatelessWidget {
-  const _Primary({
-    required this.label,
-    required this.onPressed,
-    this.icon,
-    this.loading = false,
-    this.expand = true,
+class _ButtonFrame extends StatelessWidget {
+  const _ButtonFrame({
+    required this.variant,
+    required this.expand,
+    required this.onTap,
+    required this.onTapDown,
+    required this.onTapEnd,
+    required this.child,
   });
 
-  final String label;
-  final VoidCallback? onPressed;
-  final IconData? icon;
-  final bool loading;
+  final AppButtonVariant variant;
   final bool expand;
+  final VoidCallback? onTap;
+  final VoidCallback onTapDown;
+  final VoidCallback onTapEnd;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final child = loading
-        ? SizedBox(
-            height: 22,
-            width: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: cs.onPrimary,
+
+    final decoration = switch (variant) {
+      AppButtonVariant.primary => BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [MfPalette.heroStart, MfPalette.heroMid, MfPalette.heroEnd],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cs.primary.withValues(alpha: 0.24),
+            blurRadius: 28,
+            offset: const Offset(0, 16),
+          ),
+        ],
+      ),
+      AppButtonVariant.secondary => BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: cs.surfaceContainerLowest.withValues(alpha: 0.76),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.18)),
+      ),
+      AppButtonVariant.ghost => BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: cs.surfaceContainerLow.withValues(alpha: 0.62),
+      ),
+    };
+
+    return SizedBox(
+      width: expand ? double.infinity : null,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          onTapDown: (_) => onTapDown(),
+          onTapUp: (_) => onTapEnd(),
+          onTapCancel: onTapEnd,
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            decoration: decoration,
+            child: Container(
+              constraints: BoxConstraints(
+                minHeight: variant == AppButtonVariant.ghost ? 48 : 54,
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: MfSpace.lg,
+                vertical: MfSpace.md,
+              ),
+              alignment: Alignment.center,
+              child: child,
             ),
-          )
-        : Row(
-            mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 20, color: cs.onPrimary),
-                const SizedBox(width: MfSpace.sm),
-              ],
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: cs.onPrimary,
-                ),
-              ),
-            ],
-          );
-
-    return FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        minimumSize: expand
-            ? const Size(double.infinity, 52)
-            : const Size(0, 52),
-        padding: const EdgeInsets.symmetric(
-          horizontal: MfSpace.xl,
-          vertical: MfSpace.md,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.md),
-        ),
-        elevation: 0,
-        backgroundColor: cs.primary,
-        foregroundColor: cs.onPrimary,
-      ),
-      child: child,
-    );
-  }
-}
-
-class _Secondary extends StatelessWidget {
-  const _Secondary({
-    required this.label,
-    required this.onPressed,
-    required this.cs,
-    this.icon,
-    this.loading = false,
-    this.expand = true,
-  });
-
-  final String label;
-  final VoidCallback? onPressed;
-  final ColorScheme cs;
-  final IconData? icon;
-  final bool loading;
-  final bool expand;
-
-  @override
-  Widget build(BuildContext context) {
-    final child = loading
-        ? SizedBox(
-            height: 22,
-            width: 22,
-            child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-          )
-        : Row(
-            mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 20, color: cs.primary),
-                const SizedBox(width: MfSpace.sm),
-              ],
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: cs.primary,
-                ),
-              ),
-            ],
-          );
-
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: expand
-            ? const Size(double.infinity, 52)
-            : const Size(0, 52),
-        padding: const EdgeInsets.symmetric(
-          horizontal: MfSpace.xl,
-          vertical: MfSpace.md,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.md),
-        ),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
-        foregroundColor: cs.primary,
-      ),
-      child: child,
-    );
-  }
-}
-
-class _Ghost extends StatelessWidget {
-  const _Ghost({
-    required this.label,
-    required this.onPressed,
-    required this.cs,
-    this.icon,
-    this.loading = false,
-    this.expand = true,
-  });
-
-  final String label;
-  final VoidCallback? onPressed;
-  final ColorScheme cs;
-  final IconData? icon;
-  final bool loading;
-  final bool expand;
-
-  @override
-  Widget build(BuildContext context) {
-    final child = loading
-        ? SizedBox(
-            height: 22,
-            width: 22,
-            child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-          )
-        : Row(
-            mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  size: 20,
-                  color: cs.onSurface.withValues(alpha: 0.75),
-                ),
-                const SizedBox(width: MfSpace.sm),
-              ],
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: cs.onSurface.withValues(alpha: 0.85),
-                ),
-              ),
-            ],
-          );
-
-    return TextButton(
-      onPressed: onPressed,
-      style: TextButton.styleFrom(
-        minimumSize: expand
-            ? const Size(double.infinity, 48)
-            : const Size(0, 48),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.sm),
+          ),
         ),
       ),
-      child: child,
     );
   }
 }

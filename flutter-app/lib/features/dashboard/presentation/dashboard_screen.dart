@@ -623,7 +623,7 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             child: Text(
                               (src.isNotEmpty ? src[0] : '?').toUpperCase(),
-                              style: GoogleFonts.dmSans(
+                              style: GoogleFonts.plusJakartaSans(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 14,
                                 color: Colors.white,
@@ -654,7 +654,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           Text(
                             _formatCompactCurrency(amt),
-                            style: GoogleFonts.dmMono(
+                            style: GoogleFonts.manrope(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                               color: MfPalette.incomeGreen,
@@ -745,7 +745,7 @@ class _FintechSectionTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: cs.onSurface,
@@ -754,7 +754,7 @@ class _FintechSectionTitle extends StatelessWidget {
         const SizedBox(height: MfSpace.xs - 2),
         Text(
           subtitle,
-          style: GoogleFonts.dmSans(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 12,
             color: cs.onSurface.withValues(alpha: 0.5),
           ),
@@ -823,7 +823,7 @@ class _DashboardHeroCard extends StatelessWidget {
         children: [
           Text(
             'Total Balance',
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               color: MfPalette.textMuted,
               letterSpacing: 0.04,
@@ -836,7 +836,7 @@ class _DashboardHeroCard extends StatelessWidget {
               color: Colors.transparent,
               child: Text(
                 balance,
-                style: GoogleFonts.dmMono(
+                style: GoogleFonts.manrope(
                   fontSize: 34,
                   fontWeight: FontWeight.w600,
                   color: MfPalette.textPrimary,
@@ -903,7 +903,7 @@ class _DashboardHeroStatChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: GoogleFonts.dmSans(fontSize: 11, color: MfPalette.textMuted),
+            style: GoogleFonts.plusJakartaSans(fontSize: 11, color: MfPalette.textMuted),
           ),
           const SizedBox(height: MfSpace.xs - 1),
           Row(
@@ -911,7 +911,7 @@ class _DashboardHeroStatChip extends StatelessWidget {
               Flexible(
                 child: Text(
                   value,
-                  style: GoogleFonts.dmMono(
+                  style: GoogleFonts.manrope(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: MfPalette.textPrimary,
@@ -934,7 +934,7 @@ class _DashboardHeroStatChip extends StatelessWidget {
                 ),
                 child: Text(
                   change,
-                  style: GoogleFonts.dmMono(
+                  style: GoogleFonts.manrope(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                     color: isUp ? MfPalette.incomeGreen : MfPalette.expenseRed,

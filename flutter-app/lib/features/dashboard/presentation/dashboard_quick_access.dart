@@ -126,7 +126,7 @@ class DashboardQuickAccess extends StatelessWidget {
           children: [
             Text(
               'Quick access',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 17,
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface,
@@ -135,7 +135,7 @@ class DashboardQuickAccess extends StatelessWidget {
             const SizedBox(height: MfSpace.xs),
             Text(
               'Jump to accounts, planning, and tools',
-              style: GoogleFonts.dmSans(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: cs.onSurface.withValues(alpha: 0.5),
               ),
@@ -145,8 +145,16 @@ class DashboardQuickAccess extends StatelessWidget {
         const SizedBox(height: MfSpace.md),
         LayoutBuilder(
           builder: (context, c) {
-            final cols = c.maxWidth > 480 ? 3 : 2;
-            final ratio = cols == 3 ? 0.92 : 1.0;
+            final cols = c.maxWidth > 640
+                ? 4
+                : c.maxWidth > 400
+                    ? 3
+                    : 2;
+            final ratio = cols == 4
+                ? 1.1
+                : cols == 3
+                    ? 0.92
+                    : 1.0;
             return GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -219,8 +227,21 @@ class _QuickTile extends StatelessWidget {
               const SizedBox(height: MfSpace.sm),
               Text(
                 link.title,
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface.withValues(alpha: 0.88),
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                link.subtitle,
+                style: GoogleFonts.inter(
                   fontSize: 10,
+                  fontWeight: FontWeight.w500,
                   color: cs.onSurface.withValues(alpha: 0.45),
                 ),
                 textAlign: TextAlign.center,

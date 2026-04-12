@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/navigation/ledger_page_routes.dart';
+import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/widgets/ledger_ui.dart';
 import '../../dashboard/application/dashboard_providers.dart';
@@ -84,19 +85,19 @@ class ReportsScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       _ReportStatRow(
                         label: 'Income',
-                        value: m['totalIncome']?.toString() ?? '0',
+                        value: MfCurrency.formatInr(m['totalIncome']),
                         color: cs.tertiary,
                       ),
                       const SizedBox(height: 6),
                       _ReportStatRow(
                         label: 'Expenses',
-                        value: m['totalExpenses']?.toString() ?? '0',
+                        value: MfCurrency.formatInr(m['totalExpenses']),
                         color: cs.error,
                       ),
                       const SizedBox(height: 10),
                       _ReportStatRow(
                         label: 'Cash flow',
-                        value: m['netCashFlow']?.toString() ?? '0',
+                        value: MfCurrency.formatInr(m['netCashFlow']),
                         color: cs.primary,
                       ),
                       Text(
@@ -162,24 +163,25 @@ class ReportsScreen extends ConsumerWidget {
                             children: [
                               _ReportStatRow(
                                 label: 'Total expense (incl. tax)',
-                                value:
-                                    tm['totalTaxableExpenseAmount']
-                                        ?.toString() ??
-                                    '0',
+                                value: MfCurrency.formatInr(
+                                  tm['totalTaxableExpenseAmount'],
+                                ),
                                 color: cs.onSurface,
                               ),
                               const SizedBox(height: 6),
                               _ReportStatRow(
                                 label: 'Total tax',
-                                value: tm['totalTaxAmount']?.toString() ?? '0',
+                                value: MfCurrency.formatInr(
+                                  tm['totalTaxAmount'],
+                                ),
                                 color: cs.tertiary,
                               ),
                               const SizedBox(height: 6),
                               _ReportStatRow(
                                 label: 'Net (excl. tax)',
-                                value:
-                                    tm['totalNetExcludingTax']?.toString() ??
-                                    '0',
+                                value: MfCurrency.formatInr(
+                                  tm['totalNetExcludingTax'],
+                                ),
                                 color: cs.primary,
                               ),
                               const SizedBox(height: 12),
@@ -298,14 +300,14 @@ class ReportsScreen extends ConsumerWidget {
                 children: [
                   Text(label, style: Theme.of(context).textTheme.bodyMedium),
                   Text(
-                    'Net $net',
+                    'Net ${MfCurrency.formatInr(net)}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
               ),
             ),
             Text(
-              tax,
+              MfCurrency.formatInr(tax),
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w600,
                 color: cs.tertiary,
@@ -345,7 +347,7 @@ class ReportsScreen extends ConsumerWidget {
               ),
             ),
             Text(
-              tax,
+              MfCurrency.formatInr(tax),
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
@@ -383,7 +385,7 @@ class ReportsScreen extends ConsumerWidget {
               child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
             ),
             Text(
-              total,
+              MfCurrency.formatInr(total),
               style: GoogleFonts.manrope(
                 fontWeight: FontWeight.w600,
                 color: cs.onSurface,

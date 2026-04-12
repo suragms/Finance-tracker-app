@@ -388,7 +388,7 @@ class _BrandPanel extends StatelessWidget {
                   const SizedBox(width: 10),
                   Text(
                     'MoneyFlow',
-                    style: GoogleFonts.dmSans(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -399,7 +399,7 @@ class _BrandPanel extends StatelessWidget {
               const SizedBox(height: 48),
               Text(
                 'Your finances,\nclearer than ever.',
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 38,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
@@ -409,7 +409,7 @@ class _BrandPanel extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Track spending, understand patterns,\nand build better money habits.',
-                style: GoogleFonts.dmSans(
+                style: GoogleFonts.plusJakartaSans(
                   fontSize: 15,
                   color: Colors.white.withValues(alpha: 0.7),
                 ),
@@ -464,9 +464,9 @@ class _BrandHeader extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: Text(
                 'MONEYFLOW AI',
-                style: GoogleFonts.dmMono(
+                style: GoogleFonts.manrope(
                   fontSize: 22,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 2.4,
                   color: MfPalette.textPrimary,
                 ),
@@ -632,7 +632,7 @@ class _FeaturePill extends StatelessWidget {
           const SizedBox(width: 10),
           Text(
             label,
-            style: GoogleFonts.dmSans(
+            style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: Colors.white,

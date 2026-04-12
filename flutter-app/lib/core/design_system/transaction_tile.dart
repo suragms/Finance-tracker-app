@@ -5,12 +5,12 @@ import '../theme/money_flow_tokens.dart';
 
 Color _categoryColor(String? name) {
   final colors = [
-    Color(0xFF10B981),
-    Color(0xFF6366F1),
-    Color(0xFFF59E0B),
-    Color(0xFFEC4899),
-    Color(0xFF3B82F6),
-    Color(0xFF8B5CF6),
+    const Color(0xFF4B79F8),
+    const Color(0xFF10997A),
+    const Color(0xFFE6A93D),
+    const Color(0xFFD06B5E),
+    const Color(0xFF6B74F8),
+    const Color(0xFF8E5CF6),
   ];
   final idx = (name?.codeUnits.fold(0, (a, b) => a + b) ?? 0) % colors.length;
   return colors[idx];
@@ -41,34 +41,40 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final accent = isExpense ? MfPalette.expenseRed : MfPalette.incomeGreen;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(MfRadius.lg),
         child: Container(
-          decoration: glassCard(borderRadius: MfRadius.lg),
+          decoration: glassCard(
+            borderRadius: MfRadius.lg,
+            color: cs.surfaceContainerLowest.withValues(alpha: 0.76),
+            borderColor: cs.outlineVariant.withValues(alpha: 0.14),
+          ),
           padding: const EdgeInsets.symmetric(
             horizontal: MfSpace.lg,
-            vertical: MfSpace.md,
+            vertical: MfSpace.lg,
           ),
           child: Row(
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   gradient: isExpense
                       ? expenseGradient(avatarColor)
                       : incomeGradient(),
-                  borderRadius: BorderRadius.circular(MfRadius.sm),
+                  borderRadius: BorderRadius.circular(MfRadius.md),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   avatarLabel.toUpperCase(),
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  style: GoogleFonts.manrope(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
                   ),
                 ),
@@ -88,13 +94,13 @@ class TransactionTile extends StatelessWidget {
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             title,
-                            style: GoogleFonts.dmSans(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
+                            style: GoogleFonts.manrope(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
                               color: cs.onSurface,
                             ),
                             maxLines: 1,
@@ -103,33 +109,58 @@ class TransactionTile extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: MfSpace.xs - 2),
-                    Text(
-                      subtitle,
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: cs.onSurface.withValues(alpha: 0.45),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerLow.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        subtitle.isEmpty ? 'No note attached' : subtitle,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: cs.onSurface.withValues(alpha: 0.64),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Text(
-                isExpense ? '−$amount' : '+$amount',
-                style: GoogleFonts.dmMono(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isExpense
-                      ? MfPalette.expenseRed
-                      : MfPalette.incomeGreen,
-                ),
+              const SizedBox(width: MfSpace.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      isExpense ? '-$amount' : '+$amount',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+                  if (endAction != null) ...[
+                    const SizedBox(height: MfSpace.xs),
+                    endAction!,
+                  ],
+                ],
               ),
-              if (endAction != null) ...[
-                const SizedBox(width: MfSpace.sm),
-                endAction!,
-              ],
             ],
           ),
         ),

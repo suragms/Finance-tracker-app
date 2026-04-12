@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,65 +36,111 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: IndexedStack(
-        index: _index,
-        children: const [
-          MoneyFlowHomeScreen(),
-          ExpenseListScreen(),
-          ReportsScreen(),
-          InsightsScreen(),
-          ProfileScreen(),
+      extendBody: true,
+      backgroundColor: cs.surface,
+      body: Stack(
+        children: [
+          Positioned(
+            top: -140,
+            right: -70,
+            child: IgnorePointer(
+              child: Container(
+                width: 280,
+                height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      cs.primary.withValues(alpha: 0.12),
+                      cs.primary.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          IndexedStack(
+            index: _index,
+            children: const [
+              MoneyFlowHomeScreen(),
+              ExpenseListScreen(),
+              ReportsScreen(),
+              InsightsScreen(),
+              ProfileScreen(),
+            ],
+          ),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xF00D1120),
-          border: Border(top: BorderSide(color: Color(0x14FFFFFF), width: 1)),
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.fromLTRB(
+          MfSpace.lg,
+          0,
+          MfSpace.lg,
+          bottomInset == 0 ? MfSpace.lg : bottomInset,
         ),
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            MfSpace.md,
-            MfSpace.sm,
-            MfSpace.md,
-            MfSpace.sm,
-          ),
-          child: NavigationBar(
-            height: 60,
-            backgroundColor: Colors.transparent,
-            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home_rounded),
-                label: 'Home',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
+            child: Container(
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLowest.withValues(alpha: 0.82),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(
+                  color: cs.outlineVariant.withValues(alpha: 0.14),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.shadow.withValues(alpha: 0.14),
+                    blurRadius: 40,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
               ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded),
-                label: 'Expenses',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MfSpace.sm,
+                  vertical: MfSpace.xs,
+                ),
+                child: NavigationBar(
+                  labelBehavior:
+                      NavigationDestinationLabelBehavior.onlyShowSelected,
+                  selectedIndex: _index,
+                  onDestinationSelected: (i) => setState(() => _index = i),
+                  destinations: const [
+                    NavigationDestination(
+                      icon: Icon(Icons.home_outlined),
+                      selectedIcon: Icon(Icons.home_rounded),
+                      label: 'Home',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.receipt_long_outlined),
+                      selectedIcon: Icon(Icons.receipt_long_rounded),
+                      label: 'Expenses',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.bar_chart_outlined),
+                      selectedIcon: Icon(Icons.bar_chart_rounded),
+                      label: 'Reports',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.auto_awesome_outlined),
+                      selectedIcon: Icon(Icons.auto_awesome_rounded),
+                      label: 'Insights',
+                    ),
+                    NavigationDestination(
+                      icon: Icon(Icons.person_outline_rounded),
+                      selectedIcon: Icon(Icons.person_rounded),
+                      label: 'Profile',
+                    ),
+                  ],
+                ),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart_rounded),
-                label: 'Reports',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.auto_awesome_outlined),
-                selectedIcon: Icon(Icons.auto_awesome),
-                label: 'Insights',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline_rounded),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'Profile',
-              ),
-            ],
+            ),
           ),
         ),
       ),

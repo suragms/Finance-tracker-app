@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/dio_errors.dart';
+import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/widgets/ledger_ui.dart';
 import '../../expenses/presentation/expense_list_screen.dart';
@@ -192,7 +193,7 @@ class AccountsScreen extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              bal,
+                              MfCurrency.formatInr(bal),
                               style: GoogleFonts.manrope(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 18,

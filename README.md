@@ -15,10 +15,22 @@ Full-stack personal finance tracker: **Flutter** client (`flutter-app/`), **Nest
 
 **Backend**
 
+Use **either** a local PostgreSQL install **or** Docker.
+
+- **Local Postgres** (typical port **5432**): create a database named `moneyflow`, set `DATABASE_URL` in `nest-backend/.env` (for example `postgresql://postgres:YOUR_PASSWORD@localhost:5432/moneyflow`), then migrate.
+
+- **Docker** (Postgres on host port **5433** to avoid clashing with a local server on 5432):
+
+```bash
+docker compose up -d postgres
+```
+
+Then:
+
 ```bash
 cd nest-backend
 npm install
-cp .env.example .env   # edit DATABASE_URL, secrets, etc.
+cp .env.example .env   # edit DATABASE_URL to match your Postgres
 npx prisma migrate dev
 npm run start:dev
 ```
