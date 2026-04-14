@@ -5,6 +5,9 @@ import '../../../core/offline/no_api_dashboard.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../data/reports_api.dart';
 
+/// Year + month (1–12) for MVP expense report charts.
+typedef ExpenseMvpMonth = ({int year, int month});
+
 final monthlySummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>(
   (ref) async {
     if (kNoApiMode) {
@@ -38,3 +41,19 @@ final taxSummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   }
   return ref.watch(reportsApiProvider).taxSummary(details: true);
 });
+
+final expenseMvpProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>, ExpenseMvpMonth>((ref, m) async {
+      if (kNoApiMode) {
+        return buildOfflineExpenseMvp(
+          ref.watch(ledgerDatabaseProvider),
+          m.year,
+          m.month,
+        );
+      }
+      return ref.watch(reportsApiProvider).expenseMvp(
+            year: m.year,
+            month: m.month,
+            trendMonths: 12,
+          );
+    });

@@ -145,7 +145,19 @@ class DashboardScreen extends ConsumerWidget {
                       expenseChange: '+0%',
                     ),
                     const SizedBox(height: LedgerGap.lg),
-                    _MetricCardsRow(thisMonth: tm),
+                    _MetricCardsRow(
+                      thisMonth: tm,
+                      totalSpentAllTime:
+                          dash['totalSpentAllTime']?.toString(),
+                      recurringTotal:
+                          dash['recurringMonthlyTotal']?.toString(),
+                      recurringNote: dash['recurringNote']?.toString(),
+                      upcomingPayments: dash['upcomingPayments'] is Map
+                          ? Map<String, dynamic>.from(
+                              dash['upcomingPayments'] as Map,
+                            )
+                          : null,
+                    ),
                     const SizedBox(height: LedgerGap.lg),
                     const DashboardQuickAccess(),
                     const SizedBox(height: LedgerGap.xl),
@@ -277,7 +289,9 @@ class DashboardScreen extends ConsumerWidget {
                                     if (i < 0 || i >= top.length) return null;
                                     final id =
                                         top[i]['categoryId']?.toString() ?? '';
-                                    final name = catNames[id] ?? id;
+                                    final name = top[i]['name']?.toString() ??
+                                        catNames[id] ??
+                                        id;
                                     return BarTooltipItem(
                                       '$name\n${rod.toY.toStringAsFixed(0)}',
                                       GoogleFonts.inter(
@@ -299,7 +313,9 @@ class DashboardScreen extends ConsumerWidget {
                                   }
                                   final id =
                                       top[i]['categoryId']?.toString() ?? '';
-                                  final raw = catNames[id] ?? id;
+                                  final raw = top[i]['name']?.toString() ??
+                                      catNames[id] ??
+                                      id;
                                   final short = raw.length > 8
                                       ? '${raw.substring(0, 7)}…'
                                       : raw;
@@ -950,9 +966,19 @@ class _DashboardHeroStatChip extends StatelessWidget {
 }
 
 class _MetricCardsRow extends StatelessWidget {
-  const _MetricCardsRow({required this.thisMonth});
+  const _MetricCardsRow({
+    required this.thisMonth,
+    this.totalSpentAllTime,
+    this.recurringTotal,
+    this.recurringNote,
+    this.upcomingPayments,
+  });
 
   final Map<String, dynamic> thisMonth;
+  final String? totalSpentAllTime;
+  final String? recurringTotal;
+  final String? recurringNote;
+  final Map<String, dynamic>? upcomingPayments;
 
   @override
   Widget build(BuildContext context) {
@@ -962,6 +988,12 @@ class _MetricCardsRow extends StatelessWidget {
     final savings = _formatCompactCurrency(
       thisMonth['netSavings']?.toString() ?? thisMonth['netCashFlow'],
     );
+    final allTime = totalSpentAllTime != null && totalSpentAllTime!.isNotEmpty
+        ? _formatCompactCurrency(totalSpentAllTime)
+        : '—';
+    final recur = recurringTotal != null && recurringTotal!.isNotEmpty
+        ? _formatCompactCurrency(recurringTotal)
+        : '—';
 
     Widget tile(String title, String value, Color accent) {
       return Expanded(
@@ -994,19 +1026,26 @@ class _MetricCardsRow extends StatelessWidget {
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            tile('Income', income, _incomeGreen),
+            tile('Total spent', allTime, cs.onSurface),
             const SizedBox(width: 10),
-            tile('Expenses', expense, _expenseRose),
+            tile('This month', expense, _expenseRose),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            tile('Net savings', savings, cs.primary),
+            tile('Income', income, _incomeGreen),
             const SizedBox(width: 10),
+            tile('Net savings', savings, cs.primary),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
             Expanded(
               child: _FintechCard(
                 padding: const EdgeInsets.all(14),
@@ -1014,7 +1053,7 @@ class _MetricCardsRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Month',
+                      'Recurring (MVP)',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
@@ -1023,18 +1062,78 @@ class _MetricCardsRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      thisMonth['month']?.toString() ?? '—',
+                      recur,
                       style: GoogleFonts.manrope(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: cs.onSurface,
+                        color: cs.onSurface.withValues(alpha: 0.85),
                       ),
                     ),
+                    if (recurringNote != null && recurringNote!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        recurringNote!,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: cs.onSurface.withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _FintechCard(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upcoming',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      upcomingPayments == null
+                          ? '—'
+                          : '${upcomingPayments!['count'] ?? 0} due',
+                      style: GoogleFonts.manrope(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface.withValues(alpha: 0.85),
+                      ),
+                    ),
+                    if (upcomingPayments != null &&
+                        upcomingPayments!['note'] != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        upcomingPayments!['note']?.toString() ?? '',
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          color: cs.onSurface.withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Period: ${thisMonth['month']?.toString() ?? '—'}',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: cs.onSurface.withValues(alpha: 0.45),
+          ),
         ),
       ],
     );

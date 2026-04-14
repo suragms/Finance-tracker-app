@@ -8,6 +8,7 @@ import {
   IncomeSource,
   AiInsightStatus,
   AiInsightType,
+  CategorySystemKey,
   CategoryType,
   Frequency,
   NotificationCategory,
@@ -20,6 +21,10 @@ import {
 } from '@prisma/client';
 
 const prisma = new PrismaClient();
+
+function nk(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
 
 /** Email sign-in (Flutter “Sign in” tab). Display name: Usermony */
 const DEMO_EMAIL = 'usermony@test.moneyflow';
@@ -95,29 +100,97 @@ async function main() {
     return;
   }
 
-  const food = await prisma.category.create({
-    data: { name: 'Food', type: CategoryType.expense, userId: user.id },
-  });
-  await prisma.subCategory.createMany({
-    data: [
-      { name: 'Groceries', categoryId: food.id },
-      { name: 'Dining out', categoryId: food.id },
-    ],
-  });
+  const curated: {
+    name: string;
+    key: CategorySystemKey;
+    sort: number;
+    subs: string[];
+  }[] = [
+    {
+      name: 'Daily Expenses',
+      key: CategorySystemKey.daily_expenses,
+      sort: 0,
+      subs: ['Groceries', 'Dining out', 'Personal care', 'Entertainment'],
+    },
+    {
+      name: 'Household',
+      key: CategorySystemKey.household,
+      sort: 1,
+      subs: ['Rent', 'Utilities', 'Maintenance', 'Supplies'],
+    },
+    {
+      name: 'Vehicle',
+      key: CategorySystemKey.vehicle,
+      sort: 2,
+      subs: ['Fuel', 'Service', 'Parking', 'Registration'],
+    },
+    {
+      name: 'Insurance',
+      key: CategorySystemKey.insurance,
+      sort: 3,
+      subs: ['Health', 'Vehicle', 'Home', 'Life'],
+    },
+    {
+      name: 'Financial',
+      key: CategorySystemKey.financial,
+      sort: 4,
+      subs: ['Bank fees', 'Investments', 'Transfers'],
+    },
+    {
+      name: 'Donations',
+      key: CategorySystemKey.donations,
+      sort: 5,
+      subs: ['Charity', 'Religious'],
+    },
+    {
+      name: 'Business',
+      key: CategorySystemKey.business,
+      sort: 6,
+      subs: ['Office', 'Travel', 'Software'],
+    },
+    {
+      name: 'Custom',
+      key: CategorySystemKey.custom,
+      sort: 7,
+      subs: ['Other'],
+    },
+  ];
 
-  const transport = await prisma.category.create({
-    data: { name: 'Transport', type: CategoryType.expense, userId: user.id },
-  });
-  await prisma.subCategory.createMany({
-    data: [
-      { name: 'Fuel', categoryId: transport.id },
-      { name: 'Transit', categoryId: transport.id },
-    ],
-  });
+  const categoryByKey = new Map<CategorySystemKey, { id: string }>();
+  const subByPath = new Map<string, string>();
 
-  const bills = await prisma.category.create({
-    data: { name: 'Bills', type: CategoryType.expense, userId: user.id },
-  });
+  for (const c of curated) {
+    const cat = await prisma.category.create({
+      data: {
+        name: c.name,
+        nameKey: nk(c.name),
+        systemKey: c.key,
+        sortOrder: c.sort,
+        type: CategoryType.expense,
+        userId: user.id,
+      },
+    });
+    categoryByKey.set(c.key, cat);
+    for (const subName of c.subs) {
+      const sub = await prisma.subCategory.create({
+        data: {
+          name: subName,
+          nameKey: nk(subName),
+          categoryId: cat.id,
+        },
+      });
+      subByPath.set(`${c.key}:${nk(subName)}`, sub.id);
+    }
+  }
+
+  const daily = categoryByKey.get(CategorySystemKey.daily_expenses)!;
+  const vehicleCat = categoryByKey.get(CategorySystemKey.vehicle)!;
+  const household = categoryByKey.get(CategorySystemKey.household)!;
+
+  const groceriesId = subByPath.get(`${CategorySystemKey.daily_expenses}:${nk('Groceries')}`)!;
+  const diningId = subByPath.get(`${CategorySystemKey.daily_expenses}:${nk('Dining out')}`)!;
+  const fuelId = subByPath.get(`${CategorySystemKey.vehicle}:${nk('Fuel')}`)!;
+  const utilitiesId = subByPath.get(`${CategorySystemKey.household}:${nk('Utilities')}`)!;
 
   const ws = await prisma.workspace.findFirstOrThrow({ where: { ownerUserId: user.id } });
   const mainBank = await prisma.account.create({
@@ -147,7 +220,8 @@ async function main() {
       {
         userId: user.id,
         workspaceId: ws.id,
-        categoryId: food.id,
+        categoryId: daily.id,
+        subCategoryId: groceriesId,
         accountId: mainBank.id,
         amount: new Prisma.Decimal('85.5'),
         date: new Date(startOfMonth.getTime() + 2 * 86400000),
@@ -157,7 +231,8 @@ async function main() {
       {
         userId: user.id,
         workspaceId: ws.id,
-        categoryId: food.id,
+        categoryId: daily.id,
+        subCategoryId: diningId,
         accountId: mainBank.id,
         amount: new Prisma.Decimal('42'),
         date: new Date(startOfMonth.getTime() + 5 * 86400000),
@@ -167,7 +242,8 @@ async function main() {
       {
         userId: user.id,
         workspaceId: ws.id,
-        categoryId: transport.id,
+        categoryId: vehicleCat.id,
+        subCategoryId: fuelId,
         accountId: mainBank.id,
         amount: new Prisma.Decimal('60'),
         date: new Date(startOfMonth.getTime() + 8 * 86400000),
@@ -177,7 +253,8 @@ async function main() {
       {
         userId: user.id,
         workspaceId: ws.id,
-        categoryId: bills.id,
+        categoryId: household.id,
+        subCategoryId: utilitiesId,
         accountId: mainBank.id,
         amount: new Prisma.Decimal('1200'),
         date: new Date(startOfMonth.getTime() + 10 * 86400000),
@@ -227,19 +304,19 @@ async function main() {
     data: [
       {
         userId: user.id,
-        categoryId: food.id,
+        categoryId: daily.id,
         amountLimit: new Prisma.Decimal('500'),
         yearMonth: demoYearMonth,
       },
       {
         userId: user.id,
-        categoryId: transport.id,
-        amountLimit: new Prisma.Decimal('40'),
+        categoryId: vehicleCat.id,
+        amountLimit: new Prisma.Decimal('200'),
         yearMonth: demoYearMonth,
       },
       {
         userId: user.id,
-        categoryId: bills.id,
+        categoryId: household.id,
         amountLimit: new Prisma.Decimal('1500'),
         yearMonth: demoYearMonth,
       },
@@ -267,7 +344,7 @@ async function main() {
   await prisma.recurringExpense.create({
     data: {
       userId: user.id,
-      categoryId: bills.id,
+      categoryId: household.id,
       accountId: mainBank.id,
       amount: new Prisma.Decimal('99'),
       frequency: Frequency.monthly,

@@ -177,9 +177,206 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       }
       return created;
     } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        final data = e.response?.data;
+        if (data is Map && data['existingCategoryId'] != null) {
+          final id = data['existingCategoryId']?.toString();
+          if (id != null && mounted) {
+            setState(() {
+              _categoryId = id;
+              _subId = null;
+            });
+            ref.invalidate(categoriesProvider);
+            _showSnack(
+              'That category already exists — using it.',
+              icon: Icons.label_rounded,
+            );
+            return {'id': id};
+          }
+        }
+      }
       _showSnack(dioErrorMessage(e), icon: Icons.error_outline_rounded);
       rethrow;
     }
+  }
+
+  Future<Map<String, dynamic>> _createSubcategory(
+    String categoryId,
+    String name, {
+    bool announce = true,
+  }) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) {
+      _showSnack(
+        'Enter a subcategory name.',
+        icon: Icons.label_outline_rounded,
+      );
+      return <String, dynamic>{};
+    }
+    try {
+      final created = await ref
+          .read(categoriesApiProvider)
+          .createSubcategory(categoryId, trimmed);
+      ref.invalidate(categoriesProvider);
+      if (announce) {
+        _showSnack(
+          'Subcategory added.',
+          icon: Icons.check_circle_outline_rounded,
+        );
+      }
+      return created;
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 409) {
+        final data = e.response?.data;
+        if (data is Map && data['existingSubCategoryId'] != null) {
+          final id = data['existingSubCategoryId']?.toString();
+          if (id != null && mounted) {
+            setState(() => _subId = id);
+            ref.invalidate(categoriesProvider);
+            _showSnack(
+              'That subcategory already exists — selected it.',
+              icon: Icons.label_rounded,
+            );
+            return {'id': id};
+          }
+        }
+      }
+      _showSnack(dioErrorMessage(e), icon: Icons.error_outline_rounded);
+      rethrow;
+    }
+  }
+
+  Future<void> _showAddSubcategoryDialog() async {
+    final cid = _categoryId;
+    if (cid == null) {
+      _showSnack(
+        'Pick a category first.',
+        icon: Icons.category_outlined,
+      );
+      return;
+    }
+    final controller = TextEditingController();
+    var creating = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Theme(
+          data: ThemeData.dark(useMaterial3: true).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: MfPalette.neonGreen,
+              surface: _aeSurface,
+            ),
+          ),
+          child: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return AlertDialog(
+                backgroundColor: _aeSurface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(MfRadius.lg),
+                ),
+                title: Text(
+                  'Add subcategory',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                content: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: GoogleFonts.inter(color: Colors.white),
+                  decoration: _aeFieldDec(
+                    label: 'Subcategory name',
+                    hint: 'e.g. Groceries',
+                  ),
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) async {
+                    if (creating) return;
+                    final created = await _createSubcategory(
+                      cid,
+                      controller.text,
+                      announce: false,
+                    );
+                    if (!mounted || created.isEmpty) return;
+                    setState(() {
+                      _subId = created['id']?.toString() ?? _subId;
+                    });
+                    if (dialogContext.mounted) {
+                      Navigator.of(dialogContext).pop();
+                    }
+                    _showSnack(
+                      'Subcategory added.',
+                      icon: Icons.check_circle_outline_rounded,
+                    );
+                  },
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: creating
+                        ? null
+                        : () => Navigator.of(dialogContext).pop(),
+                    child: Text(
+                      'Cancel',
+                      style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: MfPalette.neonGreen,
+                      foregroundColor: MfPalette.onNeonGreen,
+                    ),
+                    onPressed: creating
+                        ? null
+                        : () async {
+                            setDialogState(() => creating = true);
+                            try {
+                              final created = await _createSubcategory(
+                                cid,
+                                controller.text,
+                                announce: false,
+                              );
+                              if (!mounted || created.isEmpty) return;
+                              setState(() {
+                                _subId = created['id']?.toString() ?? _subId;
+                              });
+                              if (dialogContext.mounted) {
+                                Navigator.of(dialogContext).pop();
+                              }
+                              _showSnack(
+                                'Subcategory added.',
+                                icon: Icons.check_circle_outline_rounded,
+                              );
+                            } catch (_) {
+                              if (dialogContext.mounted) {
+                                setDialogState(() => creating = false);
+                              }
+                            }
+                          },
+                    child: creating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'Add',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    controller.dispose();
   }
 
   Future<void> _showAddCategoryDialog() async {
@@ -578,18 +775,43 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     _subId = null;
                   }),
                 ),
-                if (subs.isNotEmpty) ...[
+                if (_categoryId != null) ...[
                   const SizedBox(height: MfSpace.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Subcategory',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                            color: Colors.white.withValues(alpha: 0.45),
+                          ),
+                        ),
+                      ),
+                      IconButton.filledTonal(
+                        style: IconButton.styleFrom(
+                          backgroundColor: _aeField,
+                          foregroundColor: MfPalette.neonGreen,
+                        ),
+                        onPressed: _showAddSubcategoryDialog,
+                        icon: const Icon(Icons.add_rounded, size: 22),
+                        tooltip: 'Add subcategory',
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: MfSpace.sm),
                   DropdownButtonFormField<String?>(
-                    key: ValueKey('sub-$_subId'),
+                    key: ValueKey('sub-$_categoryId-$_subId'),
                     initialValue: _subId,
                     borderRadius: BorderRadius.circular(MfRadius.md),
                     dropdownColor: _aeField,
                     iconEnabledColor: Colors.white.withValues(alpha: 0.65),
                     style: dropdownStyle,
                     decoration: _aeFieldDec(
-                      label: 'Subcategory',
-                      hint: 'Optional',
+                      label: 'Select subcategory',
+                      hint: subs.isEmpty ? 'Add one with +' : 'Optional',
                     ),
                     items: [
                       DropdownMenuItem<String?>(
@@ -608,6 +830,18 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     ],
                     onChanged: (v) => setState(() => _subId = v),
                   ),
+                  if (subs.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: MfSpace.sm),
+                      child: Text(
+                        'Optional — curated categories include subcategories; tap + if yours is missing.',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          height: 1.4,
+                          color: Colors.white.withValues(alpha: 0.38),
+                        ),
+                      ),
+                    ),
                 ],
                 const SizedBox(height: MfSpace.lg),
                 accs.when(

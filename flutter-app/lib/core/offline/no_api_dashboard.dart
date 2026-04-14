@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'db/ledger_database.dart';
 
@@ -121,6 +122,101 @@ Map<String, dynamic> offlineTaxSummaryPlaceholder() => {
     'totalTaxAmount': '0',
   },
 };
+
+/// Rough offline mirror of `/reports/expense-mvp` for charts when API is disabled.
+Future<Map<String, dynamic>> buildOfflineExpenseMvp(
+  LedgerDatabase db,
+  int year,
+  int month,
+) async {
+  final expenses = await _loadExpensePayloads(db);
+  double totalAll = 0;
+  for (final e in expenses) {
+    totalAll += _parseAmount(e['amount']);
+  }
+
+  final byCat = <String, double>{};
+  final catNames = <String, String>{};
+  double monthTotal = 0;
+  for (final e in expenses) {
+    final d = DateTime.tryParse(e['date']?.toString() ?? '');
+    if (d != null && d.year == year && d.month == month) {
+      monthTotal += _parseAmount(e['amount']);
+      final cat = e['category'];
+      String? cid;
+      String name = 'Other';
+      if (cat is Map) {
+        cid = cat['id']?.toString();
+        name = cat['name']?.toString() ?? name;
+      }
+      cid ??= 'unknown';
+      catNames[cid] = name;
+      byCat[cid] = (byCat[cid] ?? 0) + _parseAmount(e['amount']);
+    }
+  }
+
+  final breakdown = byCat.entries
+      .map(
+        (e) => {
+          'categoryId': e.key,
+          'name': catNames[e.key] ?? e.key,
+          'total': e.value.toStringAsFixed(2),
+        },
+      )
+      .toList();
+
+  final now = DateTime(year, month);
+  final monthlyExpenseTrend = <Map<String, dynamic>>[];
+  final barLabels = <String>[];
+  final barValues = <double>[];
+  for (var i = 11; i >= 0; i--) {
+    final d = DateTime(now.year, now.month - i, 1);
+    var v = 0.0;
+    for (final e in expenses) {
+      final ed = DateTime.tryParse(e['date']?.toString() ?? '');
+      if (ed != null && ed.year == d.year && ed.month == d.month) {
+        v += _parseAmount(e['amount']);
+      }
+    }
+    final key = '${d.year}-${d.month}';
+    monthlyExpenseTrend.add({
+      'month': key,
+      'label': DateFormat('MMM').format(d),
+      'total': v.toStringAsFixed(2),
+      'totalNum': v,
+    });
+    barLabels.add(DateFormat('MMM').format(d));
+    barValues.add(v);
+  }
+
+  return {
+    'period': '$year-$month',
+    'totalSpentAllTime': totalAll.toStringAsFixed(2),
+    'thisMonthExpenses': monthTotal.toStringAsFixed(2),
+    'categoryBreakdownMonth': breakdown,
+    'chart': {
+      'pie': {
+        'labels': breakdown.map((e) => e['name']).toList(),
+        'values': breakdown
+            .map((e) => double.tryParse(e['total']?.toString() ?? '0') ?? 0)
+            .toList(),
+        'categoryIds': breakdown.map((e) => e['categoryId']).toList(),
+      },
+      'monthlyExpenses': {
+        'labels': barLabels,
+        'values': barValues,
+      },
+    },
+    'recurringMonthlyTotal': '0',
+    'recurringNote': 'Offline — recurring total not available.',
+    'vehicle': {
+      'hasVehicles': false,
+      'vehicleExpenseTotalAllTime': '0',
+      'emptyHint': 'Offline mode',
+    },
+    'upcomingPayments': {'count': 0, 'note': 'Offline mode'},
+  };
+}
 
 class OfflineModeBanner extends StatelessWidget {
   const OfflineModeBanner({super.key});

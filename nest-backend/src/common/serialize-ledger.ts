@@ -17,13 +17,21 @@ export function serializeCategory(c: Category) {
   return {
     id: c.id,
     name: c.name,
+    nameKey: c.nameKey,
+    systemKey: c.systemKey,
+    sortOrder: c.sortOrder,
     type: c.type,
     userId: c.userId,
   };
 }
 
 export function serializeSubCategory(s: SubCategory) {
-  return { id: s.id, name: s.name, categoryId: s.categoryId };
+  return {
+    id: s.id,
+    name: s.name,
+    nameKey: s.nameKey,
+    categoryId: s.categoryId,
+  };
 }
 
 export type ExpenseWithRelations = Prisma.ExpenseGetPayload<{

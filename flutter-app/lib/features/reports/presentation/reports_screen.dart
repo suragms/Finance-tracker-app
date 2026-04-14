@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import '../../../core/navigation/ledger_page_routes.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/theme/money_flow_tokens.dart';
+import '../../dashboard/application/dashboard_providers.dart';
 import '../../expenses/application/expense_providers.dart';
 import '../../expenses/presentation/add_expense_screen.dart';
 
@@ -21,7 +22,7 @@ class ReportsScreen extends ConsumerStatefulWidget {
 
 class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   String? _selectedMonthKey;
-  String? _highlightedCategoryLabel;
+  int? _highlightedPieIndex;
 
   Future<void> _refresh() async {
     await ref.read(ledgerSyncServiceProvider).pullAndFlush();
@@ -60,56 +61,171 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     .where((entry) => entry.monthKey == selectedMonthKey)
                     .toList();
 
-                final buckets = _analyticsCategories.map((spec) {
-                  final transactions = selectedEntries
-                      .where((entry) => entry.analyticsCategory == spec.label)
-                      .toList();
-                  final total = transactions.fold<double>(
-                    0,
-                    (sum, entry) => sum + entry.amount,
-                  );
+                final ym = _yearMonthFromKey(selectedMonthKey);
+                final mvpAsync = ref.watch(expenseMvpProvider(ym));
 
-                  return _AnalyticsBucket(
-                    spec: spec,
-                    total: total,
-                    transactions: transactions,
-                  );
-                }).toList();
+                return mvpAsync.when(
+                  data: (mvp) {
+                    final pie = mvp['chart'] is Map
+                        ? Map<String, dynamic>.from(mvp['chart']['pie'] as Map)
+                        : <String, dynamic>{};
+                    final pieLabels = (pie['labels'] as List<dynamic>?)
+                            ?.map((e) => e.toString())
+                            .toList() ??
+                        <String>[];
+                    final pieValues = (pie['values'] as List<dynamic>?)
+                            ?.map((e) => (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
+                            .toList() ??
+                        <double>[];
+                    final monthTotal = double.tryParse(
+                          mvp['thisMonthExpenses']?.toString() ?? '0',
+                        ) ??
+                        0;
+                    final allTime = mvp['totalSpentAllTime']?.toString() ?? '0';
 
-                final totalAmount = buckets.fold<double>(
-                  0,
-                  (sum, bucket) => sum + bucket.total,
-                );
-                final nonZeroBuckets = buckets
-                    .where((bucket) => bucket.total > 0)
-                    .toList();
-                final activeLabel = nonZeroBuckets.isNotEmpty
-                    ? nonZeroBuckets.any(
-                            (bucket) =>
-                                bucket.spec.label == _highlightedCategoryLabel,
+                    final bar = mvp['chart'] is Map &&
+                            (mvp['chart'] as Map)['monthlyExpenses'] is Map
+                        ? Map<String, dynamic>.from(
+                            (mvp['chart'] as Map)['monthlyExpenses'] as Map,
                           )
-                          ? _highlightedCategoryLabel
-                          : nonZeroBuckets.first.spec.label
-                    : null;
-                final groupedBuckets =
-                    buckets
-                        .where((bucket) => bucket.transactions.isNotEmpty)
-                        .toList()
-                      ..sort((a, b) {
-                        final aActive = a.spec.label == activeLabel;
-                        final bActive = b.spec.label == activeLabel;
-                        if (aActive != bActive) return aActive ? -1 : 1;
-                        return b.total.compareTo(a.total);
-                      });
+                        : <String, dynamic>{};
+                    final barLabels = (bar['labels'] as List<dynamic>?)
+                            ?.map((e) => e.toString())
+                            .toList() ??
+                        <String>[];
+                    final barValues = (bar['values'] as List<dynamic>?)
+                            ?.map((e) => (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
+                            .toList() ??
+                        <double>[];
 
-                return RefreshIndicator(
-                  color: const Color(0xFF49D6FF),
-                  backgroundColor: const Color(0xFF121722),
-                  onRefresh: _refresh,
-                  child: ListView(
-                    physics: const BouncingScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
+                    final breakdownRaw = mvp['categoryBreakdownMonth'];
+                    final breakdown = breakdownRaw is List
+                        ? breakdownRaw
+                            .map((e) => Map<String, dynamic>.from(e as Map))
+                            .toList()
+                        : <Map<String, dynamic>>[];
+
+                    final vehicle = mvp['vehicle'] is Map
+                        ? Map<String, dynamic>.from(mvp['vehicle'] as Map)
+                        : <String, dynamic>{};
+
+                    return RefreshIndicator(
+                      color: const Color(0xFF49D6FF),
+                      backgroundColor: const Color(0xFF121722),
+                      onRefresh: () async {
+                        await _refresh();
+                        ref.invalidate(expenseMvpProvider(ym));
+                      },
+                      child: ListView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        padding: const EdgeInsets.fromLTRB(
+                          MfSpace.xl,
+                          MfSpace.md,
+                          MfSpace.xl,
+                          132,
+                        ),
+                        children: [
+                          _AnalyticsHeader(
+                            canPop: canPop,
+                            monthKeys: monthKeys,
+                            selectedMonthKey: selectedMonthKey,
+                            onBack: () => Navigator.of(context).maybePop(),
+                            onMonthChanged: (value) {
+                              if (value == null) return;
+                              setState(() {
+                                _selectedMonthKey = value;
+                                _highlightedPieIndex = null;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: MfSpace.lg),
+                          _MvpSummaryStrip(
+                            monthLabel: monthLabel,
+                            monthTotal: monthTotal,
+                            allTime: allTime,
+                          ),
+                          const SizedBox(height: MfSpace.xl),
+                          _MvpCategoryPieCard(
+                            monthLabel: monthLabel,
+                            labels: pieLabels,
+                            values: pieValues,
+                            monthTotal: monthTotal,
+                            highlightedIndex: _highlightedPieIndex,
+                            onSliceTap: (i) {
+                              setState(() {
+                                _highlightedPieIndex = i;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: MfSpace.xl),
+                          _MvpMonthlyExpenseBarCard(
+                            barLabels: barLabels,
+                            barValues: barValues,
+                          ),
+                          const SizedBox(height: MfSpace.xl),
+                          _VehicleCostCard(vehicle: vehicle),
+                          const SizedBox(height: MfSpace.xl),
+                          if (breakdown.isEmpty)
+                            _EmptyAnalyticsCard(
+                              monthLabel: monthLabel,
+                              onAddExpense: () {
+                                Navigator.of(context).push(
+                                  LedgerPageRoutes.fadeSlide<void>(
+                                    const AddExpenseScreen(),
+                                  ),
+                                );
+                              },
+                            )
+                          else ...[
+                            Text(
+                              'Categories (this month)',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ),
+                            const SizedBox(height: MfSpace.md),
+                            ...breakdown.map(
+                              (row) => Padding(
+                                padding: const EdgeInsets.only(bottom: MfSpace.sm),
+                                child: _MvpCategoryRow(
+                                  name: row['name']?.toString() ?? '',
+                                  total: row['total']?.toString() ?? '0',
+                                ),
+                              ),
+                            ),
+                          ],
+                          if (selectedEntries.isNotEmpty) ...[
+                            const SizedBox(height: MfSpace.xl),
+                            Text(
+                              'Recent in month',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ),
+                            const SizedBox(height: MfSpace.md),
+                            ...selectedEntries.take(6).map(
+                                  (e) => Padding(
+                                    padding: const EdgeInsets.only(
+                                      bottom: MfSpace.sm,
+                                    ),
+                                    child: _MvpRecentRow(entry: e),
+                                  ),
+                                ),
+                          ],
+                        ],
+                      ),
+                    );
+                  },
+                  loading: () => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
                       MfSpace.xl,
                       MfSpace.md,
@@ -124,56 +240,34 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         onBack: () => Navigator.of(context).maybePop(),
                         onMonthChanged: (value) {
                           if (value == null) return;
-                          setState(() {
-                            _selectedMonthKey = value;
-                          });
+                          setState(() => _selectedMonthKey = value);
                         },
                       ),
                       const SizedBox(height: MfSpace.xl),
-                      _AnalyticsChartCard(
-                        monthLabel: monthLabel,
-                        buckets: buckets,
-                        totalAmount: totalAmount,
-                        activeLabel: activeLabel,
-                        onCategoryTap: (label) {
-                          setState(() {
-                            _highlightedCategoryLabel = label;
-                          });
+                      const _LoadingChartCard(),
+                    ],
+                  ),
+                  error: (e, _) => ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      MfSpace.xl,
+                      MfSpace.md,
+                      MfSpace.xl,
+                      132,
+                    ),
+                    children: [
+                      _AnalyticsHeader(
+                        canPop: canPop,
+                        monthKeys: monthKeys,
+                        selectedMonthKey: selectedMonthKey,
+                        onBack: () => Navigator.of(context).maybePop(),
+                        onMonthChanged: (value) {
+                          if (value == null) return;
+                          setState(() => _selectedMonthKey = value);
                         },
                       ),
                       const SizedBox(height: MfSpace.xl),
-                      if (groupedBuckets.isEmpty)
-                        _EmptyAnalyticsCard(
-                          monthLabel: monthLabel,
-                          onAddExpense: () {
-                            Navigator.of(context).push(
-                              LedgerPageRoutes.fadeSlide<void>(
-                                const AddExpenseScreen(),
-                              ),
-                            );
-                          },
-                        )
-                      else ...[
-                        Text(
-                          'Recent by category',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.2,
-                            color: Colors.white.withValues(alpha: 0.72),
-                          ),
-                        ),
-                        const SizedBox(height: MfSpace.md),
-                        ...groupedBuckets.map(
-                          (bucket) => Padding(
-                            padding: const EdgeInsets.only(bottom: MfSpace.md),
-                            child: _CategoryGroupCard(
-                              bucket: bucket,
-                              active: bucket.spec.label == activeLabel,
-                            ),
-                          ),
-                        ),
-                      ],
+                      _ErrorAnalyticsCard(message: e.toString()),
                     ],
                   ),
                 );
@@ -230,13 +324,543 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   }
 }
 
+ExpenseMvpMonth _yearMonthFromKey(String key) {
+  final p = key.split('-');
+  if (p.length < 2) {
+    final n = DateTime.now();
+    return (year: n.year, month: n.month);
+  }
+  return (year: int.parse(p[0]), month: int.parse(p[1]));
+}
+
+const _mvpPiePalette = <Color>[
+  Color(0xFFFFB26B),
+  Color(0xFF67E7FF),
+  Color(0xFFFF8FD8),
+  Color(0xFF63FFCB),
+  Color(0xFFFFE36D),
+  Color(0xFFADB7FF),
+  Color(0xFFFF8A65),
+  Color(0xFF81C784),
+];
+
+class _MvpSummaryStrip extends StatelessWidget {
+  const _MvpSummaryStrip({
+    required this.monthLabel,
+    required this.monthTotal,
+    required this.allTime,
+  });
+
+  final String monthLabel;
+  final double monthTotal;
+  final String allTime;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _AnalyticsPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'This month',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _AnalyticsColors.muted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatCurrency(monthTotal),
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: _AnalyticsColors.text,
+                  ),
+                ),
+                Text(
+                  monthLabel,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: MfSpace.md),
+        Expanded(
+          child: _AnalyticsPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'All-time spent',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: _AnalyticsColors.muted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  _formatCurrency(
+                    double.tryParse(allTime) ?? 0,
+                  ),
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: _AnalyticsColors.text,
+                  ),
+                ),
+                Text(
+                  'Workspace expenses',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MvpCategoryPieCard extends StatelessWidget {
+  const _MvpCategoryPieCard({
+    required this.monthLabel,
+    required this.labels,
+    required this.values,
+    required this.monthTotal,
+    required this.highlightedIndex,
+    required this.onSliceTap,
+  });
+
+  final String monthLabel;
+  final List<String> labels;
+  final List<double> values;
+  final double monthTotal;
+  final int? highlightedIndex;
+  final ValueChanged<int?> onSliceTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final nonZero = <int>[];
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] > 0) nonZero.add(i);
+    }
+    return _AnalyticsPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Category split (DB)',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _AnalyticsColors.text,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            monthLabel,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _AnalyticsColors.muted,
+            ),
+          ),
+          const SizedBox(height: MfSpace.lg),
+          SizedBox(
+            height: 280,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                PieChart(
+                  duration: MfMotion.medium,
+                  curve: MfMotion.curve,
+                  PieChartData(
+                    startDegreeOffset: -90,
+                    sectionsSpace: 3,
+                    centerSpaceRadius: 78,
+                    pieTouchData: PieTouchData(
+                      touchCallback: (event, response) {
+                        final touched = response?.touchedSection;
+                        if (!event.isInterestedForInteractions ||
+                            touched == null ||
+                            touched.touchedSectionIndex < 0) {
+                          onSliceTap(null);
+                          return;
+                        }
+                        final idx = nonZero[touched.touchedSectionIndex];
+                        onSliceTap(idx);
+                      },
+                    ),
+                    sections: nonZero.isEmpty
+                        ? [
+                            PieChartSectionData(
+                              value: 1,
+                              color: Colors.white.withValues(alpha: 0.08),
+                              radius: 70,
+                              showTitle: false,
+                            ),
+                          ]
+                        : List.generate(nonZero.length, (j) {
+                            final i = nonZero[j];
+                            final v = values[i];
+                            final share = monthTotal <= 0
+                                ? 0.0
+                                : (v / monthTotal) * 100;
+                            final selected = highlightedIndex == i;
+                            return PieChartSectionData(
+                              value: v,
+                              color: _mvpPiePalette[i % _mvpPiePalette.length],
+                              radius: selected ? 84 : 72,
+                              title: share >= 8 ? '${share.round()}%' : '',
+                              titleStyle: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF0A0D13),
+                                width: 2,
+                              ),
+                            );
+                          }),
+                  ),
+                ),
+                IgnorePointer(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Month total',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withValues(alpha: 0.68),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _formatCurrency(monthTotal),
+                        style: GoogleFonts.inter(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w800,
+                          color: _AnalyticsColors.text,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: MfSpace.md),
+          Wrap(
+            spacing: MfSpace.sm,
+            runSpacing: MfSpace.sm,
+            children: List.generate(labels.length, (i) {
+              if (values.length <= i || values[i] <= 0) {
+                return const SizedBox.shrink();
+              }
+              final active = highlightedIndex == i;
+              return Chip(
+                label: Text(
+                  labels[i],
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _AnalyticsColors.text,
+                  ),
+                ),
+                backgroundColor: _mvpPiePalette[i % _mvpPiePalette.length]
+                    .withValues(alpha: active ? 0.35 : 0.18),
+                side: BorderSide(
+                  color: active
+                      ? _mvpPiePalette[i % _mvpPiePalette.length]
+                      : _AnalyticsColors.border,
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MvpMonthlyExpenseBarCard extends StatelessWidget {
+  const _MvpMonthlyExpenseBarCard({
+    required this.barLabels,
+    required this.barValues,
+  });
+
+  final List<String> barLabels;
+  final List<double> barValues;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxV = barValues.isEmpty
+        ? 1.0
+        : barValues.reduce((a, b) => a > b ? a : b);
+    return _AnalyticsPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Monthly expense trend',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _AnalyticsColors.text,
+            ),
+          ),
+          const SizedBox(height: MfSpace.md),
+          SizedBox(
+            height: 200,
+            child: BarChart(
+              BarChartData(
+                maxY: maxV > 0 ? maxV * 1.15 : 1,
+                barGroups: List.generate(
+                  barLabels.length,
+                  (i) => BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: i < barValues.length ? barValues[i] : 0,
+                        width: 14,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(6),
+                        ),
+                        gradient: const LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Color(0xFF2F7BFF),
+                            Color(0xFF67E7FF),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (v, _) {
+                        final i = v.toInt();
+                        if (i < 0 || i >= barLabels.length) {
+                          return const SizedBox();
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            barLabels[i],
+                            style: GoogleFonts.inter(
+                              fontSize: 9,
+                              color: Colors.white.withValues(alpha: 0.55),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 32,
+                      getTitlesWidget: (v, _) => Text(
+                        v.toInt().toString(),
+                        style: GoogleFonts.inter(
+                          fontSize: 9,
+                          color: Colors.white.withValues(alpha: 0.45),
+                        ),
+                      ),
+                    ),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxV > 0 ? maxV / 4 : 1,
+                  getDrawingHorizontalLine: (v) => FlLine(
+                    color: Colors.white.withValues(alpha: 0.06),
+                    strokeWidth: 1,
+                  ),
+                ),
+                borderData: FlBorderData(show: false),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleCostCard extends StatelessWidget {
+  const _VehicleCostCard({required this.vehicle});
+
+  final Map<String, dynamic> vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final has = vehicle['hasVehicles'] == true;
+    final total = vehicle['vehicleExpenseTotalAllTime']?.toString() ?? '0';
+    final hint = vehicle['emptyHint']?.toString();
+    return _AnalyticsPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Vehicle costs',
+            style: GoogleFonts.inter(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: _AnalyticsColors.text,
+            ),
+          ),
+          const SizedBox(height: MfSpace.sm),
+          if (!has)
+            Text(
+              hint ?? 'No vehicles yet — add one under Profile.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: _AnalyticsColors.muted,
+                height: 1.4,
+              ),
+            )
+          else
+            Text(
+              'Logged vehicle expenses (all time): ${_formatCurrency(double.tryParse(total) ?? 0)}',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: _AnalyticsColors.muted,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MvpCategoryRow extends StatelessWidget {
+  const _MvpCategoryRow({required this.name, required this.total});
+
+  final String name;
+  final String total;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: MfSpace.lg, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _AnalyticsColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              name,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: _AnalyticsColors.text,
+              ),
+            ),
+          ),
+          Text(
+            _formatCurrency(double.tryParse(total) ?? 0),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF49D6FF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MvpRecentRow extends StatelessWidget {
+  const _MvpRecentRow({required this.entry});
+
+  final _ExpenseEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(MfSpace.md),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _AnalyticsColors.border),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  entry.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _AnalyticsColors.text,
+                  ),
+                ),
+                Text(
+                  entry.rawCategory,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: _AnalyticsColors.muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            _formatExpenseCurrency(entry.amount),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFFFF8FD8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _ExpenseEntry {
   const _ExpenseEntry({
     required this.amount,
     required this.title,
     required this.description,
     required this.rawCategory,
-    required this.analyticsCategory,
     required this.date,
   });
 
@@ -244,7 +868,6 @@ class _ExpenseEntry {
   final String title;
   final String description;
   final String rawCategory;
-  final String analyticsCategory;
   final DateTime? date;
 
   DateTime get sortDate => date ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -255,7 +878,6 @@ class _ExpenseEntry {
     final note = raw['note']?.toString().trim() ?? '';
     final rawCategory = _rawCategory(raw);
     final date = _expenseDate(raw['date']);
-    final analyticsCategory = _mapAnalyticsCategory(rawCategory, note: note);
     final title = note.isNotEmpty
         ? note
         : rawCategory.isNotEmpty
@@ -271,70 +893,10 @@ class _ExpenseEntry {
       title: title,
       description: details.isEmpty ? 'Ledger entry' : details.join(' • '),
       rawCategory: rawCategory,
-      analyticsCategory: analyticsCategory,
       date: date,
     );
   }
 }
-
-class _AnalyticsBucket {
-  const _AnalyticsBucket({
-    required this.spec,
-    required this.total,
-    required this.transactions,
-  });
-
-  final _AnalyticsCategorySpec spec;
-  final double total;
-  final List<_ExpenseEntry> transactions;
-}
-
-class _AnalyticsCategorySpec {
-  const _AnalyticsCategorySpec({
-    required this.label,
-    required this.icon,
-    required this.colors,
-  });
-
-  final String label;
-  final IconData icon;
-  final List<Color> colors;
-
-  Color get accent => colors.first;
-}
-
-const _analyticsCategories = <_AnalyticsCategorySpec>[
-  _AnalyticsCategorySpec(
-    label: 'Food',
-    icon: Icons.restaurant_rounded,
-    colors: [Color(0xFFFFB26B), Color(0xFFFF5E7E)],
-  ),
-  _AnalyticsCategorySpec(
-    label: 'Transport',
-    icon: Icons.directions_car_rounded,
-    colors: [Color(0xFF67E7FF), Color(0xFF2F7BFF)],
-  ),
-  _AnalyticsCategorySpec(
-    label: 'Shopping',
-    icon: Icons.shopping_bag_rounded,
-    colors: [Color(0xFFFF8FD8), Color(0xFFFF5C90)],
-  ),
-  _AnalyticsCategorySpec(
-    label: 'Health',
-    icon: Icons.favorite_rounded,
-    colors: [Color(0xFF63FFCB), Color(0xFF13B773)],
-  ),
-  _AnalyticsCategorySpec(
-    label: 'Education',
-    icon: Icons.menu_book_rounded,
-    colors: [Color(0xFFFFE36D), Color(0xFFFF9D40)],
-  ),
-  _AnalyticsCategorySpec(
-    label: 'Other',
-    icon: Icons.category_rounded,
-    colors: [Color(0xFFADB7FF), Color(0xFF6476FF)],
-  ),
-];
 
 abstract final class _AnalyticsColors {
   static const background = Color(0xFF060910);
@@ -367,101 +929,6 @@ String _rawCategory(Map<String, dynamic> expense) {
   if (categoryName.isNotEmpty) return categoryName;
 
   return expense['category']?.toString().trim() ?? '';
-}
-
-String _mapAnalyticsCategory(String rawCategory, {String? note}) {
-  final text = '$rawCategory ${note ?? ''}'.toLowerCase();
-
-  if (_matchesAny(text, const [
-    'food',
-    'dining',
-    'restaurant',
-    'cafe',
-    'coffee',
-    'meal',
-    'snack',
-    'grocery',
-    'groceries',
-    'swiggy',
-    'zomato',
-  ])) {
-    return 'Food';
-  }
-
-  if (_matchesAny(text, const [
-    'transport',
-    'travel',
-    'fuel',
-    'petrol',
-    'diesel',
-    'uber',
-    'ola',
-    'metro',
-    'bus',
-    'train',
-    'cab',
-    'parking',
-    'flight',
-    'vehicle',
-  ])) {
-    return 'Transport';
-  }
-
-  if (_matchesAny(text, const [
-    'shopping',
-    'shop',
-    'retail',
-    'mall',
-    'clothing',
-    'fashion',
-    'amazon',
-    'flipkart',
-    'purchase',
-    'electronics',
-    'gift',
-  ])) {
-    return 'Shopping';
-  }
-
-  if (_matchesAny(text, const [
-    'health',
-    'medical',
-    'doctor',
-    'hospital',
-    'medicine',
-    'pharmacy',
-    'clinic',
-    'fitness',
-    'gym',
-    'wellness',
-  ])) {
-    return 'Health';
-  }
-
-  if (_matchesAny(text, const [
-    'education',
-    'school',
-    'college',
-    'course',
-    'class',
-    'tuition',
-    'fees',
-    'book',
-    'learning',
-    'exam',
-    'study',
-  ])) {
-    return 'Education';
-  }
-
-  return 'Other';
-}
-
-bool _matchesAny(String text, List<String> keywords) {
-  for (final keyword in keywords) {
-    if (text.contains(keyword)) return true;
-  }
-  return false;
 }
 
 String _monthKey(DateTime date) => DateFormat('yyyy-MM').format(date.toLocal());
@@ -780,540 +1247,6 @@ class _AnalyticsScaffoldState extends StatelessWidget {
         ),
         Expanded(child: child),
       ],
-    );
-  }
-}
-
-class _AnalyticsChartCard extends StatelessWidget {
-  const _AnalyticsChartCard({
-    required this.monthLabel,
-    required this.buckets,
-    required this.totalAmount,
-    required this.activeLabel,
-    required this.onCategoryTap,
-  });
-
-  final String monthLabel;
-  final List<_AnalyticsBucket> buckets;
-  final double totalAmount;
-  final String? activeLabel;
-  final ValueChanged<String?> onCategoryTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final chartBuckets = buckets.where((bucket) => bucket.total > 0).toList();
-    _AnalyticsBucket? highlightedBucket;
-    if (activeLabel != null) {
-      for (final bucket in buckets) {
-        if (bucket.spec.label == activeLabel) {
-          highlightedBucket = bucket;
-          break;
-        }
-      }
-    }
-
-    return _AnalyticsPanel(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Category split',
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: _AnalyticsColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    monthLabel,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: _AnalyticsColors.muted,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-              if (chartBuckets.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: _AnalyticsColors.border),
-                  ),
-                  child: Text(
-                    '${chartBuckets.length} categories',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _AnalyticsColors.text,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: MfSpace.lg),
-          SizedBox(
-            height: 320,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                if (highlightedBucket != null)
-                  IgnorePointer(
-                    child: Container(
-                      width: 236,
-                      height: 236,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            highlightedBucket.spec.accent.withValues(
-                              alpha: 0.22,
-                            ),
-                            highlightedBucket.spec.accent.withValues(alpha: 0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                PieChart(
-                  duration: MfMotion.medium,
-                  curve: MfMotion.curve,
-                  PieChartData(
-                    startDegreeOffset: -90,
-                    sectionsSpace: 4,
-                    centerSpaceRadius: 82,
-                    pieTouchData: PieTouchData(
-                      touchCallback: (event, response) {
-                        final touched = response?.touchedSection;
-                        if (!event.isInterestedForInteractions ||
-                            touched == null ||
-                            touched.touchedSectionIndex < 0 ||
-                            touched.touchedSectionIndex >=
-                                chartBuckets.length) {
-                          onCategoryTap(null);
-                          return;
-                        }
-                        onCategoryTap(
-                          chartBuckets[touched.touchedSectionIndex].spec.label,
-                        );
-                      },
-                    ),
-                    sections: chartBuckets.isEmpty
-                        ? [
-                            PieChartSectionData(
-                              value: 1,
-                              color: Colors.white.withValues(alpha: 0.08),
-                              radius: 72,
-                              showTitle: false,
-                              borderSide: BorderSide(
-                                color: Colors.black.withValues(alpha: 0.08),
-                                width: 2,
-                              ),
-                            ),
-                          ]
-                        : List.generate(chartBuckets.length, (index) {
-                            final bucket = chartBuckets[index];
-                            final selected = bucket.spec.label == activeLabel;
-                            final share = totalAmount <= 0
-                                ? 0.0
-                                : (bucket.total / totalAmount) * 100;
-                            return PieChartSectionData(
-                              value: bucket.total,
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: bucket.spec.colors,
-                              ),
-                              radius: selected ? 88 : 76,
-                              title: share >= 9 ? '${share.round()}%' : '',
-                              titlePositionPercentageOffset: 0.62,
-                              titleStyle: GoogleFonts.inter(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                              ),
-                              borderSide: const BorderSide(
-                                color: Color(0xFF0A0D13),
-                                width: 2,
-                              ),
-                            );
-                          }),
-                  ),
-                ),
-                IgnorePointer(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Total expenses',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.68),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatCurrency(totalAmount),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          height: 1,
-                          letterSpacing: -1.1,
-                          color: _AnalyticsColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        chartBuckets.isEmpty
-                            ? 'No spend recorded'
-                            : activeLabel ?? monthLabel,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.54),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: MfSpace.lg),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final crossAxisCount = constraints.maxWidth > 560 ? 3 : 2;
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: buckets.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: MfSpace.md,
-                  mainAxisSpacing: MfSpace.md,
-                  childAspectRatio: 1.85,
-                ),
-                itemBuilder: (context, index) {
-                  final bucket = buckets[index];
-                  final share = totalAmount <= 0
-                      ? 0.0
-                      : (bucket.total / totalAmount) * 100;
-                  return _LegendCard(
-                    bucket: bucket,
-                    share: share,
-                    active: bucket.spec.label == activeLabel,
-                    onTap: () => onCategoryTap(bucket.spec.label),
-                  );
-                },
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegendCard extends StatelessWidget {
-  const _LegendCard({
-    required this.bucket,
-    required this.share,
-    required this.active,
-    required this.onTap,
-  });
-
-  final _AnalyticsBucket bucket;
-  final double share;
-  final bool active;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: MfMotion.medium,
-      curve: MfMotion.curve,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            bucket.spec.accent.withValues(alpha: active ? 0.28 : 0.14),
-            const Color(0xFF131925).withValues(alpha: 0.96),
-          ],
-        ),
-        border: Border.all(
-          color: active
-              ? bucket.spec.accent.withValues(alpha: 0.42)
-              : _AnalyticsColors.border,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
-          child: Padding(
-            padding: const EdgeInsets.all(MfSpace.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: bucket.spec.colors),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(bucket.spec.icon, color: Colors.white, size: 20),
-                ),
-                const SizedBox(width: MfSpace.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        bucket.spec.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: _AnalyticsColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _formatCurrency(bucket.total),
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withValues(alpha: 0.72),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: MfSpace.sm),
-                Text(
-                  bucket.total <= 0 ? '--' : '${share.round()}%',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: bucket.spec.accent,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryGroupCard extends StatelessWidget {
-  const _CategoryGroupCard({required this.bucket, required this.active});
-
-  final _AnalyticsBucket bucket;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final visibleTransactions = bucket.transactions.length > 3
-        ? bucket.transactions.sublist(0, 3)
-        : bucket.transactions;
-
-    return AnimatedContainer(
-      duration: MfMotion.medium,
-      curve: MfMotion.curve,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(28),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            bucket.spec.accent.withValues(alpha: active ? 0.22 : 0.12),
-            const Color(0xFF121722).withValues(alpha: 0.96),
-          ],
-        ),
-        border: Border.all(
-          color: active
-              ? bucket.spec.accent.withValues(alpha: 0.38)
-              : _AnalyticsColors.border,
-        ),
-        boxShadow: [
-          if (active)
-            BoxShadow(
-              color: bucket.spec.accent.withValues(alpha: 0.16),
-              blurRadius: 26,
-              offset: const Offset(0, 16),
-            ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(MfSpace.lg),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: bucket.spec.colors),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Icon(bucket.spec.icon, color: Colors.white),
-                ),
-                const SizedBox(width: MfSpace.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        bucket.spec.label,
-                        style: GoogleFonts.inter(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: _AnalyticsColors.text,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${bucket.transactions.length} recent transaction${bucket.transactions.length == 1 ? '' : 's'}',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: _AnalyticsColors.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: MfSpace.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: bucket.spec.accent.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    _formatCurrency(bucket.total),
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: bucket.spec.accent,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: MfSpace.md),
-            ...List.generate(
-              visibleTransactions.length,
-              (index) => Padding(
-                padding: EdgeInsets.only(
-                  bottom: index == visibleTransactions.length - 1
-                      ? 0
-                      : MfSpace.md,
-                ),
-                child: _TransactionRow(
-                  entry: visibleTransactions[index],
-                  spec: bucket.spec,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TransactionRow extends StatelessWidget {
-  const _TransactionRow({required this.entry, required this.spec});
-
-  final _ExpenseEntry entry;
-  final _AnalyticsCategorySpec spec;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(MfSpace.md),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: spec.accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(spec.icon, color: spec.accent, size: 20),
-          ),
-          const SizedBox(width: MfSpace.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: _AnalyticsColors.text,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  entry.description,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: _AnalyticsColors.muted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: MfSpace.md),
-          Text(
-            _formatExpenseCurrency(entry.amount),
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: spec.accent,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

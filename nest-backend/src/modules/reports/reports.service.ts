@@ -221,15 +221,29 @@ export class ReportsService {
   }
 
   async dashboard(ctx: WorkspaceContext, trendMonths = 6) {
-    const [thisMonth, trend, netWorthBreakdown] = await Promise.all([
-      this.monthlySummary(ctx),
-      this.savingsTrend(ctx, trendMonths),
-      this.netWorth(ctx),
-    ]);
+    assertWorkspacePermission(ctx.role, "expense:read");
+    const [thisMonth, trend, netWorthBreakdown, allTimeExpenses] =
+      await Promise.all([
+        this.monthlySummary(ctx),
+        this.savingsTrend(ctx, trendMonths),
+        this.netWorth(ctx),
+        this.prisma.expense.aggregate({
+          where: {
+            userId: ctx.ownerUserId,
+            workspaceId: ctx.workspaceId,
+            category: { type: CategoryType.expense },
+          },
+          _sum: { amount: true },
+        }),
+      ]);
     return {
       thisMonth,
       netWorth: netWorthBreakdown,
       savingsTrend: trend,
+      totalSpentAllTime: Number(allTimeExpenses._sum.amount ?? 0).toFixed(2),
+      recurringMonthlyTotal: "0",
+      recurringNote: "Recurring total — fuller module after MVP.",
+      upcomingPayments: { count: 0, note: "Upcoming — after MVP." },
     };
   }
 
@@ -241,19 +255,193 @@ export class ReportsService {
         workspaceId: ctx.workspaceId,
         category: { type: CategoryType.expense },
       },
-      select: { categoryId: true, amount: true },
+      select: {
+        categoryId: true,
+        amount: true,
+        category: {
+          select: { name: true, systemKey: true, sortOrder: true },
+        },
+      },
     });
-    const totals = new Map<string, number>();
+    const totals = new Map<
+      string,
+      { total: number; name: string; systemKey: string | null; sortOrder: number }
+    >();
     for (const row of rows) {
-      totals.set(
-        row.categoryId,
-        (totals.get(row.categoryId) ?? 0) + Number(row.amount),
-      );
+      const prev = totals.get(row.categoryId);
+      const add = Number(row.amount);
+      if (prev) {
+        prev.total += add;
+      } else {
+        totals.set(row.categoryId, {
+          total: add,
+          name: row.category.name,
+          systemKey: row.category.systemKey,
+          sortOrder: row.category.sortOrder,
+        });
+      }
     }
-    return [...totals.entries()].map(([categoryId, total]) => ({
-      categoryId,
-      total: total.toFixed(2),
-    }));
+    return [...totals.entries()]
+      .map(([categoryId, v]) => ({
+        categoryId,
+        name: v.name,
+        systemKey: v.systemKey,
+        sortOrder: v.sortOrder,
+        total: v.total.toFixed(2),
+      }))
+      .sort((a, b) => {
+        const o = a.sortOrder - b.sortOrder;
+        if (o !== 0) return o;
+        return a.name.localeCompare(b.name);
+      });
+  }
+
+  /**
+   * Chart-ready MVP payload: lifetime spend, month-scoped category pie data,
+   * expense-only monthly bars, placeholders for recurring / vehicle / upcoming.
+   */
+  async expenseMvp(ctx: WorkspaceContext, yearStr?: string, monthStr?: string, trendMonths = 12) {
+    assertWorkspacePermission(ctx.role, "expense:read");
+    const { start, end, label } = this.parseYearMonth(yearStr, monthStr);
+    const months = Math.min(24, Math.max(1, Math.floor(trendMonths)));
+
+    const baseWhere = {
+      userId: ctx.ownerUserId,
+      workspaceId: ctx.workspaceId,
+      category: { type: CategoryType.expense },
+    } as const;
+
+    const [allTimeAgg, monthRows, trendRows, vehicleCount] = await Promise.all([
+      this.prisma.expense.aggregate({
+        where: baseWhere,
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.findMany({
+        where: { ...baseWhere, date: { gte: start, lt: end } },
+        select: {
+          amount: true,
+          categoryId: true,
+          category: {
+            select: { name: true, systemKey: true, sortOrder: true },
+          },
+        },
+      }),
+      this.prisma.expense.findMany({
+        where: baseWhere,
+        select: { amount: true, date: true },
+      }),
+      this.prisma.vehicle.count({ where: { userId: ctx.ownerUserId } }),
+    ]);
+
+    const totalSpentAllTime = Number(allTimeAgg._sum.amount ?? 0);
+
+    const byCatMonth = new Map<
+      string,
+      { total: number; name: string; systemKey: string | null; sortOrder: number }
+    >();
+    for (const row of monthRows) {
+      const prev = byCatMonth.get(row.categoryId);
+      const add = Number(row.amount);
+      if (prev) {
+        prev.total += add;
+      } else {
+        byCatMonth.set(row.categoryId, {
+          total: add,
+          name: row.category.name,
+          systemKey: row.category.systemKey,
+          sortOrder: row.category.sortOrder,
+        });
+      }
+    }
+
+    const categoryBreakdownMonth = [...byCatMonth.entries()]
+      .map(([categoryId, v]) => ({
+        categoryId,
+        name: v.name,
+        systemKey: v.systemKey,
+        total: v.total.toFixed(2),
+      }))
+      .sort((a, b) => {
+        const av = byCatMonth.get(a.categoryId)!;
+        const bv = byCatMonth.get(b.categoryId)!;
+        const o = av.sortOrder - bv.sortOrder;
+        if (o !== 0) return o;
+        return a.name.localeCompare(b.name);
+      });
+
+    const pieLabels = categoryBreakdownMonth.map((r) => r.name);
+    const pieValues = categoryBreakdownMonth.map((r) => Number(r.total));
+    const pieCategoryIds = categoryBreakdownMonth.map((r) => r.categoryId);
+
+    const expenseByMonth = new Map<string, number>();
+    for (const row of trendRows) {
+      const k = this.monthKey(row.date);
+      expenseByMonth.set(k, (expenseByMonth.get(k) ?? 0) + Number(row.amount));
+    }
+
+    const now = new Date();
+    const monthlyExpenseTrend: {
+      month: string;
+      label: string;
+      total: string;
+      totalNum: number;
+    }[] = [];
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+      const short = d.toLocaleString("en-US", { month: "short" });
+      const v = expenseByMonth.get(key) ?? 0;
+      monthlyExpenseTrend.push({
+        month: key,
+        label: short,
+        total: v.toFixed(2),
+        totalNum: v,
+      });
+    }
+
+    const barLabels = monthlyExpenseTrend.map((m) => m.label);
+    const barValues = monthlyExpenseTrend.map((m) => m.totalNum);
+
+    const vehicleExpenseAgg = await this.prisma.vehicleExpense.aggregate({
+      where: { vehicle: { userId: ctx.ownerUserId } },
+      _sum: { amount: true },
+    });
+    const vehicleCostsTotal = Number(vehicleExpenseAgg._sum.amount ?? 0);
+
+    return {
+      period: label,
+      totalSpentAllTime: totalSpentAllTime.toFixed(2),
+      thisMonthExpenses: monthRows
+        .reduce((s, r) => s + Number(r.amount), 0)
+        .toFixed(2),
+      categoryBreakdownMonth,
+      chart: {
+        pie: {
+          labels: pieLabels,
+          values: pieValues,
+          categoryIds: pieCategoryIds,
+        },
+        monthlyExpenses: {
+          labels: barLabels,
+          values: barValues,
+          months: monthlyExpenseTrend.map((m) => m.month),
+        },
+      },
+      recurringMonthlyTotal: "0",
+      recurringNote: "Coming soon — connect recurring module for a total.",
+      vehicle: {
+        hasVehicles: vehicleCount > 0,
+        vehicleExpenseTotalAllTime: vehicleCostsTotal.toFixed(2),
+        emptyHint:
+          vehicleCount === 0
+            ? "Add a vehicle under Profile to track fuel & service here."
+            : null,
+      },
+      upcomingPayments: {
+        count: 0,
+        note: "Upcoming bills — fuller module after MVP.",
+      },
+    };
   }
 
   private schemeLabel(scheme: string) {

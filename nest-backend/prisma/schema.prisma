@@ -26,6 +26,18 @@ enum CategoryType {
   income
 }
 
+/// Curated top-level groups seeded per user (Custom is the explicit overflow bucket).
+enum CategorySystemKey {
+  daily_expenses
+  household
+  vehicle
+  insurance
+  financial
+  donations
+  business
+  custom
+}
+
 enum Frequency {
   daily
   weekly
@@ -268,18 +280,25 @@ model OTPChallenge {
 
 /// Top-level category (Option A: two levels — Category + SubCategory only; no nested Category tree).
 model Category {
-  id                String             @id @default(cuid())
+  id                String              @id @default(cuid())
   name              String
-  type              CategoryType       @default(expense)
+  /// Lowercase trimmed normalized key for dedupe (case-insensitive uniqueness per user).
+  nameKey           String
+  /// Optional stable key for curated/template categories; null = user-created custom row.
+  systemKey         CategorySystemKey?
+  /// Display order for curated groups (0 = first).
+  sortOrder         Int                 @default(0)
+  type              CategoryType        @default(expense)
   userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   subCategoryRows   SubCategory[]
   expenses          Expense[]
   recurringExpenses RecurringExpense[]
   budgets           Budget[]
 
-  @@unique([userId, name])
+  @@unique([userId, nameKey])
   @@index([userId, type])
+  @@index([userId, sortOrder])
 }
 
 /// Monthly spending cap per expense category (yearMonth = YYYY * 100 + MM, e.g. 202604).
@@ -301,11 +320,13 @@ model Budget {
 model SubCategory {
   id         String    @id @default(cuid())
   name       String
+  nameKey    String
   categoryId String
   category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   expenses   Expense[]
 
-  @@unique([categoryId, name])
+  @@unique([categoryId, nameKey])
+  @@index([categoryId])
 }
 
 model Workspace {

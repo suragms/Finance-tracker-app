@@ -9,9 +9,17 @@ export class CategoriesRepository {
   findManyByUser(userId: string) {
     return this.prisma.category.findMany({
       where: { userId },
-      include: { subCategoryRows: true },
-      orderBy: { name: 'asc' },
+      include: { subCategoryRows: { orderBy: { name: 'asc' } } },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
+  }
+
+  findCategoryByUserAndNameKey(userId: string, nameKey: string) {
+    return this.prisma.category.findFirst({ where: { userId, nameKey } });
+  }
+
+  findSubcategoryByCategoryAndNameKey(categoryId: string, nameKey: string) {
+    return this.prisma.subCategory.findFirst({ where: { categoryId, nameKey } });
   }
 
   createCategory(data: Prisma.CategoryUncheckedCreateInput) {

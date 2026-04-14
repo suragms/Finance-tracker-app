@@ -38,6 +38,23 @@ class ReportsApi {
     return unwrapApiMap(res.data) ?? <String, dynamic>{};
   }
 
+  /// MVP: chart-ready category month breakdown + monthly expense trend + vehicle placeholder.
+  Future<Map<String, dynamic>> expenseMvp({
+    int? year,
+    int? month,
+    int trendMonths = 12,
+  }) async {
+    final res = await _dio.get<dynamic>(
+      '/reports/expense-mvp',
+      queryParameters: {
+        if (year != null) 'year': year.toString(),
+        if (month != null) 'month': month.toString(),
+        'trendMonths': trendMonths.toString(),
+      },
+    );
+    return unwrapApiMap(res.data) ?? <String, dynamic>{};
+  }
+
   Future<Map<String, dynamic>> taxSummary({
     int? year,
     int? month,

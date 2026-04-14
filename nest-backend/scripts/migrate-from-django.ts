@@ -2,6 +2,10 @@ import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
 import sqlite3 from 'sqlite3';
 
+function nk(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 const prisma = new PrismaClient();
 const sourcePath = process.env.DJANGO_SOURCE_DB_PATH || path.resolve(__dirname, '../../backend/db.sqlite3');
 
@@ -23,9 +27,11 @@ async function run() {
   for (const cat of categories) {
     const user = await prisma.user.findFirst({ where: { phone: `legacy-${cat.user_id}` } });
     if (!user) continue;
+    const name = String(cat.name).trim();
     await prisma.category.create({
       data: {
-        name: cat.name,
+        name,
+        nameKey: nk(name),
         userId: user.id,
       },
     });

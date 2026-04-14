@@ -18,6 +18,17 @@ class CategoriesApi {
     final res = await _dio.post<dynamic>('/categories', data: {'name': name});
     return unwrapApiMap(res.data) ?? <String, dynamic>{};
   }
+
+  Future<Map<String, dynamic>> createSubcategory(
+    String categoryId,
+    String name,
+  ) async {
+    final res = await _dio.post<dynamic>(
+      '/categories/$categoryId/subcategories',
+      data: {'name': name},
+    );
+    return unwrapApiMap(res.data) ?? <String, dynamic>{};
+  }
 }
 
 final categoriesApiProvider = Provider<CategoriesApi>(
