@@ -12,4 +12,5 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 EXPOSE 4000
-CMD ["node", "dist/main.js"]
+# nest build emits src under dist/ when tsconfig includes prisma/scripts (rootDir = .)
+CMD ["node", "dist/src/main.js"]
