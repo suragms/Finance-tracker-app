@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   Logger,
-  ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
@@ -30,6 +29,8 @@ type InsightDraft = {
   summary: string;
   payload: Prisma.InputJsonValue;
 };
+
+type AiProvider = 'groq' | 'gemini' | 'openai';
 
 @Injectable()
 export class AiService {
@@ -565,9 +566,14 @@ export class AiService {
     };
   }
 
-  /** True if OpenAI and/or Gemini (Google) API key is configured. */
+  /** True if at least one LLM provider key is configured. */
   private hasAiProvider(): boolean {
-    return !!(this.getGeminiKey() || this.config.get<string>('OPENAI_API_KEY')?.trim());
+    return !!(this.getGroqKey() || this.getGeminiKey() || this.config.get<string>('OPENAI_API_KEY')?.trim());
+  }
+
+  /** Groq key (OpenAI-compatible API). */
+  private getGroqKey(): string | undefined {
+    return this.config.get<string>('GROQ_API_KEY')?.trim();
   }
 
   /** Gemini: GEMINI_API_KEY, or Render-style `gemini_api`. */
@@ -579,17 +585,81 @@ export class AiService {
     );
   }
 
+  /** Provider order for fallback chain. Example: "groq,gemini,openai". */
+  private providerOrder(): AiProvider[] {
+    const raw = this.config.get<string>('AI_PROVIDER_ORDER', 'groq,gemini,openai');
+    const parsed = raw
+      .split(',')
+      .map((x) => x.trim().toLowerCase())
+      .filter((x): x is AiProvider => x === 'groq' || x === 'gemini' || x === 'openai');
+    return parsed.length ? parsed : ['groq', 'gemini', 'openai'];
+  }
+
+  private async completeWithFallback(
+    messages: { role: string; content: string }[],
+    jsonMode: boolean,
+  ): Promise<{ text: string; provider: AiProvider } | null> {
+    const errors: string[] = [];
+    for (const provider of this.providerOrder()) {
+      try {
+        if (provider === 'groq') {
+          const key = this.getGroqKey();
+          if (!key) continue;
+          const text = await this.groqComplete(messages, jsonMode, key);
+          if (text?.trim()) return { text, provider };
+          continue;
+        }
+        if (provider === 'gemini') {
+          const key = this.getGeminiKey();
+          if (!key) continue;
+          const text = await this.geminiComplete(messages, jsonMode, key);
+          if (text?.trim()) return { text, provider };
+          continue;
+        }
+        const key = this.config.get<string>('OPENAI_API_KEY')?.trim();
+        if (!key) continue;
+        const text = await this.openaiChatComplete(messages, jsonMode, key);
+        if (text?.trim()) return { text, provider };
+      } catch (e) {
+        errors.push(`${provider}: ${(e as Error).message}`);
+      }
+    }
+    if (errors.length) {
+      this.logger.warn(`LLM providers failed in order [${this.providerOrder().join(',')}]: ${errors.join(' | ')}`);
+    }
+    return null;
+  }
+
   private async openaiComplete(
     messages: { role: string; content: string }[],
     jsonMode: boolean,
   ): Promise<string | null> {
-    const geminiKey = this.getGeminiKey();
-    if (geminiKey) {
-      return this.geminiComplete(messages, jsonMode, geminiKey);
+    const result = await this.completeWithFallback(messages, jsonMode);
+    return result?.text ?? null;
+  }
+
+  /** Groq Chat Completions (OpenAI-compatible endpoint). */
+  private async groqComplete(
+    messages: { role: string; content: string }[],
+    jsonMode: boolean,
+    apiKey: string,
+  ): Promise<string | null> {
+    const model = this.config.get<string>('GROQ_MODEL', 'llama-3.3-70b-versatile');
+    const body: Record<string, unknown> = {
+      model,
+      messages,
+      max_tokens: jsonMode ? 900 : 700,
+      temperature: 0.2,
+    };
+    if (jsonMode) {
+      body.response_format = { type: 'json_object' };
     }
-    const openaiKey = this.config.get<string>('OPENAI_API_KEY')?.trim();
-    if (!openaiKey) return null;
-    return this.openaiChatComplete(messages, jsonMode, openaiKey);
+    const { data } = await axios.post('https://api.groq.com/openai/v1/chat/completions', body, {
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      timeout: 60000,
+    });
+    const content = data?.choices?.[0]?.message?.content;
+    return typeof content === 'string' ? content : null;
   }
 
   private async openaiChatComplete(
@@ -733,7 +803,7 @@ export class AiService {
     const apiKeyConfigured = this.hasAiProvider();
 
     let structured: StructuredInsights;
-    let source: 'openai' | 'gemini' | 'heuristic';
+    let source: 'openai' | 'gemini' | 'groq' | 'heuristic';
 
     const systemJsonPrompt = [
       'You are a disciplined personal finance advisor. Output ONLY valid JSON with these exact keys:',
@@ -746,15 +816,14 @@ export class AiService {
 
     if (apiKeyConfigured) {
       try {
-        const text = await this.openaiComplete(
+        const completion = await this.completeWithFallback(
           [
             { role: 'system', content: systemJsonPrompt },
             { role: 'user', content: `User financial data:\n\n${context}` },
           ],
           true,
         );
-
-        const parsed = text ? this.parseStructured(text) : null;
+        const parsed = completion?.text ? this.parseStructured(completion.text) : null;
         if (parsed) {
           structured = {
             monthlyFinancialSummary: parsed.monthlyFinancialSummary,
@@ -762,7 +831,7 @@ export class AiService {
             savingSuggestions: parsed.savingSuggestions.slice(0, 8),
             budgetRecommendations: parsed.budgetRecommendations.slice(0, 8),
           };
-          source = this.getGeminiKey() ? 'gemini' : 'openai';
+          source = completion?.provider ?? 'heuristic';
         } else {
           structured = this.heuristicStructured(thisMonth, lastMonth, currency, momTuples);
           source = 'heuristic';
@@ -804,7 +873,7 @@ export class AiService {
     if (!this.hasAiProvider()) {
       return {
         reply:
-          'The AI assistant needs GEMINI_API_KEY (or gemini_api) or OPENAI_API_KEY on the server. Meanwhile: compare this month category totals to last month, cap your top category at 90% of last month spend, and automate one savings transfer per paycheck.',
+          'The AI assistant needs at least one provider key: GROQ_API_KEY, GEMINI_API_KEY (or gemini_api), or OPENAI_API_KEY. Meanwhile: compare this month category totals to last month, cap your top category at 90% of last month spend, and automate one savings transfer per paycheck.',
         source: 'heuristic' as const,
       };
     }
@@ -820,10 +889,9 @@ export class AiService {
     ];
 
     try {
-      const text = await this.openaiComplete(messages, false);
-      if (!text?.trim()) throw new Error('Empty completion');
-      const src: 'gemini' | 'openai' = this.getGeminiKey() ? 'gemini' : 'openai';
-      return { reply: text.trim(), source: src };
+      const completion = await this.completeWithFallback(messages, false);
+      if (!completion?.text?.trim()) throw new Error('Empty completion');
+      return { reply: completion.text.trim(), source: completion.provider };
     } catch (e) {
       this.logger.warn(`AI chat failed; using heuristic fallback: ${(e as Error).message}`);
       const fallback = await this.insightsLive(userId);
