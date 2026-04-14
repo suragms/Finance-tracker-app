@@ -39,8 +39,8 @@ jobs:
       - name: Build web (release)
         run: flutter build web --release --dart-define=API_BASE=${{ env.API_BASE }}
 
-      - name: Include Vercel SPA rewrites in output
-        run: cp vercel.json build/web/vercel.json
+      - name: Include Vercel SPA rewrites in output (rewrites only; no build keys)
+        run: cp vercel-rewrites.json build/web/vercel.json
 
       - name: Upload build/web
         uses: actions/upload-artifact@v4
