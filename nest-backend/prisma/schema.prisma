@@ -1,5 +1,7 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  /// Ensures Docker/Render (Debian/glibc + OpenSSL 3) gets a matching engine; avoids linux-musl + libssl1.1 on Alpine mismatches.
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {

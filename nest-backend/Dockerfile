@@ -17,5 +17,5 @@ COPY --from=builder /app/prisma ./prisma
 EXPOSE 4000
 ENV NODE_ENV=production
 # Apply migrations then start API (fixes empty DB / Prisma errors on first deploy).
-# nest build emits src under dist/ when tsconfig includes prisma/scripts (rootDir = .)
-CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/src/main.js"]
+# `npm run build` also writes dist/main.js → forwards to dist/src/main.js for hosts that default to dist/main.js.
+CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/main.js"]

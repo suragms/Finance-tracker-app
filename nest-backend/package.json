@@ -6,8 +6,8 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "scripts": {
-    "build": "nest build",
-    "start": "nest start",
+    "build": "nest build && node scripts/write-dist-main-shim.cjs",
+    "start": "node dist/src/main.js",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/src/main.js",
     "lint": "eslint \"src/**/*.ts\"",
