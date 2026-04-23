@@ -20,6 +20,7 @@ class AnalyticsFilter {
   final String? subCategoryId;
   final String? expenseTypeId;
   final String? spendEntityId;
+
   /// Backend enum: cash, card, upi, bank_transfer, wallet, other
   final String? paymentMode;
 

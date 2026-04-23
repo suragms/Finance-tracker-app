@@ -5,8 +5,8 @@ import '../data/recurring_api.dart';
 
 final recurringListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      if (kNoApiMode) {
-        return const <Map<String, dynamic>>[];
-      }
-      return ref.watch(recurringApiProvider).list();
-    });
+  if (kNoApiMode) {
+    return const <Map<String, dynamic>>[];
+  }
+  return ref.watch(recurringApiProvider).list();
+});

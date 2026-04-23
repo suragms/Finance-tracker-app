@@ -15,6 +15,9 @@ import { LoginEmailDto } from './dto/login-email.dto';
 import { OtpRequestDto, OtpVerifyDto } from './dto/otp.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { CategoriesService } from '../categories/categories.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
+import { AccountType } from '@prisma/client';
 
 export type SessionMeta = {
   userAgent?: string;
@@ -35,6 +38,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly categories: CategoriesService,
+    private readonly workspaces: WorkspacesService,
   ) {}
 
   private refreshTokenHashes(raw: string): string[] {
@@ -81,6 +86,7 @@ export class AuthService {
         role: (dto.role as UserRole | undefined) ?? UserRole.owner,
       },
     });
+    await this.setupNewUser(user.id);
     return this.issueTokenPair(
       { id: user.id, phone: user.phone, email: user.email, role: user.role },
       meta,
@@ -160,6 +166,7 @@ export class AuthService {
           role: UserRole.owner,
         },
       });
+      await this.setupNewUser(user.id);
     }
     return this.issueTokenPair(
       { id: user.id, phone: user.phone, email: user.email, role: user.role },
@@ -257,6 +264,30 @@ export class AuthService {
       throw new BadRequestException('Session not found or already revoked.');
     }
     return { ok: true };
+  }
+
+  private async setupNewUser(userId: string) {
+    // 1. Ensure personal workspace
+    const workspaceId = await this.workspaces.ensurePersonalWorkspace(userId);
+
+    // 2. Seed default categories
+    await this.categories.seedDefaultCategories(userId);
+
+    // 3. Create a default Cash account if none exists
+    const existingAccounts = await this.prisma.account.findFirst({
+      where: { userId, workspaceId },
+    });
+    if (!existingAccounts) {
+      await this.prisma.account.create({
+        data: {
+          userId,
+          workspaceId,
+          name: 'Cash',
+          type: AccountType.cash,
+          balance: 0,
+        },
+      });
+    }
   }
 
   private async revokeAllRefreshTokensForUser(userId: string) {

@@ -14,7 +14,8 @@ Future<void> showDemoGetStartedIfNeeded(BuildContext context) async {
     PageRouteBuilder<void>(
       opaque: true,
       barrierDismissible: false,
-      pageBuilder: (ctx, _, __) => const DemoGetStartedScreen(markCompleteOnExit: true),
+      pageBuilder: (ctx, _, __) =>
+          const DemoGetStartedScreen(markCompleteOnExit: true),
       transitionsBuilder: (ctx, anim, _, child) {
         return FadeTransition(opacity: anim, child: child);
       },
@@ -46,7 +47,32 @@ class DemoGetStartedScreen extends StatefulWidget {
 class _DemoGetStartedScreenState extends State<DemoGetStartedScreen> {
   final _pageController = PageController();
   int _page = 0;
-  static const _totalPages = 3;
+  static const _slides = <_OnboardSlide>[
+    _OnboardSlide(
+      title: 'Track Expenses',
+      description:
+          'Capture every spend in seconds with clean categories and instant balance updates.',
+      accent: Color(0xFF6366F1),
+      icon: Icons.receipt_long_rounded,
+      secondaryIcon: Icons.pie_chart_rounded,
+    ),
+    _OnboardSlide(
+      title: 'Smart Insights',
+      description:
+          'See weekly trends, category breakdowns, and practical guidance for better decisions.',
+      accent: Color(0xFF4DB5FF),
+      icon: Icons.auto_graph_rounded,
+      secondaryIcon: Icons.insights_rounded,
+    ),
+    _OnboardSlide(
+      title: 'Recurring Automation',
+      description:
+          'Automate repeated bills and incomes so your budget stays accurate without extra effort.',
+      accent: Color(0xFF10B981),
+      icon: Icons.autorenew_rounded,
+      secondaryIcon: Icons.event_repeat_rounded,
+    ),
+  ];
 
   @override
   void dispose() {
@@ -62,10 +88,10 @@ class _DemoGetStartedScreenState extends State<DemoGetStartedScreen> {
   }
 
   void _next() {
-    if (_page < _totalPages - 1) {
+    if (_page < _slides.length - 1) {
       _pageController.nextPage(
         duration: MfMotion.medium,
-        curve: MfMotion.curve,
+        curve: Curves.easeInOutCubic,
       );
     } else {
       _exit();
@@ -75,183 +101,302 @@ class _DemoGetStartedScreenState extends State<DemoGetStartedScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MfPalette.canvas,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                MfSpace.sm,
-                MfSpace.sm,
-                MfSpace.sm,
-                MfSpace.xs,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    'MoneyFlow AI',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 18,
-                      color: MfPalette.neonGreen,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _exit,
-                    child: Text(
-                      'Skip',
-                      style: GoogleFonts.inter(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: MfPalette.textMuted,
+      backgroundColor: Colors.transparent,
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A1038), Color(0xFF050507)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  MfSpace.lg,
+                  MfSpace.md,
+                  MfSpace.lg,
+                  MfSpace.md,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      'MoneyFlow AI',
+                      style: GoogleFonts.manrope(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 20,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _page = i),
-                children: [
-                  _OnboardPage(
-                    icon: Icons.rocket_launch_rounded,
-                    title: 'Welcome to the demo',
-                    body:
-                        'You\'re in offline demo mode with sample income, expenses, '
-                        'and balances. No sign-in or server is required—explore freely.',
-                  ),
-                  _OnboardPage(
-                    icon: Icons.explore_rounded,
-                    title: 'Find your way around',
-                    body:
-                        'Use the bottom bar: Home for your overview, Transactions for '
-                        'spending history, Analytics for charts, and Profile for settings '
-                        'and more tools. Tap the yellow + button to add an expense quickly.',
-                  ),
-                  _OnboardPage(
-                    icon: Icons.lightbulb_outline_rounded,
-                    title: 'Tips',
-                    body:
-                        'Pull down on lists to refresh when a live API is connected. '
-                        'In this demo, adding income from some flows may be limited—'
-                        'expenses and browsing work with local sample data.',
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                MfSpace.xxl,
-                MfSpace.md,
-                MfSpace.xxl,
-                MfSpace.lg,
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_totalPages, (i) {
-                      final active = i == _page;
-                      return AnimatedContainer(
-                        duration: MfMotion.fast,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: active ? 22 : 7,
-                        height: 7,
-                        decoration: BoxDecoration(
-                          color: active
-                              ? MfPalette.neonGreen
-                              : Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: MfSpace.lg),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: _next,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: MfPalette.neonGreen,
-                        foregroundColor: MfPalette.onNeonGreen,
-                        padding: const EdgeInsets.symmetric(vertical: MfSpace.md),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(MfRadius.md),
-                        ),
-                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _exit,
                       child: Text(
-                        _page < _totalPages - 1 ? 'Next' : 'Get started',
+                        'Skip',
                         style: GoogleFonts.inter(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.white.withValues(alpha: 0.62),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  physics: const BouncingScrollPhysics(),
+                  onPageChanged: (i) => setState(() => _page = i),
+                  itemCount: _slides.length,
+                  itemBuilder: (context, index) => _PageSlideTransition(
+                    controller: _pageController,
+                    index: index,
+                    child: Padding(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: MfSpace.xl),
+                      child: _OnboardPage(slide: _slides[index]),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  MfSpace.xl,
+                  MfSpace.md,
+                  MfSpace.xl,
+                  MfSpace.xl,
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(_slides.length, (i) {
+                        final active = i == _page;
+                        final activeColor = _slides[_page].accent;
+                        return AnimatedContainer(
+                          duration: MfMotion.fast,
+                          curve: Curves.easeOut,
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          width: active ? 22 : 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: active
+                                ? activeColor
+                                : Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(99),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: MfSpace.lg),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _next,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _slides[_page].accent,
+                          foregroundColor: Colors.white,
+                          padding:
+                              const EdgeInsets.symmetric(vertical: MfSpace.lg),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          'Get Started',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _OnboardPage extends StatelessWidget {
-  const _OnboardPage({
-    required this.icon,
+class _OnboardSlide {
+  const _OnboardSlide({
     required this.title,
-    required this.body,
+    required this.description,
+    required this.accent,
+    required this.icon,
+    required this.secondaryIcon,
   });
 
-  final IconData icon;
   final String title;
-  final String body;
+  final String description;
+  final Color accent;
+  final IconData icon;
+  final IconData secondaryIcon;
+}
+
+class _OnboardPage extends StatelessWidget {
+  const _OnboardPage({required this.slide});
+
+  final _OnboardSlide slide;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: MfSpace.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: MfSpace.md),
+        _FintechIllustration(
+          accent: slide.accent,
+          primaryIcon: slide.icon,
+          secondaryIcon: slide.secondaryIcon,
+        ),
+        const SizedBox(height: MfSpace.xxxl),
+        Text(
+          slide.title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.manrope(
+            fontWeight: FontWeight.w800,
+            fontSize: 31,
+            color: Colors.white,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: MfSpace.md),
+        Text(
+          slide.description,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            height: 1.45,
+            color: Colors.white.withValues(alpha: 0.68),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FintechIllustration extends StatelessWidget {
+  const _FintechIllustration({
+    required this.accent,
+    required this.primaryIcon,
+    required this.secondaryIcon,
+  });
+
+  final Color accent;
+  final IconData primaryIcon;
+  final IconData secondaryIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 230,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(MfSpace.xl),
+          AnimatedContainer(
+            duration: MfMotion.medium,
+            curve: Curves.easeOutCubic,
+            width: 190,
+            height: 190,
             decoration: BoxDecoration(
-              color: MfPalette.neonGreen.withValues(alpha: 0.12),
               shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 48, color: MfPalette.neonGreen),
-          ),
-          const SizedBox(height: MfSpace.xxxl),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w800,
-              fontSize: 24,
-              color: Colors.white,
-              height: 1.2,
+              color: accent.withValues(alpha: 0.18),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.2),
+                  blurRadius: 26,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: MfSpace.lg),
-          Text(
-            body,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w400,
-              fontSize: 15,
-              height: 1.45,
-              color: MfPalette.textMuted,
+          Container(
+            width: 150,
+            height: 150,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.06),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: Icon(primaryIcon, size: 64, color: accent),
+          ),
+          Positioned(
+            right: 32,
+            top: 20,
+            child: _MiniIconBubble(icon: secondaryIcon, color: accent),
+          ),
+          Positioned(
+            left: 28,
+            bottom: 16,
+            child: _MiniIconBubble(
+              icon: Icons.trending_up_rounded,
+              color: accent,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MiniIconBubble extends StatelessWidget {
+  const _MiniIconBubble({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.2),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      alignment: Alignment.center,
+      child: Icon(icon, size: 22, color: color),
+    );
+  }
+}
+
+class _PageSlideTransition extends StatelessWidget {
+  const _PageSlideTransition({
+    required this.child,
+    required this.controller,
+    required this.index,
+  });
+
+  final Widget child;
+  final PageController controller;
+  final int index;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        final page = controller.hasClients && controller.page != null
+            ? controller.page!
+            : controller.initialPage.toDouble();
+        final delta = (page - index).clamp(-1.0, 1.0);
+        final opacity = 1 - (delta.abs() * 0.35);
+        return Transform.translate(
+          offset: Offset(delta * 28, 0),
+          child: Opacity(opacity: opacity, child: child),
+        );
+      },
     );
   }
 }

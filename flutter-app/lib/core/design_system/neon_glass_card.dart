@@ -25,20 +25,20 @@ class NeonGlassCard extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: MfPalette.neonGreen.withValues(alpha: 0.08),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withValues(alpha: 0.26),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.06),

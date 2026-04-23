@@ -1,0 +1,195 @@
+🧠 SECTION 1: BASIC PROJECT INFO
+🔹 1.1 Your SaaS Idea
+
+What are you building?
+
+👉 MoneyFlow AI is a smart finance tracking application designed for small business owners and individuals to track income, expenses, and recurring payments while gaining intelligent insights into their financial behavior.
+
+👉 Users can add transactions in 2–3 taps, view real-time dashboards, and receive smart alerts and automation for better financial decisions.
+
+🌍 1.2 Target Market
+
+✔ India (Primary)
+✔ Future: India + Gulf
+
+Why this market?
+
+Large number of small business owners
+Many still use notebooks or Excel
+High demand for simple finance tracking apps
+Mobile-first users (Android heavy market)
+⏱ 1.3 Timeline
+
+✔ 3–4 days (MVP + Advanced Features)
+
+Why?
+
+Fast development using Flutter + NestJS
+Cursor AI used for rapid implementation
+Focus on core features first, then enhancements
+💰 1.4 Budget
+
+✔ <$2,000 (Low-cost development)
+
+✔ Preference: Balanced (low cost + good quality)
+
+Reason:
+
+Using open-source tools
+No heavy infrastructure cost
+Personal development project
+🧩 SECTION 2: PRODUCT DEFINITION
+🔹 2.1 Product Type
+
+✔ Analytics Dashboard + Finance Tracker (Custom SaaS)
+
+👤 2.2 Target Users
+🎯 Primary Users
+
+👉 Small business owners (1–10 employees) in India
+
+Age: 22–45
+Tech level: Basic
+Budget: ₹0–₹500/month
+Current tools: Notebook / Excel
+🔹 Secondary Users
+
+👉 Freelancers & working professionals
+
+Track income and daily expenses
+Want simple insights
+⚠️ 2.3 Main Problem
+
+Problem:
+
+No clear tracking of expenses
+Hard to calculate profit
+Forget recurring payments
+No insights into spending
+
+Why this is important:
+
+👉 Businesses lose money due to:
+
+Untracked expenses
+Poor financial visibility
+Missed payments
+
+👉 Time wasted in manual tracking
+
+🔥 SECTION 3: FEATURES
+✅ 3.1 P0 Features (Must Have)
+🔹 Feature 1: Income Management
+Description: Add and track income sources
+Why critical: Required for profit calculation
+User Flow:
+Tap ➕ → Select Income → Enter amount → Save
+🔹 Feature 2: Expense Management
+Description: Add expenses with categories
+Why critical: Core tracking system
+User Flow:
+Tap ➕ → Expense → Enter amount → Select category → Save
+🔹 Feature 3: Dashboard
+Description: Shows total income, expense, profit
+Why critical: Gives financial clarity
+User Flow:
+Open app → View summary + charts
+⚡ 3.2 P1 Features (Should Have)
+🔹 Feature 1: Reports & Charts
+Pie chart (category spending)
+Bar chart (monthly trends)
+Why important: Helps decision making
+🔹 Feature 2: Recurring System
+Monthly/yearly expenses
+Reminders
+Auto-add
+Why important: Reduces manual work
+🔹 Feature 3: Smart Insights
+Spending alerts
+Budget warnings
+Why important: Adds intelligence
+🔮 3.3 P2 Features (Later)
+🔹 Feature 1: SMS Tracking
+Detect bank SMS
+Auto-create expense
+🔹 Feature 2: WhatsApp Alerts
+Daily reports
+Notifications
+🌐 SECTION 4: PLATFORMS & INTEGRATION
+📱 4.1 Platforms
+
+✔ Web + Android (Flutter app)
+✔ Future: iOS
+
+💳 4.2 Payment Integration
+
+✔ Razorpay (Planned)
+
+Details:
+
+Subscription plans
+UPI + Card payments
+Monthly billing
+🔌 4.3 Integrations
+SMS parsing (Android)
+Notifications system
+Future:
+Firebase (cloud sync)
+Email alerts
+⚙️ SECTION 5: TECHNICAL REQUIREMENTS
+🧠 5.1 Tech Stack
+
+Frontend: Flutter
+Backend: NestJS
+Database: PostgreSQL + Drift (local)
+Hosting: Render
+
+⚡ 5.2 Performance Targets
+Page load: <3 seconds
+API response: <500ms
+Users: 100+ concurrent
+💰 SECTION 6: BUSINESS MODEL
+💳 6.1 Pricing Strategy
+
+✔ Freemium Model
+
+🟢 Starter (Free)
+Basic tracking
+Limited features
+🔵 Pro
+₹99/month
+Reports + insights
+🔴 Premium
+₹199/month
+AI + automation
+📊 6.2 Revenue Target
+Month 1: ₹10,000
+Month 3: ₹50,000
+Month 6: ₹2,00,000
+Year 1: ₹10,00,000+
+⚠️ SECTION 7: ISSUES & CONCERNS
+🔹 7.1 Risks
+
+✔ Production bugs
+✔ Performance issues
+✔ SMS parsing accuracy
+✔ User adoption
+✔ UI/UX confusion
+
+Concerns:
+SMS detection may fail
+Complex UI may confuse users
+Bugs in early version
+🔹 7.2 Constraints
+Must be mobile-first
+Must work on low-end devices
+Must be simple UI
+Limited budget
+🧠 FINAL CONCLUSION
+
+👉 MoneyFlow AI is a scalable SaaS finance system
+
+✔ Solves real-world problem
+✔ Simple but powerful
+✔ Built for Indian users
+✔ Ready for MVP launch

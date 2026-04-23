@@ -12,89 +12,55 @@ class $CachedExpensesTable extends CachedExpenses
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
-    'payloadJson',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-    'payload_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
-    'syncStatus',
-  );
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
   late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
-    'sync_status',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _clientRevisionAtMeta = const VerificationMeta(
-    'clientRevisionAt',
-  );
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientRevisionAtMeta =
+      const VerificationMeta('clientRevisionAt');
   @override
   late final GeneratedColumn<DateTime> clientRevisionAt =
-      GeneratedColumn<DateTime>(
-        'client_revision_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _lastKnownServerAtMeta = const VerificationMeta(
-    'lastKnownServerAt',
-  );
+      GeneratedColumn<DateTime>('client_revision_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastKnownServerAtMeta =
+      const VerificationMeta('lastKnownServerAt');
   @override
   late final GeneratedColumn<DateTime> lastKnownServerAt =
-      GeneratedColumn<DateTime>(
-        'last_known_server_at',
-        aliasedName,
-        true,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _expenseSortDateMeta = const VerificationMeta(
-    'expenseSortDate',
-  );
+      GeneratedColumn<DateTime>('last_known_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _expenseSortDateMeta =
+      const VerificationMeta('expenseSortDate');
   @override
   late final GeneratedColumn<DateTime> expenseSortDate =
-      GeneratedColumn<DateTime>(
-        'expense_sort_date',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
+      GeneratedColumn<DateTime>('expense_sort_date', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-    expenseSortDate,
-  ];
+        id,
+        payloadJson,
+        syncStatus,
+        clientRevisionAt,
+        lastKnownServerAt,
+        expenseSortDate
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'cached_expenses';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CachedExpense> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CachedExpense> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -104,51 +70,39 @@ class $CachedExpensesTable extends CachedExpenses
     }
     if (data.containsKey('payload_json')) {
       context.handle(
-        _payloadJsonMeta,
-        payloadJson.isAcceptableOrUnknown(
-          data['payload_json']!,
           _payloadJsonMeta,
-        ),
-      );
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('sync_status')) {
       context.handle(
-        _syncStatusMeta,
-        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
-      );
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
     } else if (isInserting) {
       context.missing(_syncStatusMeta);
     }
     if (data.containsKey('client_revision_at')) {
       context.handle(
-        _clientRevisionAtMeta,
-        clientRevisionAt.isAcceptableOrUnknown(
-          data['client_revision_at']!,
           _clientRevisionAtMeta,
-        ),
-      );
+          clientRevisionAt.isAcceptableOrUnknown(
+              data['client_revision_at']!, _clientRevisionAtMeta));
     } else if (isInserting) {
       context.missing(_clientRevisionAtMeta);
     }
     if (data.containsKey('last_known_server_at')) {
       context.handle(
-        _lastKnownServerAtMeta,
-        lastKnownServerAt.isAcceptableOrUnknown(
-          data['last_known_server_at']!,
           _lastKnownServerAtMeta,
-        ),
-      );
+          lastKnownServerAt.isAcceptableOrUnknown(
+              data['last_known_server_at']!, _lastKnownServerAtMeta));
     }
     if (data.containsKey('expense_sort_date')) {
       context.handle(
-        _expenseSortDateMeta,
-        expenseSortDate.isAcceptableOrUnknown(
-          data['expense_sort_date']!,
           _expenseSortDateMeta,
-        ),
-      );
+          expenseSortDate.isAcceptableOrUnknown(
+              data['expense_sort_date']!, _expenseSortDateMeta));
     } else if (isInserting) {
       context.missing(_expenseSortDateMeta);
     }
@@ -161,30 +115,19 @@ class $CachedExpensesTable extends CachedExpenses
   CachedExpense map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedExpense(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      payloadJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload_json'],
-      )!,
-      syncStatus: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sync_status'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sync_status'])!,
       clientRevisionAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}client_revision_at'],
-      )!,
+          DriftSqlType.dateTime, data['${effectivePrefix}client_revision_at'])!,
       lastKnownServerAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_known_server_at'],
-      ),
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_known_server_at']),
       expenseSortDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}expense_sort_date'],
-      )!,
+          DriftSqlType.dateTime, data['${effectivePrefix}expense_sort_date'])!,
     );
   }
 
@@ -201,14 +144,13 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
   final DateTime clientRevisionAt;
   final DateTime? lastKnownServerAt;
   final DateTime expenseSortDate;
-  const CachedExpense({
-    required this.id,
-    required this.payloadJson,
-    required this.syncStatus,
-    required this.clientRevisionAt,
-    this.lastKnownServerAt,
-    required this.expenseSortDate,
-  });
+  const CachedExpense(
+      {required this.id,
+      required this.payloadJson,
+      required this.syncStatus,
+      required this.clientRevisionAt,
+      this.lastKnownServerAt,
+      required this.expenseSortDate});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -236,19 +178,16 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
     );
   }
 
-  factory CachedExpense.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CachedExpense.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedExpense(
       id: serializer.fromJson<String>(json['id']),
       payloadJson: serializer.fromJson<String>(json['payloadJson']),
       syncStatus: serializer.fromJson<int>(json['syncStatus']),
       clientRevisionAt: serializer.fromJson<DateTime>(json['clientRevisionAt']),
-      lastKnownServerAt: serializer.fromJson<DateTime?>(
-        json['lastKnownServerAt'],
-      ),
+      lastKnownServerAt:
+          serializer.fromJson<DateTime?>(json['lastKnownServerAt']),
       expenseSortDate: serializer.fromJson<DateTime>(json['expenseSortDate']),
     );
   }
@@ -265,32 +204,30 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
     };
   }
 
-  CachedExpense copyWith({
-    String? id,
-    String? payloadJson,
-    int? syncStatus,
-    DateTime? clientRevisionAt,
-    Value<DateTime?> lastKnownServerAt = const Value.absent(),
-    DateTime? expenseSortDate,
-  }) => CachedExpense(
-    id: id ?? this.id,
-    payloadJson: payloadJson ?? this.payloadJson,
-    syncStatus: syncStatus ?? this.syncStatus,
-    clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
-    lastKnownServerAt: lastKnownServerAt.present
-        ? lastKnownServerAt.value
-        : this.lastKnownServerAt,
-    expenseSortDate: expenseSortDate ?? this.expenseSortDate,
-  );
+  CachedExpense copyWith(
+          {String? id,
+          String? payloadJson,
+          int? syncStatus,
+          DateTime? clientRevisionAt,
+          Value<DateTime?> lastKnownServerAt = const Value.absent(),
+          DateTime? expenseSortDate}) =>
+      CachedExpense(
+        id: id ?? this.id,
+        payloadJson: payloadJson ?? this.payloadJson,
+        syncStatus: syncStatus ?? this.syncStatus,
+        clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+        lastKnownServerAt: lastKnownServerAt.present
+            ? lastKnownServerAt.value
+            : this.lastKnownServerAt,
+        expenseSortDate: expenseSortDate ?? this.expenseSortDate,
+      );
   CachedExpense copyWithCompanion(CachedExpensesCompanion data) {
     return CachedExpense(
       id: data.id.present ? data.id.value : this.id,
-      payloadJson: data.payloadJson.present
-          ? data.payloadJson.value
-          : this.payloadJson,
-      syncStatus: data.syncStatus.present
-          ? data.syncStatus.value
-          : this.syncStatus,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
       clientRevisionAt: data.clientRevisionAt.present
           ? data.clientRevisionAt.value
           : this.clientRevisionAt,
@@ -317,14 +254,8 @@ class CachedExpense extends DataClass implements Insertable<CachedExpense> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-    expenseSortDate,
-  );
+  int get hashCode => Object.hash(id, payloadJson, syncStatus, clientRevisionAt,
+      lastKnownServerAt, expenseSortDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -362,11 +293,11 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     this.lastKnownServerAt = const Value.absent(),
     required DateTime expenseSortDate,
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       payloadJson = Value(payloadJson),
-       syncStatus = Value(syncStatus),
-       clientRevisionAt = Value(clientRevisionAt),
-       expenseSortDate = Value(expenseSortDate);
+  })  : id = Value(id),
+        payloadJson = Value(payloadJson),
+        syncStatus = Value(syncStatus),
+        clientRevisionAt = Value(clientRevisionAt),
+        expenseSortDate = Value(expenseSortDate);
   static Insertable<CachedExpense> custom({
     Expression<String>? id,
     Expression<String>? payloadJson,
@@ -387,15 +318,14 @@ class CachedExpensesCompanion extends UpdateCompanion<CachedExpense> {
     });
   }
 
-  CachedExpensesCompanion copyWith({
-    Value<String>? id,
-    Value<String>? payloadJson,
-    Value<int>? syncStatus,
-    Value<DateTime>? clientRevisionAt,
-    Value<DateTime?>? lastKnownServerAt,
-    Value<DateTime>? expenseSortDate,
-    Value<int>? rowid,
-  }) {
+  CachedExpensesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? payloadJson,
+      Value<int>? syncStatus,
+      Value<DateTime>? clientRevisionAt,
+      Value<DateTime?>? lastKnownServerAt,
+      Value<DateTime>? expenseSortDate,
+      Value<int>? rowid}) {
     return CachedExpensesCompanion(
       id: id ?? this.id,
       payloadJson: payloadJson ?? this.payloadJson,
@@ -458,76 +388,43 @@ class $CachedAccountsTable extends CachedAccounts
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
-    'payloadJson',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-    'payload_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
-    'syncStatus',
-  );
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
   late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
-    'sync_status',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _clientRevisionAtMeta = const VerificationMeta(
-    'clientRevisionAt',
-  );
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientRevisionAtMeta =
+      const VerificationMeta('clientRevisionAt');
   @override
   late final GeneratedColumn<DateTime> clientRevisionAt =
-      GeneratedColumn<DateTime>(
-        'client_revision_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _lastKnownServerAtMeta = const VerificationMeta(
-    'lastKnownServerAt',
-  );
+      GeneratedColumn<DateTime>('client_revision_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastKnownServerAtMeta =
+      const VerificationMeta('lastKnownServerAt');
   @override
   late final GeneratedColumn<DateTime> lastKnownServerAt =
-      GeneratedColumn<DateTime>(
-        'last_known_server_at',
-        aliasedName,
-        true,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: false,
-      );
+      GeneratedColumn<DateTime>('last_known_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-  ];
+  List<GeneratedColumn> get $columns =>
+      [id, payloadJson, syncStatus, clientRevisionAt, lastKnownServerAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'cached_accounts';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CachedAccount> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CachedAccount> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -537,42 +434,33 @@ class $CachedAccountsTable extends CachedAccounts
     }
     if (data.containsKey('payload_json')) {
       context.handle(
-        _payloadJsonMeta,
-        payloadJson.isAcceptableOrUnknown(
-          data['payload_json']!,
           _payloadJsonMeta,
-        ),
-      );
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('sync_status')) {
       context.handle(
-        _syncStatusMeta,
-        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
-      );
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
     } else if (isInserting) {
       context.missing(_syncStatusMeta);
     }
     if (data.containsKey('client_revision_at')) {
       context.handle(
-        _clientRevisionAtMeta,
-        clientRevisionAt.isAcceptableOrUnknown(
-          data['client_revision_at']!,
           _clientRevisionAtMeta,
-        ),
-      );
+          clientRevisionAt.isAcceptableOrUnknown(
+              data['client_revision_at']!, _clientRevisionAtMeta));
     } else if (isInserting) {
       context.missing(_clientRevisionAtMeta);
     }
     if (data.containsKey('last_known_server_at')) {
       context.handle(
-        _lastKnownServerAtMeta,
-        lastKnownServerAt.isAcceptableOrUnknown(
-          data['last_known_server_at']!,
           _lastKnownServerAtMeta,
-        ),
-      );
+          lastKnownServerAt.isAcceptableOrUnknown(
+              data['last_known_server_at']!, _lastKnownServerAtMeta));
     }
     return context;
   }
@@ -583,26 +471,17 @@ class $CachedAccountsTable extends CachedAccounts
   CachedAccount map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedAccount(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      payloadJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload_json'],
-      )!,
-      syncStatus: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sync_status'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sync_status'])!,
       clientRevisionAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}client_revision_at'],
-      )!,
+          DriftSqlType.dateTime, data['${effectivePrefix}client_revision_at'])!,
       lastKnownServerAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_known_server_at'],
-      ),
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_known_server_at']),
     );
   }
 
@@ -618,13 +497,12 @@ class CachedAccount extends DataClass implements Insertable<CachedAccount> {
   final int syncStatus;
   final DateTime clientRevisionAt;
   final DateTime? lastKnownServerAt;
-  const CachedAccount({
-    required this.id,
-    required this.payloadJson,
-    required this.syncStatus,
-    required this.clientRevisionAt,
-    this.lastKnownServerAt,
-  });
+  const CachedAccount(
+      {required this.id,
+      required this.payloadJson,
+      required this.syncStatus,
+      required this.clientRevisionAt,
+      this.lastKnownServerAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -650,19 +528,16 @@ class CachedAccount extends DataClass implements Insertable<CachedAccount> {
     );
   }
 
-  factory CachedAccount.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CachedAccount.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedAccount(
       id: serializer.fromJson<String>(json['id']),
       payloadJson: serializer.fromJson<String>(json['payloadJson']),
       syncStatus: serializer.fromJson<int>(json['syncStatus']),
       clientRevisionAt: serializer.fromJson<DateTime>(json['clientRevisionAt']),
-      lastKnownServerAt: serializer.fromJson<DateTime?>(
-        json['lastKnownServerAt'],
-      ),
+      lastKnownServerAt:
+          serializer.fromJson<DateTime?>(json['lastKnownServerAt']),
     );
   }
   @override
@@ -677,30 +552,28 @@ class CachedAccount extends DataClass implements Insertable<CachedAccount> {
     };
   }
 
-  CachedAccount copyWith({
-    String? id,
-    String? payloadJson,
-    int? syncStatus,
-    DateTime? clientRevisionAt,
-    Value<DateTime?> lastKnownServerAt = const Value.absent(),
-  }) => CachedAccount(
-    id: id ?? this.id,
-    payloadJson: payloadJson ?? this.payloadJson,
-    syncStatus: syncStatus ?? this.syncStatus,
-    clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
-    lastKnownServerAt: lastKnownServerAt.present
-        ? lastKnownServerAt.value
-        : this.lastKnownServerAt,
-  );
+  CachedAccount copyWith(
+          {String? id,
+          String? payloadJson,
+          int? syncStatus,
+          DateTime? clientRevisionAt,
+          Value<DateTime?> lastKnownServerAt = const Value.absent()}) =>
+      CachedAccount(
+        id: id ?? this.id,
+        payloadJson: payloadJson ?? this.payloadJson,
+        syncStatus: syncStatus ?? this.syncStatus,
+        clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+        lastKnownServerAt: lastKnownServerAt.present
+            ? lastKnownServerAt.value
+            : this.lastKnownServerAt,
+      );
   CachedAccount copyWithCompanion(CachedAccountsCompanion data) {
     return CachedAccount(
       id: data.id.present ? data.id.value : this.id,
-      payloadJson: data.payloadJson.present
-          ? data.payloadJson.value
-          : this.payloadJson,
-      syncStatus: data.syncStatus.present
-          ? data.syncStatus.value
-          : this.syncStatus,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
       clientRevisionAt: data.clientRevisionAt.present
           ? data.clientRevisionAt.value
           : this.clientRevisionAt,
@@ -724,12 +597,7 @@ class CachedAccount extends DataClass implements Insertable<CachedAccount> {
 
   @override
   int get hashCode => Object.hash(
-    id,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-  );
+      id, payloadJson, syncStatus, clientRevisionAt, lastKnownServerAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -763,10 +631,10 @@ class CachedAccountsCompanion extends UpdateCompanion<CachedAccount> {
     required DateTime clientRevisionAt,
     this.lastKnownServerAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       payloadJson = Value(payloadJson),
-       syncStatus = Value(syncStatus),
-       clientRevisionAt = Value(clientRevisionAt);
+  })  : id = Value(id),
+        payloadJson = Value(payloadJson),
+        syncStatus = Value(syncStatus),
+        clientRevisionAt = Value(clientRevisionAt);
   static Insertable<CachedAccount> custom({
     Expression<String>? id,
     Expression<String>? payloadJson,
@@ -785,14 +653,13 @@ class CachedAccountsCompanion extends UpdateCompanion<CachedAccount> {
     });
   }
 
-  CachedAccountsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? payloadJson,
-    Value<int>? syncStatus,
-    Value<DateTime>? clientRevisionAt,
-    Value<DateTime?>? lastKnownServerAt,
-    Value<int>? rowid,
-  }) {
+  CachedAccountsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? payloadJson,
+      Value<int>? syncStatus,
+      Value<DateTime>? clientRevisionAt,
+      Value<DateTime?>? lastKnownServerAt,
+      Value<int>? rowid}) {
     return CachedAccountsCompanion(
       id: id ?? this.id,
       payloadJson: payloadJson ?? this.payloadJson,
@@ -850,88 +717,55 @@ class $CachedBudgetsTable extends CachedBudgets
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
-    'id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _monthKeyMeta = const VerificationMeta(
-    'monthKey',
-  );
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _monthKeyMeta =
+      const VerificationMeta('monthKey');
   @override
   late final GeneratedColumn<String> monthKey = GeneratedColumn<String>(
-    'month_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
-    'payloadJson',
-  );
+      'month_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-    'payload_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
-    'syncStatus',
-  );
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
   late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
-    'sync_status',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _clientRevisionAtMeta = const VerificationMeta(
-    'clientRevisionAt',
-  );
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientRevisionAtMeta =
+      const VerificationMeta('clientRevisionAt');
   @override
   late final GeneratedColumn<DateTime> clientRevisionAt =
-      GeneratedColumn<DateTime>(
-        'client_revision_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _lastKnownServerAtMeta = const VerificationMeta(
-    'lastKnownServerAt',
-  );
+      GeneratedColumn<DateTime>('client_revision_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastKnownServerAtMeta =
+      const VerificationMeta('lastKnownServerAt');
   @override
   late final GeneratedColumn<DateTime> lastKnownServerAt =
-      GeneratedColumn<DateTime>(
-        'last_known_server_at',
-        aliasedName,
-        true,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: false,
-      );
+      GeneratedColumn<DateTime>('last_known_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
-    monthKey,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-  ];
+        id,
+        monthKey,
+        payloadJson,
+        syncStatus,
+        clientRevisionAt,
+        lastKnownServerAt
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'cached_budgets';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<CachedBudget> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<CachedBudget> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -940,51 +774,40 @@ class $CachedBudgetsTable extends CachedBudgets
       context.missing(_idMeta);
     }
     if (data.containsKey('month_key')) {
-      context.handle(
-        _monthKeyMeta,
-        monthKey.isAcceptableOrUnknown(data['month_key']!, _monthKeyMeta),
-      );
+      context.handle(_monthKeyMeta,
+          monthKey.isAcceptableOrUnknown(data['month_key']!, _monthKeyMeta));
     } else if (isInserting) {
       context.missing(_monthKeyMeta);
     }
     if (data.containsKey('payload_json')) {
       context.handle(
-        _payloadJsonMeta,
-        payloadJson.isAcceptableOrUnknown(
-          data['payload_json']!,
           _payloadJsonMeta,
-        ),
-      );
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('sync_status')) {
       context.handle(
-        _syncStatusMeta,
-        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
-      );
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
     } else if (isInserting) {
       context.missing(_syncStatusMeta);
     }
     if (data.containsKey('client_revision_at')) {
       context.handle(
-        _clientRevisionAtMeta,
-        clientRevisionAt.isAcceptableOrUnknown(
-          data['client_revision_at']!,
           _clientRevisionAtMeta,
-        ),
-      );
+          clientRevisionAt.isAcceptableOrUnknown(
+              data['client_revision_at']!, _clientRevisionAtMeta));
     } else if (isInserting) {
       context.missing(_clientRevisionAtMeta);
     }
     if (data.containsKey('last_known_server_at')) {
       context.handle(
-        _lastKnownServerAtMeta,
-        lastKnownServerAt.isAcceptableOrUnknown(
-          data['last_known_server_at']!,
           _lastKnownServerAtMeta,
-        ),
-      );
+          lastKnownServerAt.isAcceptableOrUnknown(
+              data['last_known_server_at']!, _lastKnownServerAtMeta));
     }
     return context;
   }
@@ -995,30 +818,19 @@ class $CachedBudgetsTable extends CachedBudgets
   CachedBudget map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedBudget(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      monthKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}month_key'],
-      )!,
-      payloadJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload_json'],
-      )!,
-      syncStatus: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}sync_status'],
-      )!,
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      monthKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}month_key'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sync_status'])!,
       clientRevisionAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}client_revision_at'],
-      )!,
+          DriftSqlType.dateTime, data['${effectivePrefix}client_revision_at'])!,
       lastKnownServerAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_known_server_at'],
-      ),
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_known_server_at']),
     );
   }
 
@@ -1035,14 +847,13 @@ class CachedBudget extends DataClass implements Insertable<CachedBudget> {
   final int syncStatus;
   final DateTime clientRevisionAt;
   final DateTime? lastKnownServerAt;
-  const CachedBudget({
-    required this.id,
-    required this.monthKey,
-    required this.payloadJson,
-    required this.syncStatus,
-    required this.clientRevisionAt,
-    this.lastKnownServerAt,
-  });
+  const CachedBudget(
+      {required this.id,
+      required this.monthKey,
+      required this.payloadJson,
+      required this.syncStatus,
+      required this.clientRevisionAt,
+      this.lastKnownServerAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1070,10 +881,8 @@ class CachedBudget extends DataClass implements Insertable<CachedBudget> {
     );
   }
 
-  factory CachedBudget.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CachedBudget.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedBudget(
       id: serializer.fromJson<String>(json['id']),
@@ -1081,9 +890,8 @@ class CachedBudget extends DataClass implements Insertable<CachedBudget> {
       payloadJson: serializer.fromJson<String>(json['payloadJson']),
       syncStatus: serializer.fromJson<int>(json['syncStatus']),
       clientRevisionAt: serializer.fromJson<DateTime>(json['clientRevisionAt']),
-      lastKnownServerAt: serializer.fromJson<DateTime?>(
-        json['lastKnownServerAt'],
-      ),
+      lastKnownServerAt:
+          serializer.fromJson<DateTime?>(json['lastKnownServerAt']),
     );
   }
   @override
@@ -1099,33 +907,31 @@ class CachedBudget extends DataClass implements Insertable<CachedBudget> {
     };
   }
 
-  CachedBudget copyWith({
-    String? id,
-    String? monthKey,
-    String? payloadJson,
-    int? syncStatus,
-    DateTime? clientRevisionAt,
-    Value<DateTime?> lastKnownServerAt = const Value.absent(),
-  }) => CachedBudget(
-    id: id ?? this.id,
-    monthKey: monthKey ?? this.monthKey,
-    payloadJson: payloadJson ?? this.payloadJson,
-    syncStatus: syncStatus ?? this.syncStatus,
-    clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
-    lastKnownServerAt: lastKnownServerAt.present
-        ? lastKnownServerAt.value
-        : this.lastKnownServerAt,
-  );
+  CachedBudget copyWith(
+          {String? id,
+          String? monthKey,
+          String? payloadJson,
+          int? syncStatus,
+          DateTime? clientRevisionAt,
+          Value<DateTime?> lastKnownServerAt = const Value.absent()}) =>
+      CachedBudget(
+        id: id ?? this.id,
+        monthKey: monthKey ?? this.monthKey,
+        payloadJson: payloadJson ?? this.payloadJson,
+        syncStatus: syncStatus ?? this.syncStatus,
+        clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+        lastKnownServerAt: lastKnownServerAt.present
+            ? lastKnownServerAt.value
+            : this.lastKnownServerAt,
+      );
   CachedBudget copyWithCompanion(CachedBudgetsCompanion data) {
     return CachedBudget(
       id: data.id.present ? data.id.value : this.id,
       monthKey: data.monthKey.present ? data.monthKey.value : this.monthKey,
-      payloadJson: data.payloadJson.present
-          ? data.payloadJson.value
-          : this.payloadJson,
-      syncStatus: data.syncStatus.present
-          ? data.syncStatus.value
-          : this.syncStatus,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
       clientRevisionAt: data.clientRevisionAt.present
           ? data.clientRevisionAt.value
           : this.clientRevisionAt,
@@ -1149,14 +955,8 @@ class CachedBudget extends DataClass implements Insertable<CachedBudget> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    monthKey,
-    payloadJson,
-    syncStatus,
-    clientRevisionAt,
-    lastKnownServerAt,
-  );
+  int get hashCode => Object.hash(id, monthKey, payloadJson, syncStatus,
+      clientRevisionAt, lastKnownServerAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1194,11 +994,11 @@ class CachedBudgetsCompanion extends UpdateCompanion<CachedBudget> {
     required DateTime clientRevisionAt,
     this.lastKnownServerAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       monthKey = Value(monthKey),
-       payloadJson = Value(payloadJson),
-       syncStatus = Value(syncStatus),
-       clientRevisionAt = Value(clientRevisionAt);
+  })  : id = Value(id),
+        monthKey = Value(monthKey),
+        payloadJson = Value(payloadJson),
+        syncStatus = Value(syncStatus),
+        clientRevisionAt = Value(clientRevisionAt);
   static Insertable<CachedBudget> custom({
     Expression<String>? id,
     Expression<String>? monthKey,
@@ -1219,15 +1019,14 @@ class CachedBudgetsCompanion extends UpdateCompanion<CachedBudget> {
     });
   }
 
-  CachedBudgetsCompanion copyWith({
-    Value<String>? id,
-    Value<String>? monthKey,
-    Value<String>? payloadJson,
-    Value<int>? syncStatus,
-    Value<DateTime>? clientRevisionAt,
-    Value<DateTime?>? lastKnownServerAt,
-    Value<int>? rowid,
-  }) {
+  CachedBudgetsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? monthKey,
+      Value<String>? payloadJson,
+      Value<int>? syncStatus,
+      Value<DateTime>? clientRevisionAt,
+      Value<DateTime?>? lastKnownServerAt,
+      Value<int>? rowid}) {
     return CachedBudgetsCompanion(
       id: id ?? this.id,
       monthKey: monthKey ?? this.monthKey,
@@ -1287,184 +1086,127 @@ class $SyncOutboxTable extends SyncOutbox
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SyncOutboxTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _localIdMeta = const VerificationMeta(
-    'localId',
-  );
+  static const VerificationMeta _localIdMeta =
+      const VerificationMeta('localId');
   @override
   late final GeneratedColumn<int> localId = GeneratedColumn<int>(
-    'local_id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
+      'local_id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
   static const VerificationMeta _opCodeMeta = const VerificationMeta('opCode');
   @override
   late final GeneratedColumn<String> opCode = GeneratedColumn<String>(
-    'op_code',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _entityIdMeta = const VerificationMeta(
-    'entityId',
-  );
+      'op_code', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _entityIdMeta =
+      const VerificationMeta('entityId');
   @override
   late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
-    'entity_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
-    'payloadJson',
-  );
+      'entity_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-    'payload_json',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _idempotencyKeyMeta = const VerificationMeta(
-    'idempotencyKey',
-  );
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _idempotencyKeyMeta =
+      const VerificationMeta('idempotencyKey');
   @override
   late final GeneratedColumn<String> idempotencyKey = GeneratedColumn<String>(
-    'idempotency_key',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+      'idempotency_key', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _attemptsMeta = const VerificationMeta(
-    'attempts',
-  );
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _attemptsMeta =
+      const VerificationMeta('attempts');
   @override
   late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
-    'attempts',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
-  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
-    'lastError',
-  );
+      'attempts', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _lastErrorMeta =
+      const VerificationMeta('lastError');
   @override
   late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
-    'last_error',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+      'last_error', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
-    localId,
-    opCode,
-    entityId,
-    payloadJson,
-    idempotencyKey,
-    createdAt,
-    attempts,
-    lastError,
-  ];
+        localId,
+        opCode,
+        entityId,
+        payloadJson,
+        idempotencyKey,
+        createdAt,
+        attempts,
+        lastError
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sync_outbox';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SyncOutboxData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SyncOutboxData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('local_id')) {
-      context.handle(
-        _localIdMeta,
-        localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta),
-      );
+      context.handle(_localIdMeta,
+          localId.isAcceptableOrUnknown(data['local_id']!, _localIdMeta));
     }
     if (data.containsKey('op_code')) {
-      context.handle(
-        _opCodeMeta,
-        opCode.isAcceptableOrUnknown(data['op_code']!, _opCodeMeta),
-      );
+      context.handle(_opCodeMeta,
+          opCode.isAcceptableOrUnknown(data['op_code']!, _opCodeMeta));
     } else if (isInserting) {
       context.missing(_opCodeMeta);
     }
     if (data.containsKey('entity_id')) {
-      context.handle(
-        _entityIdMeta,
-        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
-      );
+      context.handle(_entityIdMeta,
+          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
     } else if (isInserting) {
       context.missing(_entityIdMeta);
     }
     if (data.containsKey('payload_json')) {
       context.handle(
-        _payloadJsonMeta,
-        payloadJson.isAcceptableOrUnknown(
-          data['payload_json']!,
           _payloadJsonMeta,
-        ),
-      );
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
     } else if (isInserting) {
       context.missing(_payloadJsonMeta);
     }
     if (data.containsKey('idempotency_key')) {
       context.handle(
-        _idempotencyKeyMeta,
-        idempotencyKey.isAcceptableOrUnknown(
-          data['idempotency_key']!,
           _idempotencyKeyMeta,
-        ),
-      );
+          idempotencyKey.isAcceptableOrUnknown(
+              data['idempotency_key']!, _idempotencyKeyMeta));
     } else if (isInserting) {
       context.missing(_idempotencyKeyMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
     if (data.containsKey('attempts')) {
-      context.handle(
-        _attemptsMeta,
-        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
-      );
+      context.handle(_attemptsMeta,
+          attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
     }
     if (data.containsKey('last_error')) {
-      context.handle(
-        _lastErrorMeta,
-        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
-      );
+      context.handle(_lastErrorMeta,
+          lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta));
     }
     return context;
   }
@@ -1475,38 +1217,22 @@ class $SyncOutboxTable extends SyncOutbox
   SyncOutboxData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncOutboxData(
-      localId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}local_id'],
-      )!,
-      opCode: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}op_code'],
-      )!,
-      entityId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity_id'],
-      )!,
-      payloadJson: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload_json'],
-      )!,
+      localId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}local_id'])!,
+      opCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}op_code'])!,
+      entityId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}entity_id'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
       idempotencyKey: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}idempotency_key'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      attempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}attempts'],
-      )!,
-      lastError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_error'],
-      ),
+          DriftSqlType.string, data['${effectivePrefix}idempotency_key'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      attempts: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      lastError: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}last_error']),
     );
   }
 
@@ -1525,16 +1251,15 @@ class SyncOutboxData extends DataClass implements Insertable<SyncOutboxData> {
   final DateTime createdAt;
   final int attempts;
   final String? lastError;
-  const SyncOutboxData({
-    required this.localId,
-    required this.opCode,
-    required this.entityId,
-    required this.payloadJson,
-    required this.idempotencyKey,
-    required this.createdAt,
-    required this.attempts,
-    this.lastError,
-  });
+  const SyncOutboxData(
+      {required this.localId,
+      required this.opCode,
+      required this.entityId,
+      required this.payloadJson,
+      required this.idempotencyKey,
+      required this.createdAt,
+      required this.attempts,
+      this.lastError});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1566,10 +1291,8 @@ class SyncOutboxData extends DataClass implements Insertable<SyncOutboxData> {
     );
   }
 
-  factory SyncOutboxData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SyncOutboxData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncOutboxData(
       localId: serializer.fromJson<int>(json['localId']),
@@ -1597,33 +1320,32 @@ class SyncOutboxData extends DataClass implements Insertable<SyncOutboxData> {
     };
   }
 
-  SyncOutboxData copyWith({
-    int? localId,
-    String? opCode,
-    String? entityId,
-    String? payloadJson,
-    String? idempotencyKey,
-    DateTime? createdAt,
-    int? attempts,
-    Value<String?> lastError = const Value.absent(),
-  }) => SyncOutboxData(
-    localId: localId ?? this.localId,
-    opCode: opCode ?? this.opCode,
-    entityId: entityId ?? this.entityId,
-    payloadJson: payloadJson ?? this.payloadJson,
-    idempotencyKey: idempotencyKey ?? this.idempotencyKey,
-    createdAt: createdAt ?? this.createdAt,
-    attempts: attempts ?? this.attempts,
-    lastError: lastError.present ? lastError.value : this.lastError,
-  );
+  SyncOutboxData copyWith(
+          {int? localId,
+          String? opCode,
+          String? entityId,
+          String? payloadJson,
+          String? idempotencyKey,
+          DateTime? createdAt,
+          int? attempts,
+          Value<String?> lastError = const Value.absent()}) =>
+      SyncOutboxData(
+        localId: localId ?? this.localId,
+        opCode: opCode ?? this.opCode,
+        entityId: entityId ?? this.entityId,
+        payloadJson: payloadJson ?? this.payloadJson,
+        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+        createdAt: createdAt ?? this.createdAt,
+        attempts: attempts ?? this.attempts,
+        lastError: lastError.present ? lastError.value : this.lastError,
+      );
   SyncOutboxData copyWithCompanion(SyncOutboxCompanion data) {
     return SyncOutboxData(
       localId: data.localId.present ? data.localId.value : this.localId,
       opCode: data.opCode.present ? data.opCode.value : this.opCode,
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
-      payloadJson: data.payloadJson.present
-          ? data.payloadJson.value
-          : this.payloadJson,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
       idempotencyKey: data.idempotencyKey.present
           ? data.idempotencyKey.value
           : this.idempotencyKey,
@@ -1649,16 +1371,8 @@ class SyncOutboxData extends DataClass implements Insertable<SyncOutboxData> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    localId,
-    opCode,
-    entityId,
-    payloadJson,
-    idempotencyKey,
-    createdAt,
-    attempts,
-    lastError,
-  );
+  int get hashCode => Object.hash(localId, opCode, entityId, payloadJson,
+      idempotencyKey, createdAt, attempts, lastError);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1701,11 +1415,11 @@ class SyncOutboxCompanion extends UpdateCompanion<SyncOutboxData> {
     required DateTime createdAt,
     this.attempts = const Value.absent(),
     this.lastError = const Value.absent(),
-  }) : opCode = Value(opCode),
-       entityId = Value(entityId),
-       payloadJson = Value(payloadJson),
-       idempotencyKey = Value(idempotencyKey),
-       createdAt = Value(createdAt);
+  })  : opCode = Value(opCode),
+        entityId = Value(entityId),
+        payloadJson = Value(payloadJson),
+        idempotencyKey = Value(idempotencyKey),
+        createdAt = Value(createdAt);
   static Insertable<SyncOutboxData> custom({
     Expression<int>? localId,
     Expression<String>? opCode,
@@ -1728,16 +1442,15 @@ class SyncOutboxCompanion extends UpdateCompanion<SyncOutboxData> {
     });
   }
 
-  SyncOutboxCompanion copyWith({
-    Value<int>? localId,
-    Value<String>? opCode,
-    Value<String>? entityId,
-    Value<String>? payloadJson,
-    Value<String>? idempotencyKey,
-    Value<DateTime>? createdAt,
-    Value<int>? attempts,
-    Value<String?>? lastError,
-  }) {
+  SyncOutboxCompanion copyWith(
+      {Value<int>? localId,
+      Value<String>? opCode,
+      Value<String>? entityId,
+      Value<String>? payloadJson,
+      Value<String>? idempotencyKey,
+      Value<DateTime>? createdAt,
+      Value<int>? attempts,
+      Value<String?>? lastError}) {
     return SyncOutboxCompanion(
       localId: localId ?? this.localId,
       opCode: opCode ?? this.opCode,
@@ -1805,21 +1518,13 @@ class $LedgerKvTable extends LedgerKv
   static const VerificationMeta _kMeta = const VerificationMeta('k');
   @override
   late final GeneratedColumn<String> k = GeneratedColumn<String>(
-    'k',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'k', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _vMeta = const VerificationMeta('v');
   @override
   late final GeneratedColumn<String> v = GeneratedColumn<String>(
-    'v',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
+      'v', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns => [k, v];
   @override
@@ -1828,10 +1533,8 @@ class $LedgerKvTable extends LedgerKv
   String get actualTableName => $name;
   static const String $name = 'ledger_kv';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<LedgerKvData> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<LedgerKvData> instance,
+      {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('k')) {
@@ -1853,14 +1556,10 @@ class $LedgerKvTable extends LedgerKv
   LedgerKvData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LedgerKvData(
-      k: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}k'],
-      )!,
-      v: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}v'],
-      )!,
+      k: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}k'])!,
+      v: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}v'])!,
     );
   }
 
@@ -1883,13 +1582,14 @@ class LedgerKvData extends DataClass implements Insertable<LedgerKvData> {
   }
 
   LedgerKvCompanion toCompanion(bool nullToAbsent) {
-    return LedgerKvCompanion(k: Value(k), v: Value(v));
+    return LedgerKvCompanion(
+      k: Value(k),
+      v: Value(v),
+    );
   }
 
-  factory LedgerKvData.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory LedgerKvData.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LedgerKvData(
       k: serializer.fromJson<String>(json['k']),
@@ -1905,8 +1605,10 @@ class LedgerKvData extends DataClass implements Insertable<LedgerKvData> {
     };
   }
 
-  LedgerKvData copyWith({String? k, String? v}) =>
-      LedgerKvData(k: k ?? this.k, v: v ?? this.v);
+  LedgerKvData copyWith({String? k, String? v}) => LedgerKvData(
+        k: k ?? this.k,
+        v: v ?? this.v,
+      );
   LedgerKvData copyWithCompanion(LedgerKvCompanion data) {
     return LedgerKvData(
       k: data.k.present ? data.k.value : this.k,
@@ -1944,8 +1646,8 @@ class LedgerKvCompanion extends UpdateCompanion<LedgerKvData> {
     required String k,
     required String v,
     this.rowid = const Value.absent(),
-  }) : k = Value(k),
-       v = Value(v);
+  })  : k = Value(k),
+        v = Value(v);
   static Insertable<LedgerKvData> custom({
     Expression<String>? k,
     Expression<String>? v,
@@ -1958,11 +1660,8 @@ class LedgerKvCompanion extends UpdateCompanion<LedgerKvData> {
     });
   }
 
-  LedgerKvCompanion copyWith({
-    Value<String>? k,
-    Value<String>? v,
-    Value<int>? rowid,
-  }) {
+  LedgerKvCompanion copyWith(
+      {Value<String>? k, Value<String>? v, Value<int>? rowid}) {
     return LedgerKvCompanion(
       k: k ?? this.k,
       v: v ?? this.v,
@@ -1996,6 +1695,796 @@ class LedgerKvCompanion extends UpdateCompanion<LedgerKvData> {
   }
 }
 
+class $CachedIncomesTable extends CachedIncomes
+    with TableInfo<$CachedIncomesTable, CachedIncome> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedIncomesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
+  @override
+  late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientRevisionAtMeta =
+      const VerificationMeta('clientRevisionAt');
+  @override
+  late final GeneratedColumn<DateTime> clientRevisionAt =
+      GeneratedColumn<DateTime>('client_revision_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastKnownServerAtMeta =
+      const VerificationMeta('lastKnownServerAt');
+  @override
+  late final GeneratedColumn<DateTime> lastKnownServerAt =
+      GeneratedColumn<DateTime>('last_known_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _incomeSortDateMeta =
+      const VerificationMeta('incomeSortDate');
+  @override
+  late final GeneratedColumn<DateTime> incomeSortDate =
+      GeneratedColumn<DateTime>('income_sort_date', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        payloadJson,
+        syncStatus,
+        clientRevisionAt,
+        lastKnownServerAt,
+        incomeSortDate
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_incomes';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedIncome> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+          _payloadJsonMeta,
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    } else if (isInserting) {
+      context.missing(_syncStatusMeta);
+    }
+    if (data.containsKey('client_revision_at')) {
+      context.handle(
+          _clientRevisionAtMeta,
+          clientRevisionAt.isAcceptableOrUnknown(
+              data['client_revision_at']!, _clientRevisionAtMeta));
+    } else if (isInserting) {
+      context.missing(_clientRevisionAtMeta);
+    }
+    if (data.containsKey('last_known_server_at')) {
+      context.handle(
+          _lastKnownServerAtMeta,
+          lastKnownServerAt.isAcceptableOrUnknown(
+              data['last_known_server_at']!, _lastKnownServerAtMeta));
+    }
+    if (data.containsKey('income_sort_date')) {
+      context.handle(
+          _incomeSortDateMeta,
+          incomeSortDate.isAcceptableOrUnknown(
+              data['income_sort_date']!, _incomeSortDateMeta));
+    } else if (isInserting) {
+      context.missing(_incomeSortDateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedIncome map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedIncome(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sync_status'])!,
+      clientRevisionAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}client_revision_at'])!,
+      lastKnownServerAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_known_server_at']),
+      incomeSortDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}income_sort_date'])!,
+    );
+  }
+
+  @override
+  $CachedIncomesTable createAlias(String alias) {
+    return $CachedIncomesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedIncome extends DataClass implements Insertable<CachedIncome> {
+  final String id;
+  final String payloadJson;
+  final int syncStatus;
+  final DateTime clientRevisionAt;
+  final DateTime? lastKnownServerAt;
+  final DateTime incomeSortDate;
+  const CachedIncome(
+      {required this.id,
+      required this.payloadJson,
+      required this.syncStatus,
+      required this.clientRevisionAt,
+      this.lastKnownServerAt,
+      required this.incomeSortDate});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['sync_status'] = Variable<int>(syncStatus);
+    map['client_revision_at'] = Variable<DateTime>(clientRevisionAt);
+    if (!nullToAbsent || lastKnownServerAt != null) {
+      map['last_known_server_at'] = Variable<DateTime>(lastKnownServerAt);
+    }
+    map['income_sort_date'] = Variable<DateTime>(incomeSortDate);
+    return map;
+  }
+
+  CachedIncomesCompanion toCompanion(bool nullToAbsent) {
+    return CachedIncomesCompanion(
+      id: Value(id),
+      payloadJson: Value(payloadJson),
+      syncStatus: Value(syncStatus),
+      clientRevisionAt: Value(clientRevisionAt),
+      lastKnownServerAt: lastKnownServerAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastKnownServerAt),
+      incomeSortDate: Value(incomeSortDate),
+    );
+  }
+
+  factory CachedIncome.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedIncome(
+      id: serializer.fromJson<String>(json['id']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      syncStatus: serializer.fromJson<int>(json['syncStatus']),
+      clientRevisionAt: serializer.fromJson<DateTime>(json['clientRevisionAt']),
+      lastKnownServerAt:
+          serializer.fromJson<DateTime?>(json['lastKnownServerAt']),
+      incomeSortDate: serializer.fromJson<DateTime>(json['incomeSortDate']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'syncStatus': serializer.toJson<int>(syncStatus),
+      'clientRevisionAt': serializer.toJson<DateTime>(clientRevisionAt),
+      'lastKnownServerAt': serializer.toJson<DateTime?>(lastKnownServerAt),
+      'incomeSortDate': serializer.toJson<DateTime>(incomeSortDate),
+    };
+  }
+
+  CachedIncome copyWith(
+          {String? id,
+          String? payloadJson,
+          int? syncStatus,
+          DateTime? clientRevisionAt,
+          Value<DateTime?> lastKnownServerAt = const Value.absent(),
+          DateTime? incomeSortDate}) =>
+      CachedIncome(
+        id: id ?? this.id,
+        payloadJson: payloadJson ?? this.payloadJson,
+        syncStatus: syncStatus ?? this.syncStatus,
+        clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+        lastKnownServerAt: lastKnownServerAt.present
+            ? lastKnownServerAt.value
+            : this.lastKnownServerAt,
+        incomeSortDate: incomeSortDate ?? this.incomeSortDate,
+      );
+  CachedIncome copyWithCompanion(CachedIncomesCompanion data) {
+    return CachedIncome(
+      id: data.id.present ? data.id.value : this.id,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      clientRevisionAt: data.clientRevisionAt.present
+          ? data.clientRevisionAt.value
+          : this.clientRevisionAt,
+      lastKnownServerAt: data.lastKnownServerAt.present
+          ? data.lastKnownServerAt.value
+          : this.lastKnownServerAt,
+      incomeSortDate: data.incomeSortDate.present
+          ? data.incomeSortDate.value
+          : this.incomeSortDate,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedIncome(')
+          ..write('id: $id, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('clientRevisionAt: $clientRevisionAt, ')
+          ..write('lastKnownServerAt: $lastKnownServerAt, ')
+          ..write('incomeSortDate: $incomeSortDate')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, payloadJson, syncStatus, clientRevisionAt,
+      lastKnownServerAt, incomeSortDate);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedIncome &&
+          other.id == this.id &&
+          other.payloadJson == this.payloadJson &&
+          other.syncStatus == this.syncStatus &&
+          other.clientRevisionAt == this.clientRevisionAt &&
+          other.lastKnownServerAt == this.lastKnownServerAt &&
+          other.incomeSortDate == this.incomeSortDate);
+}
+
+class CachedIncomesCompanion extends UpdateCompanion<CachedIncome> {
+  final Value<String> id;
+  final Value<String> payloadJson;
+  final Value<int> syncStatus;
+  final Value<DateTime> clientRevisionAt;
+  final Value<DateTime?> lastKnownServerAt;
+  final Value<DateTime> incomeSortDate;
+  final Value<int> rowid;
+  const CachedIncomesCompanion({
+    this.id = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.clientRevisionAt = const Value.absent(),
+    this.lastKnownServerAt = const Value.absent(),
+    this.incomeSortDate = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedIncomesCompanion.insert({
+    required String id,
+    required String payloadJson,
+    required int syncStatus,
+    required DateTime clientRevisionAt,
+    this.lastKnownServerAt = const Value.absent(),
+    required DateTime incomeSortDate,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        payloadJson = Value(payloadJson),
+        syncStatus = Value(syncStatus),
+        clientRevisionAt = Value(clientRevisionAt),
+        incomeSortDate = Value(incomeSortDate);
+  static Insertable<CachedIncome> custom({
+    Expression<String>? id,
+    Expression<String>? payloadJson,
+    Expression<int>? syncStatus,
+    Expression<DateTime>? clientRevisionAt,
+    Expression<DateTime>? lastKnownServerAt,
+    Expression<DateTime>? incomeSortDate,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (clientRevisionAt != null) 'client_revision_at': clientRevisionAt,
+      if (lastKnownServerAt != null) 'last_known_server_at': lastKnownServerAt,
+      if (incomeSortDate != null) 'income_sort_date': incomeSortDate,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedIncomesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? payloadJson,
+      Value<int>? syncStatus,
+      Value<DateTime>? clientRevisionAt,
+      Value<DateTime?>? lastKnownServerAt,
+      Value<DateTime>? incomeSortDate,
+      Value<int>? rowid}) {
+    return CachedIncomesCompanion(
+      id: id ?? this.id,
+      payloadJson: payloadJson ?? this.payloadJson,
+      syncStatus: syncStatus ?? this.syncStatus,
+      clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+      lastKnownServerAt: lastKnownServerAt ?? this.lastKnownServerAt,
+      incomeSortDate: incomeSortDate ?? this.incomeSortDate,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(syncStatus.value);
+    }
+    if (clientRevisionAt.present) {
+      map['client_revision_at'] = Variable<DateTime>(clientRevisionAt.value);
+    }
+    if (lastKnownServerAt.present) {
+      map['last_known_server_at'] = Variable<DateTime>(lastKnownServerAt.value);
+    }
+    if (incomeSortDate.present) {
+      map['income_sort_date'] = Variable<DateTime>(incomeSortDate.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedIncomesCompanion(')
+          ..write('id: $id, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('clientRevisionAt: $clientRevisionAt, ')
+          ..write('lastKnownServerAt: $lastKnownServerAt, ')
+          ..write('incomeSortDate: $incomeSortDate, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CachedRecurringExpensesTable extends CachedRecurringExpenses
+    with TableInfo<$CachedRecurringExpensesTable, CachedRecurringExpense> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedRecurringExpensesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _payloadJsonMeta =
+      const VerificationMeta('payloadJson');
+  @override
+  late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
+      'payload_json', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
+  @override
+  late final GeneratedColumn<int> syncStatus = GeneratedColumn<int>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _clientRevisionAtMeta =
+      const VerificationMeta('clientRevisionAt');
+  @override
+  late final GeneratedColumn<DateTime> clientRevisionAt =
+      GeneratedColumn<DateTime>('client_revision_at', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _lastKnownServerAtMeta =
+      const VerificationMeta('lastKnownServerAt');
+  @override
+  late final GeneratedColumn<DateTime> lastKnownServerAt =
+      GeneratedColumn<DateTime>('last_known_server_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _nextDateMeta =
+      const VerificationMeta('nextDate');
+  @override
+  late final GeneratedColumn<DateTime> nextDate = GeneratedColumn<DateTime>(
+      'next_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _activeMeta = const VerificationMeta('active');
+  @override
+  late final GeneratedColumn<bool> active = GeneratedColumn<bool>(
+      'active', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("active" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        payloadJson,
+        syncStatus,
+        clientRevisionAt,
+        lastKnownServerAt,
+        nextDate,
+        active
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_recurring_expenses';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CachedRecurringExpense> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('payload_json')) {
+      context.handle(
+          _payloadJsonMeta,
+          payloadJson.isAcceptableOrUnknown(
+              data['payload_json']!, _payloadJsonMeta));
+    } else if (isInserting) {
+      context.missing(_payloadJsonMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    } else if (isInserting) {
+      context.missing(_syncStatusMeta);
+    }
+    if (data.containsKey('client_revision_at')) {
+      context.handle(
+          _clientRevisionAtMeta,
+          clientRevisionAt.isAcceptableOrUnknown(
+              data['client_revision_at']!, _clientRevisionAtMeta));
+    } else if (isInserting) {
+      context.missing(_clientRevisionAtMeta);
+    }
+    if (data.containsKey('last_known_server_at')) {
+      context.handle(
+          _lastKnownServerAtMeta,
+          lastKnownServerAt.isAcceptableOrUnknown(
+              data['last_known_server_at']!, _lastKnownServerAtMeta));
+    }
+    if (data.containsKey('next_date')) {
+      context.handle(_nextDateMeta,
+          nextDate.isAcceptableOrUnknown(data['next_date']!, _nextDateMeta));
+    } else if (isInserting) {
+      context.missing(_nextDateMeta);
+    }
+    if (data.containsKey('active')) {
+      context.handle(_activeMeta,
+          active.isAcceptableOrUnknown(data['active']!, _activeMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedRecurringExpense map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedRecurringExpense(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      payloadJson: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}payload_json'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}sync_status'])!,
+      clientRevisionAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}client_revision_at'])!,
+      lastKnownServerAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_known_server_at']),
+      nextDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}next_date'])!,
+      active: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}active'])!,
+    );
+  }
+
+  @override
+  $CachedRecurringExpensesTable createAlias(String alias) {
+    return $CachedRecurringExpensesTable(attachedDatabase, alias);
+  }
+}
+
+class CachedRecurringExpense extends DataClass
+    implements Insertable<CachedRecurringExpense> {
+  final String id;
+  final String payloadJson;
+  final int syncStatus;
+  final DateTime clientRevisionAt;
+  final DateTime? lastKnownServerAt;
+  final DateTime nextDate;
+  final bool active;
+  const CachedRecurringExpense(
+      {required this.id,
+      required this.payloadJson,
+      required this.syncStatus,
+      required this.clientRevisionAt,
+      this.lastKnownServerAt,
+      required this.nextDate,
+      required this.active});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['payload_json'] = Variable<String>(payloadJson);
+    map['sync_status'] = Variable<int>(syncStatus);
+    map['client_revision_at'] = Variable<DateTime>(clientRevisionAt);
+    if (!nullToAbsent || lastKnownServerAt != null) {
+      map['last_known_server_at'] = Variable<DateTime>(lastKnownServerAt);
+    }
+    map['next_date'] = Variable<DateTime>(nextDate);
+    map['active'] = Variable<bool>(active);
+    return map;
+  }
+
+  CachedRecurringExpensesCompanion toCompanion(bool nullToAbsent) {
+    return CachedRecurringExpensesCompanion(
+      id: Value(id),
+      payloadJson: Value(payloadJson),
+      syncStatus: Value(syncStatus),
+      clientRevisionAt: Value(clientRevisionAt),
+      lastKnownServerAt: lastKnownServerAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastKnownServerAt),
+      nextDate: Value(nextDate),
+      active: Value(active),
+    );
+  }
+
+  factory CachedRecurringExpense.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedRecurringExpense(
+      id: serializer.fromJson<String>(json['id']),
+      payloadJson: serializer.fromJson<String>(json['payloadJson']),
+      syncStatus: serializer.fromJson<int>(json['syncStatus']),
+      clientRevisionAt: serializer.fromJson<DateTime>(json['clientRevisionAt']),
+      lastKnownServerAt:
+          serializer.fromJson<DateTime?>(json['lastKnownServerAt']),
+      nextDate: serializer.fromJson<DateTime>(json['nextDate']),
+      active: serializer.fromJson<bool>(json['active']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'payloadJson': serializer.toJson<String>(payloadJson),
+      'syncStatus': serializer.toJson<int>(syncStatus),
+      'clientRevisionAt': serializer.toJson<DateTime>(clientRevisionAt),
+      'lastKnownServerAt': serializer.toJson<DateTime?>(lastKnownServerAt),
+      'nextDate': serializer.toJson<DateTime>(nextDate),
+      'active': serializer.toJson<bool>(active),
+    };
+  }
+
+  CachedRecurringExpense copyWith(
+          {String? id,
+          String? payloadJson,
+          int? syncStatus,
+          DateTime? clientRevisionAt,
+          Value<DateTime?> lastKnownServerAt = const Value.absent(),
+          DateTime? nextDate,
+          bool? active}) =>
+      CachedRecurringExpense(
+        id: id ?? this.id,
+        payloadJson: payloadJson ?? this.payloadJson,
+        syncStatus: syncStatus ?? this.syncStatus,
+        clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+        lastKnownServerAt: lastKnownServerAt.present
+            ? lastKnownServerAt.value
+            : this.lastKnownServerAt,
+        nextDate: nextDate ?? this.nextDate,
+        active: active ?? this.active,
+      );
+  CachedRecurringExpense copyWithCompanion(
+      CachedRecurringExpensesCompanion data) {
+    return CachedRecurringExpense(
+      id: data.id.present ? data.id.value : this.id,
+      payloadJson:
+          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      clientRevisionAt: data.clientRevisionAt.present
+          ? data.clientRevisionAt.value
+          : this.clientRevisionAt,
+      lastKnownServerAt: data.lastKnownServerAt.present
+          ? data.lastKnownServerAt.value
+          : this.lastKnownServerAt,
+      nextDate: data.nextDate.present ? data.nextDate.value : this.nextDate,
+      active: data.active.present ? data.active.value : this.active,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedRecurringExpense(')
+          ..write('id: $id, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('clientRevisionAt: $clientRevisionAt, ')
+          ..write('lastKnownServerAt: $lastKnownServerAt, ')
+          ..write('nextDate: $nextDate, ')
+          ..write('active: $active')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, payloadJson, syncStatus, clientRevisionAt,
+      lastKnownServerAt, nextDate, active);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedRecurringExpense &&
+          other.id == this.id &&
+          other.payloadJson == this.payloadJson &&
+          other.syncStatus == this.syncStatus &&
+          other.clientRevisionAt == this.clientRevisionAt &&
+          other.lastKnownServerAt == this.lastKnownServerAt &&
+          other.nextDate == this.nextDate &&
+          other.active == this.active);
+}
+
+class CachedRecurringExpensesCompanion
+    extends UpdateCompanion<CachedRecurringExpense> {
+  final Value<String> id;
+  final Value<String> payloadJson;
+  final Value<int> syncStatus;
+  final Value<DateTime> clientRevisionAt;
+  final Value<DateTime?> lastKnownServerAt;
+  final Value<DateTime> nextDate;
+  final Value<bool> active;
+  final Value<int> rowid;
+  const CachedRecurringExpensesCompanion({
+    this.id = const Value.absent(),
+    this.payloadJson = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.clientRevisionAt = const Value.absent(),
+    this.lastKnownServerAt = const Value.absent(),
+    this.nextDate = const Value.absent(),
+    this.active = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedRecurringExpensesCompanion.insert({
+    required String id,
+    required String payloadJson,
+    required int syncStatus,
+    required DateTime clientRevisionAt,
+    this.lastKnownServerAt = const Value.absent(),
+    required DateTime nextDate,
+    this.active = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        payloadJson = Value(payloadJson),
+        syncStatus = Value(syncStatus),
+        clientRevisionAt = Value(clientRevisionAt),
+        nextDate = Value(nextDate);
+  static Insertable<CachedRecurringExpense> custom({
+    Expression<String>? id,
+    Expression<String>? payloadJson,
+    Expression<int>? syncStatus,
+    Expression<DateTime>? clientRevisionAt,
+    Expression<DateTime>? lastKnownServerAt,
+    Expression<DateTime>? nextDate,
+    Expression<bool>? active,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (payloadJson != null) 'payload_json': payloadJson,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (clientRevisionAt != null) 'client_revision_at': clientRevisionAt,
+      if (lastKnownServerAt != null) 'last_known_server_at': lastKnownServerAt,
+      if (nextDate != null) 'next_date': nextDate,
+      if (active != null) 'active': active,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedRecurringExpensesCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? payloadJson,
+      Value<int>? syncStatus,
+      Value<DateTime>? clientRevisionAt,
+      Value<DateTime?>? lastKnownServerAt,
+      Value<DateTime>? nextDate,
+      Value<bool>? active,
+      Value<int>? rowid}) {
+    return CachedRecurringExpensesCompanion(
+      id: id ?? this.id,
+      payloadJson: payloadJson ?? this.payloadJson,
+      syncStatus: syncStatus ?? this.syncStatus,
+      clientRevisionAt: clientRevisionAt ?? this.clientRevisionAt,
+      lastKnownServerAt: lastKnownServerAt ?? this.lastKnownServerAt,
+      nextDate: nextDate ?? this.nextDate,
+      active: active ?? this.active,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (payloadJson.present) {
+      map['payload_json'] = Variable<String>(payloadJson.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<int>(syncStatus.value);
+    }
+    if (clientRevisionAt.present) {
+      map['client_revision_at'] = Variable<DateTime>(clientRevisionAt.value);
+    }
+    if (lastKnownServerAt.present) {
+      map['last_known_server_at'] = Variable<DateTime>(lastKnownServerAt.value);
+    }
+    if (nextDate.present) {
+      map['next_date'] = Variable<DateTime>(nextDate.value);
+    }
+    if (active.present) {
+      map['active'] = Variable<bool>(active.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedRecurringExpensesCompanion(')
+          ..write('id: $id, ')
+          ..write('payloadJson: $payloadJson, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('clientRevisionAt: $clientRevisionAt, ')
+          ..write('lastKnownServerAt: $lastKnownServerAt, ')
+          ..write('nextDate: $nextDate, ')
+          ..write('active: $active, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$LedgerDatabase extends GeneratedDatabase {
   _$LedgerDatabase(QueryExecutor e) : super(e);
   $LedgerDatabaseManager get managers => $LedgerDatabaseManager(this);
@@ -2004,39 +2493,44 @@ abstract class _$LedgerDatabase extends GeneratedDatabase {
   late final $CachedBudgetsTable cachedBudgets = $CachedBudgetsTable(this);
   late final $SyncOutboxTable syncOutbox = $SyncOutboxTable(this);
   late final $LedgerKvTable ledgerKv = $LedgerKvTable(this);
+  late final $CachedIncomesTable cachedIncomes = $CachedIncomesTable(this);
+  late final $CachedRecurringExpensesTable cachedRecurringExpenses =
+      $CachedRecurringExpensesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-    cachedExpenses,
-    cachedAccounts,
-    cachedBudgets,
-    syncOutbox,
-    ledgerKv,
-  ];
+        cachedExpenses,
+        cachedAccounts,
+        cachedBudgets,
+        syncOutbox,
+        ledgerKv,
+        cachedIncomes,
+        cachedRecurringExpenses
+      ];
 }
 
-typedef $$CachedExpensesTableCreateCompanionBuilder =
-    CachedExpensesCompanion Function({
-      required String id,
-      required String payloadJson,
-      required int syncStatus,
-      required DateTime clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      required DateTime expenseSortDate,
-      Value<int> rowid,
-    });
-typedef $$CachedExpensesTableUpdateCompanionBuilder =
-    CachedExpensesCompanion Function({
-      Value<String> id,
-      Value<String> payloadJson,
-      Value<int> syncStatus,
-      Value<DateTime> clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      Value<DateTime> expenseSortDate,
-      Value<int> rowid,
-    });
+typedef $$CachedExpensesTableCreateCompanionBuilder = CachedExpensesCompanion
+    Function({
+  required String id,
+  required String payloadJson,
+  required int syncStatus,
+  required DateTime clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  required DateTime expenseSortDate,
+  Value<int> rowid,
+});
+typedef $$CachedExpensesTableUpdateCompanionBuilder = CachedExpensesCompanion
+    Function({
+  Value<String> id,
+  Value<String> payloadJson,
+  Value<int> syncStatus,
+  Value<DateTime> clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<DateTime> expenseSortDate,
+  Value<int> rowid,
+});
 
 class $$CachedExpensesTableFilterComposer
     extends Composer<_$LedgerDatabase, $CachedExpensesTable> {
@@ -2048,34 +2542,25 @@ class $$CachedExpensesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get expenseSortDate => $composableBuilder(
-    column: $table.expenseSortDate,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.expenseSortDate,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$CachedExpensesTableOrderingComposer
@@ -2088,34 +2573,25 @@ class $$CachedExpensesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get expenseSortDate => $composableBuilder(
-    column: $table.expenseSortDate,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.expenseSortDate,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedExpensesTableAnnotationComposer
@@ -2131,58 +2607,39 @@ class $$CachedExpensesTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => column,
-  );
+      column: $table.payloadJson, builder: (column) => column);
 
   GeneratedColumn<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => column,
-  );
+      column: $table.syncStatus, builder: (column) => column);
 
   GeneratedColumn<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => column,
-  );
+      column: $table.clientRevisionAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => column,
-  );
+      column: $table.lastKnownServerAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get expenseSortDate => $composableBuilder(
-    column: $table.expenseSortDate,
-    builder: (column) => column,
-  );
+      column: $table.expenseSortDate, builder: (column) => column);
 }
 
-class $$CachedExpensesTableTableManager
-    extends
-        RootTableManager<
-          _$LedgerDatabase,
-          $CachedExpensesTable,
-          CachedExpense,
-          $$CachedExpensesTableFilterComposer,
-          $$CachedExpensesTableOrderingComposer,
-          $$CachedExpensesTableAnnotationComposer,
-          $$CachedExpensesTableCreateCompanionBuilder,
-          $$CachedExpensesTableUpdateCompanionBuilder,
-          (
-            CachedExpense,
-            BaseReferences<
-              _$LedgerDatabase,
-              $CachedExpensesTable,
-              CachedExpense
-            >,
-          ),
-          CachedExpense,
-          PrefetchHooks Function()
-        > {
+class $$CachedExpensesTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $CachedExpensesTable,
+    CachedExpense,
+    $$CachedExpensesTableFilterComposer,
+    $$CachedExpensesTableOrderingComposer,
+    $$CachedExpensesTableAnnotationComposer,
+    $$CachedExpensesTableCreateCompanionBuilder,
+    $$CachedExpensesTableUpdateCompanionBuilder,
+    (
+      CachedExpense,
+      BaseReferences<_$LedgerDatabase, $CachedExpensesTable, CachedExpense>
+    ),
+    CachedExpense,
+    PrefetchHooks Function()> {
   $$CachedExpensesTableTableManager(
-    _$LedgerDatabase db,
-    $CachedExpensesTable table,
-  ) : super(
-        TableManagerState(
+      _$LedgerDatabase db, $CachedExpensesTable table)
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2191,85 +2648,82 @@ class $$CachedExpensesTableTableManager
               $$CachedExpensesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CachedExpensesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> payloadJson = const Value.absent(),
-                Value<int> syncStatus = const Value.absent(),
-                Value<DateTime> clientRevisionAt = const Value.absent(),
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                Value<DateTime> expenseSortDate = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedExpensesCompanion(
-                id: id,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                expenseSortDate: expenseSortDate,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String payloadJson,
-                required int syncStatus,
-                required DateTime clientRevisionAt,
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                required DateTime expenseSortDate,
-                Value<int> rowid = const Value.absent(),
-              }) => CachedExpensesCompanion.insert(
-                id: id,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                expenseSortDate: expenseSortDate,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<int> syncStatus = const Value.absent(),
+            Value<DateTime> clientRevisionAt = const Value.absent(),
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<DateTime> expenseSortDate = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedExpensesCompanion(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            expenseSortDate: expenseSortDate,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String payloadJson,
+            required int syncStatus,
+            required DateTime clientRevisionAt,
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            required DateTime expenseSortDate,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedExpensesCompanion.insert(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            expenseSortDate: expenseSortDate,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$CachedExpensesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$LedgerDatabase,
-      $CachedExpensesTable,
+typedef $$CachedExpensesTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $CachedExpensesTable,
+    CachedExpense,
+    $$CachedExpensesTableFilterComposer,
+    $$CachedExpensesTableOrderingComposer,
+    $$CachedExpensesTableAnnotationComposer,
+    $$CachedExpensesTableCreateCompanionBuilder,
+    $$CachedExpensesTableUpdateCompanionBuilder,
+    (
       CachedExpense,
-      $$CachedExpensesTableFilterComposer,
-      $$CachedExpensesTableOrderingComposer,
-      $$CachedExpensesTableAnnotationComposer,
-      $$CachedExpensesTableCreateCompanionBuilder,
-      $$CachedExpensesTableUpdateCompanionBuilder,
-      (
-        CachedExpense,
-        BaseReferences<_$LedgerDatabase, $CachedExpensesTable, CachedExpense>,
-      ),
-      CachedExpense,
-      PrefetchHooks Function()
-    >;
-typedef $$CachedAccountsTableCreateCompanionBuilder =
-    CachedAccountsCompanion Function({
-      required String id,
-      required String payloadJson,
-      required int syncStatus,
-      required DateTime clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      Value<int> rowid,
-    });
-typedef $$CachedAccountsTableUpdateCompanionBuilder =
-    CachedAccountsCompanion Function({
-      Value<String> id,
-      Value<String> payloadJson,
-      Value<int> syncStatus,
-      Value<DateTime> clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      Value<int> rowid,
-    });
+      BaseReferences<_$LedgerDatabase, $CachedExpensesTable, CachedExpense>
+    ),
+    CachedExpense,
+    PrefetchHooks Function()>;
+typedef $$CachedAccountsTableCreateCompanionBuilder = CachedAccountsCompanion
+    Function({
+  required String id,
+  required String payloadJson,
+  required int syncStatus,
+  required DateTime clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<int> rowid,
+});
+typedef $$CachedAccountsTableUpdateCompanionBuilder = CachedAccountsCompanion
+    Function({
+  Value<String> id,
+  Value<String> payloadJson,
+  Value<int> syncStatus,
+  Value<DateTime> clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<int> rowid,
+});
 
 class $$CachedAccountsTableFilterComposer
     extends Composer<_$LedgerDatabase, $CachedAccountsTable> {
@@ -2281,29 +2735,21 @@ class $$CachedAccountsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$CachedAccountsTableOrderingComposer
@@ -2316,29 +2762,21 @@ class $$CachedAccountsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedAccountsTableAnnotationComposer
@@ -2354,53 +2792,36 @@ class $$CachedAccountsTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => column,
-  );
+      column: $table.payloadJson, builder: (column) => column);
 
   GeneratedColumn<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => column,
-  );
+      column: $table.syncStatus, builder: (column) => column);
 
   GeneratedColumn<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => column,
-  );
+      column: $table.clientRevisionAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => column,
-  );
+      column: $table.lastKnownServerAt, builder: (column) => column);
 }
 
-class $$CachedAccountsTableTableManager
-    extends
-        RootTableManager<
-          _$LedgerDatabase,
-          $CachedAccountsTable,
-          CachedAccount,
-          $$CachedAccountsTableFilterComposer,
-          $$CachedAccountsTableOrderingComposer,
-          $$CachedAccountsTableAnnotationComposer,
-          $$CachedAccountsTableCreateCompanionBuilder,
-          $$CachedAccountsTableUpdateCompanionBuilder,
-          (
-            CachedAccount,
-            BaseReferences<
-              _$LedgerDatabase,
-              $CachedAccountsTable,
-              CachedAccount
-            >,
-          ),
-          CachedAccount,
-          PrefetchHooks Function()
-        > {
+class $$CachedAccountsTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $CachedAccountsTable,
+    CachedAccount,
+    $$CachedAccountsTableFilterComposer,
+    $$CachedAccountsTableOrderingComposer,
+    $$CachedAccountsTableAnnotationComposer,
+    $$CachedAccountsTableCreateCompanionBuilder,
+    $$CachedAccountsTableUpdateCompanionBuilder,
+    (
+      CachedAccount,
+      BaseReferences<_$LedgerDatabase, $CachedAccountsTable, CachedAccount>
+    ),
+    CachedAccount,
+    PrefetchHooks Function()> {
   $$CachedAccountsTableTableManager(
-    _$LedgerDatabase db,
-    $CachedAccountsTable table,
-  ) : super(
-        TableManagerState(
+      _$LedgerDatabase db, $CachedAccountsTable table)
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2409,83 +2830,80 @@ class $$CachedAccountsTableTableManager
               $$CachedAccountsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CachedAccountsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> payloadJson = const Value.absent(),
-                Value<int> syncStatus = const Value.absent(),
-                Value<DateTime> clientRevisionAt = const Value.absent(),
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedAccountsCompanion(
-                id: id,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String payloadJson,
-                required int syncStatus,
-                required DateTime clientRevisionAt,
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedAccountsCompanion.insert(
-                id: id,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<int> syncStatus = const Value.absent(),
+            Value<DateTime> clientRevisionAt = const Value.absent(),
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedAccountsCompanion(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String payloadJson,
+            required int syncStatus,
+            required DateTime clientRevisionAt,
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedAccountsCompanion.insert(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$CachedAccountsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$LedgerDatabase,
-      $CachedAccountsTable,
+typedef $$CachedAccountsTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $CachedAccountsTable,
+    CachedAccount,
+    $$CachedAccountsTableFilterComposer,
+    $$CachedAccountsTableOrderingComposer,
+    $$CachedAccountsTableAnnotationComposer,
+    $$CachedAccountsTableCreateCompanionBuilder,
+    $$CachedAccountsTableUpdateCompanionBuilder,
+    (
       CachedAccount,
-      $$CachedAccountsTableFilterComposer,
-      $$CachedAccountsTableOrderingComposer,
-      $$CachedAccountsTableAnnotationComposer,
-      $$CachedAccountsTableCreateCompanionBuilder,
-      $$CachedAccountsTableUpdateCompanionBuilder,
-      (
-        CachedAccount,
-        BaseReferences<_$LedgerDatabase, $CachedAccountsTable, CachedAccount>,
-      ),
-      CachedAccount,
-      PrefetchHooks Function()
-    >;
-typedef $$CachedBudgetsTableCreateCompanionBuilder =
-    CachedBudgetsCompanion Function({
-      required String id,
-      required String monthKey,
-      required String payloadJson,
-      required int syncStatus,
-      required DateTime clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      Value<int> rowid,
-    });
-typedef $$CachedBudgetsTableUpdateCompanionBuilder =
-    CachedBudgetsCompanion Function({
-      Value<String> id,
-      Value<String> monthKey,
-      Value<String> payloadJson,
-      Value<int> syncStatus,
-      Value<DateTime> clientRevisionAt,
-      Value<DateTime?> lastKnownServerAt,
-      Value<int> rowid,
-    });
+      BaseReferences<_$LedgerDatabase, $CachedAccountsTable, CachedAccount>
+    ),
+    CachedAccount,
+    PrefetchHooks Function()>;
+typedef $$CachedBudgetsTableCreateCompanionBuilder = CachedBudgetsCompanion
+    Function({
+  required String id,
+  required String monthKey,
+  required String payloadJson,
+  required int syncStatus,
+  required DateTime clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<int> rowid,
+});
+typedef $$CachedBudgetsTableUpdateCompanionBuilder = CachedBudgetsCompanion
+    Function({
+  Value<String> id,
+  Value<String> monthKey,
+  Value<String> payloadJson,
+  Value<int> syncStatus,
+  Value<DateTime> clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<int> rowid,
+});
 
 class $$CachedBudgetsTableFilterComposer
     extends Composer<_$LedgerDatabase, $CachedBudgetsTable> {
@@ -2497,34 +2915,24 @@ class $$CachedBudgetsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.id, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get monthKey => $composableBuilder(
-    column: $table.monthKey,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.monthKey, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$CachedBudgetsTableOrderingComposer
@@ -2537,34 +2945,24 @@ class $$CachedBudgetsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get monthKey => $composableBuilder(
-    column: $table.monthKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.monthKey, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedBudgetsTableAnnotationComposer
@@ -2583,49 +2981,36 @@ class $$CachedBudgetsTableAnnotationComposer
       $composableBuilder(column: $table.monthKey, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => column,
-  );
+      column: $table.payloadJson, builder: (column) => column);
 
   GeneratedColumn<int> get syncStatus => $composableBuilder(
-    column: $table.syncStatus,
-    builder: (column) => column,
-  );
+      column: $table.syncStatus, builder: (column) => column);
 
   GeneratedColumn<DateTime> get clientRevisionAt => $composableBuilder(
-    column: $table.clientRevisionAt,
-    builder: (column) => column,
-  );
+      column: $table.clientRevisionAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastKnownServerAt => $composableBuilder(
-    column: $table.lastKnownServerAt,
-    builder: (column) => column,
-  );
+      column: $table.lastKnownServerAt, builder: (column) => column);
 }
 
-class $$CachedBudgetsTableTableManager
-    extends
-        RootTableManager<
-          _$LedgerDatabase,
-          $CachedBudgetsTable,
-          CachedBudget,
-          $$CachedBudgetsTableFilterComposer,
-          $$CachedBudgetsTableOrderingComposer,
-          $$CachedBudgetsTableAnnotationComposer,
-          $$CachedBudgetsTableCreateCompanionBuilder,
-          $$CachedBudgetsTableUpdateCompanionBuilder,
-          (
-            CachedBudget,
-            BaseReferences<_$LedgerDatabase, $CachedBudgetsTable, CachedBudget>,
-          ),
-          CachedBudget,
-          PrefetchHooks Function()
-        > {
+class $$CachedBudgetsTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $CachedBudgetsTable,
+    CachedBudget,
+    $$CachedBudgetsTableFilterComposer,
+    $$CachedBudgetsTableOrderingComposer,
+    $$CachedBudgetsTableAnnotationComposer,
+    $$CachedBudgetsTableCreateCompanionBuilder,
+    $$CachedBudgetsTableUpdateCompanionBuilder,
+    (
+      CachedBudget,
+      BaseReferences<_$LedgerDatabase, $CachedBudgetsTable, CachedBudget>
+    ),
+    CachedBudget,
+    PrefetchHooks Function()> {
   $$CachedBudgetsTableTableManager(
-    _$LedgerDatabase db,
-    $CachedBudgetsTable table,
-  ) : super(
-        TableManagerState(
+      _$LedgerDatabase db, $CachedBudgetsTable table)
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2634,89 +3019,84 @@ class $$CachedBudgetsTableTableManager
               $$CachedBudgetsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CachedBudgetsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> monthKey = const Value.absent(),
-                Value<String> payloadJson = const Value.absent(),
-                Value<int> syncStatus = const Value.absent(),
-                Value<DateTime> clientRevisionAt = const Value.absent(),
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedBudgetsCompanion(
-                id: id,
-                monthKey: monthKey,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                required String monthKey,
-                required String payloadJson,
-                required int syncStatus,
-                required DateTime clientRevisionAt,
-                Value<DateTime?> lastKnownServerAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedBudgetsCompanion.insert(
-                id: id,
-                monthKey: monthKey,
-                payloadJson: payloadJson,
-                syncStatus: syncStatus,
-                clientRevisionAt: clientRevisionAt,
-                lastKnownServerAt: lastKnownServerAt,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> monthKey = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<int> syncStatus = const Value.absent(),
+            Value<DateTime> clientRevisionAt = const Value.absent(),
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedBudgetsCompanion(
+            id: id,
+            monthKey: monthKey,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String monthKey,
+            required String payloadJson,
+            required int syncStatus,
+            required DateTime clientRevisionAt,
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedBudgetsCompanion.insert(
+            id: id,
+            monthKey: monthKey,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$CachedBudgetsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$LedgerDatabase,
-      $CachedBudgetsTable,
+typedef $$CachedBudgetsTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $CachedBudgetsTable,
+    CachedBudget,
+    $$CachedBudgetsTableFilterComposer,
+    $$CachedBudgetsTableOrderingComposer,
+    $$CachedBudgetsTableAnnotationComposer,
+    $$CachedBudgetsTableCreateCompanionBuilder,
+    $$CachedBudgetsTableUpdateCompanionBuilder,
+    (
       CachedBudget,
-      $$CachedBudgetsTableFilterComposer,
-      $$CachedBudgetsTableOrderingComposer,
-      $$CachedBudgetsTableAnnotationComposer,
-      $$CachedBudgetsTableCreateCompanionBuilder,
-      $$CachedBudgetsTableUpdateCompanionBuilder,
-      (
-        CachedBudget,
-        BaseReferences<_$LedgerDatabase, $CachedBudgetsTable, CachedBudget>,
-      ),
-      CachedBudget,
-      PrefetchHooks Function()
-    >;
-typedef $$SyncOutboxTableCreateCompanionBuilder =
-    SyncOutboxCompanion Function({
-      Value<int> localId,
-      required String opCode,
-      required String entityId,
-      required String payloadJson,
-      required String idempotencyKey,
-      required DateTime createdAt,
-      Value<int> attempts,
-      Value<String?> lastError,
-    });
-typedef $$SyncOutboxTableUpdateCompanionBuilder =
-    SyncOutboxCompanion Function({
-      Value<int> localId,
-      Value<String> opCode,
-      Value<String> entityId,
-      Value<String> payloadJson,
-      Value<String> idempotencyKey,
-      Value<DateTime> createdAt,
-      Value<int> attempts,
-      Value<String?> lastError,
-    });
+      BaseReferences<_$LedgerDatabase, $CachedBudgetsTable, CachedBudget>
+    ),
+    CachedBudget,
+    PrefetchHooks Function()>;
+typedef $$SyncOutboxTableCreateCompanionBuilder = SyncOutboxCompanion Function({
+  Value<int> localId,
+  required String opCode,
+  required String entityId,
+  required String payloadJson,
+  required String idempotencyKey,
+  required DateTime createdAt,
+  Value<int> attempts,
+  Value<String?> lastError,
+});
+typedef $$SyncOutboxTableUpdateCompanionBuilder = SyncOutboxCompanion Function({
+  Value<int> localId,
+  Value<String> opCode,
+  Value<String> entityId,
+  Value<String> payloadJson,
+  Value<String> idempotencyKey,
+  Value<DateTime> createdAt,
+  Value<int> attempts,
+  Value<String?> lastError,
+});
 
 class $$SyncOutboxTableFilterComposer
     extends Composer<_$LedgerDatabase, $SyncOutboxTable> {
@@ -2728,44 +3108,29 @@ class $$SyncOutboxTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get localId => $composableBuilder(
-    column: $table.localId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.localId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get opCode => $composableBuilder(
-    column: $table.opCode,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.opCode, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.entityId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get idempotencyKey => $composableBuilder(
-    column: $table.idempotencyKey,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.attempts, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get lastError => $composableBuilder(
-    column: $table.lastError,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.lastError, builder: (column) => ColumnFilters(column));
 }
 
 class $$SyncOutboxTableOrderingComposer
@@ -2778,44 +3143,29 @@ class $$SyncOutboxTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get localId => $composableBuilder(
-    column: $table.localId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.localId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get opCode => $composableBuilder(
-    column: $table.opCode,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.opCode, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.entityId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get idempotencyKey => $composableBuilder(
-    column: $table.idempotencyKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.idempotencyKey,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.attempts, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get lastError => $composableBuilder(
-    column: $table.lastError,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.lastError, builder: (column) => ColumnOrderings(column));
 }
 
 class $$SyncOutboxTableAnnotationComposer
@@ -2837,14 +3187,10 @@ class $$SyncOutboxTableAnnotationComposer
       $composableBuilder(column: $table.entityId, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-    column: $table.payloadJson,
-    builder: (column) => column,
-  );
+      column: $table.payloadJson, builder: (column) => column);
 
   GeneratedColumn<String> get idempotencyKey => $composableBuilder(
-    column: $table.idempotencyKey,
-    builder: (column) => column,
-  );
+      column: $table.idempotencyKey, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -2856,27 +3202,23 @@ class $$SyncOutboxTableAnnotationComposer
       $composableBuilder(column: $table.lastError, builder: (column) => column);
 }
 
-class $$SyncOutboxTableTableManager
-    extends
-        RootTableManager<
-          _$LedgerDatabase,
-          $SyncOutboxTable,
-          SyncOutboxData,
-          $$SyncOutboxTableFilterComposer,
-          $$SyncOutboxTableOrderingComposer,
-          $$SyncOutboxTableAnnotationComposer,
-          $$SyncOutboxTableCreateCompanionBuilder,
-          $$SyncOutboxTableUpdateCompanionBuilder,
-          (
-            SyncOutboxData,
-            BaseReferences<_$LedgerDatabase, $SyncOutboxTable, SyncOutboxData>,
-          ),
-          SyncOutboxData,
-          PrefetchHooks Function()
-        > {
+class $$SyncOutboxTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $SyncOutboxTable,
+    SyncOutboxData,
+    $$SyncOutboxTableFilterComposer,
+    $$SyncOutboxTableOrderingComposer,
+    $$SyncOutboxTableAnnotationComposer,
+    $$SyncOutboxTableCreateCompanionBuilder,
+    $$SyncOutboxTableUpdateCompanionBuilder,
+    (
+      SyncOutboxData,
+      BaseReferences<_$LedgerDatabase, $SyncOutboxTable, SyncOutboxData>
+    ),
+    SyncOutboxData,
+    PrefetchHooks Function()> {
   $$SyncOutboxTableTableManager(_$LedgerDatabase db, $SyncOutboxTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -2885,83 +3227,78 @@ class $$SyncOutboxTableTableManager
               $$SyncOutboxTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SyncOutboxTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> localId = const Value.absent(),
-                Value<String> opCode = const Value.absent(),
-                Value<String> entityId = const Value.absent(),
-                Value<String> payloadJson = const Value.absent(),
-                Value<String> idempotencyKey = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<int> attempts = const Value.absent(),
-                Value<String?> lastError = const Value.absent(),
-              }) => SyncOutboxCompanion(
-                localId: localId,
-                opCode: opCode,
-                entityId: entityId,
-                payloadJson: payloadJson,
-                idempotencyKey: idempotencyKey,
-                createdAt: createdAt,
-                attempts: attempts,
-                lastError: lastError,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> localId = const Value.absent(),
-                required String opCode,
-                required String entityId,
-                required String payloadJson,
-                required String idempotencyKey,
-                required DateTime createdAt,
-                Value<int> attempts = const Value.absent(),
-                Value<String?> lastError = const Value.absent(),
-              }) => SyncOutboxCompanion.insert(
-                localId: localId,
-                opCode: opCode,
-                entityId: entityId,
-                payloadJson: payloadJson,
-                idempotencyKey: idempotencyKey,
-                createdAt: createdAt,
-                attempts: attempts,
-                lastError: lastError,
-              ),
+          updateCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            Value<String> opCode = const Value.absent(),
+            Value<String> entityId = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<String> idempotencyKey = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<int> attempts = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
+          }) =>
+              SyncOutboxCompanion(
+            localId: localId,
+            opCode: opCode,
+            entityId: entityId,
+            payloadJson: payloadJson,
+            idempotencyKey: idempotencyKey,
+            createdAt: createdAt,
+            attempts: attempts,
+            lastError: lastError,
+          ),
+          createCompanionCallback: ({
+            Value<int> localId = const Value.absent(),
+            required String opCode,
+            required String entityId,
+            required String payloadJson,
+            required String idempotencyKey,
+            required DateTime createdAt,
+            Value<int> attempts = const Value.absent(),
+            Value<String?> lastError = const Value.absent(),
+          }) =>
+              SyncOutboxCompanion.insert(
+            localId: localId,
+            opCode: opCode,
+            entityId: entityId,
+            payloadJson: payloadJson,
+            idempotencyKey: idempotencyKey,
+            createdAt: createdAt,
+            attempts: attempts,
+            lastError: lastError,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$SyncOutboxTableProcessedTableManager =
-    ProcessedTableManager<
-      _$LedgerDatabase,
-      $SyncOutboxTable,
+typedef $$SyncOutboxTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $SyncOutboxTable,
+    SyncOutboxData,
+    $$SyncOutboxTableFilterComposer,
+    $$SyncOutboxTableOrderingComposer,
+    $$SyncOutboxTableAnnotationComposer,
+    $$SyncOutboxTableCreateCompanionBuilder,
+    $$SyncOutboxTableUpdateCompanionBuilder,
+    (
       SyncOutboxData,
-      $$SyncOutboxTableFilterComposer,
-      $$SyncOutboxTableOrderingComposer,
-      $$SyncOutboxTableAnnotationComposer,
-      $$SyncOutboxTableCreateCompanionBuilder,
-      $$SyncOutboxTableUpdateCompanionBuilder,
-      (
-        SyncOutboxData,
-        BaseReferences<_$LedgerDatabase, $SyncOutboxTable, SyncOutboxData>,
-      ),
-      SyncOutboxData,
-      PrefetchHooks Function()
-    >;
-typedef $$LedgerKvTableCreateCompanionBuilder =
-    LedgerKvCompanion Function({
-      required String k,
-      required String v,
-      Value<int> rowid,
-    });
-typedef $$LedgerKvTableUpdateCompanionBuilder =
-    LedgerKvCompanion Function({
-      Value<String> k,
-      Value<String> v,
-      Value<int> rowid,
-    });
+      BaseReferences<_$LedgerDatabase, $SyncOutboxTable, SyncOutboxData>
+    ),
+    SyncOutboxData,
+    PrefetchHooks Function()>;
+typedef $$LedgerKvTableCreateCompanionBuilder = LedgerKvCompanion Function({
+  required String k,
+  required String v,
+  Value<int> rowid,
+});
+typedef $$LedgerKvTableUpdateCompanionBuilder = LedgerKvCompanion Function({
+  Value<String> k,
+  Value<String> v,
+  Value<int> rowid,
+});
 
 class $$LedgerKvTableFilterComposer
     extends Composer<_$LedgerDatabase, $LedgerKvTable> {
@@ -2973,14 +3310,10 @@ class $$LedgerKvTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get k => $composableBuilder(
-    column: $table.k,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.k, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get v => $composableBuilder(
-    column: $table.v,
-    builder: (column) => ColumnFilters(column),
-  );
+      column: $table.v, builder: (column) => ColumnFilters(column));
 }
 
 class $$LedgerKvTableOrderingComposer
@@ -2993,14 +3326,10 @@ class $$LedgerKvTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get k => $composableBuilder(
-    column: $table.k,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.k, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get v => $composableBuilder(
-    column: $table.v,
-    builder: (column) => ColumnOrderings(column),
-  );
+      column: $table.v, builder: (column) => ColumnOrderings(column));
 }
 
 class $$LedgerKvTableAnnotationComposer
@@ -3019,27 +3348,23 @@ class $$LedgerKvTableAnnotationComposer
       $composableBuilder(column: $table.v, builder: (column) => column);
 }
 
-class $$LedgerKvTableTableManager
-    extends
-        RootTableManager<
-          _$LedgerDatabase,
-          $LedgerKvTable,
-          LedgerKvData,
-          $$LedgerKvTableFilterComposer,
-          $$LedgerKvTableOrderingComposer,
-          $$LedgerKvTableAnnotationComposer,
-          $$LedgerKvTableCreateCompanionBuilder,
-          $$LedgerKvTableUpdateCompanionBuilder,
-          (
-            LedgerKvData,
-            BaseReferences<_$LedgerDatabase, $LedgerKvTable, LedgerKvData>,
-          ),
-          LedgerKvData,
-          PrefetchHooks Function()
-        > {
+class $$LedgerKvTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $LedgerKvTable,
+    LedgerKvData,
+    $$LedgerKvTableFilterComposer,
+    $$LedgerKvTableOrderingComposer,
+    $$LedgerKvTableAnnotationComposer,
+    $$LedgerKvTableCreateCompanionBuilder,
+    $$LedgerKvTableUpdateCompanionBuilder,
+    (
+      LedgerKvData,
+      BaseReferences<_$LedgerDatabase, $LedgerKvTable, LedgerKvData>
+    ),
+    LedgerKvData,
+    PrefetchHooks Function()> {
   $$LedgerKvTableTableManager(_$LedgerDatabase db, $LedgerKvTable table)
-    : super(
-        TableManagerState(
+      : super(TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -3048,43 +3373,457 @@ class $$LedgerKvTableTableManager
               $$LedgerKvTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$LedgerKvTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> k = const Value.absent(),
-                Value<String> v = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => LedgerKvCompanion(k: k, v: v, rowid: rowid),
-          createCompanionCallback:
-              ({
-                required String k,
-                required String v,
-                Value<int> rowid = const Value.absent(),
-              }) => LedgerKvCompanion.insert(k: k, v: v, rowid: rowid),
+          updateCompanionCallback: ({
+            Value<String> k = const Value.absent(),
+            Value<String> v = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LedgerKvCompanion(
+            k: k,
+            v: v,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String k,
+            required String v,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LedgerKvCompanion.insert(
+            k: k,
+            v: v,
+            rowid: rowid,
+          ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ),
-      );
+        ));
 }
 
-typedef $$LedgerKvTableProcessedTableManager =
-    ProcessedTableManager<
-      _$LedgerDatabase,
-      $LedgerKvTable,
+typedef $$LedgerKvTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $LedgerKvTable,
+    LedgerKvData,
+    $$LedgerKvTableFilterComposer,
+    $$LedgerKvTableOrderingComposer,
+    $$LedgerKvTableAnnotationComposer,
+    $$LedgerKvTableCreateCompanionBuilder,
+    $$LedgerKvTableUpdateCompanionBuilder,
+    (
       LedgerKvData,
-      $$LedgerKvTableFilterComposer,
-      $$LedgerKvTableOrderingComposer,
-      $$LedgerKvTableAnnotationComposer,
-      $$LedgerKvTableCreateCompanionBuilder,
-      $$LedgerKvTableUpdateCompanionBuilder,
-      (
-        LedgerKvData,
-        BaseReferences<_$LedgerDatabase, $LedgerKvTable, LedgerKvData>,
-      ),
-      LedgerKvData,
-      PrefetchHooks Function()
-    >;
+      BaseReferences<_$LedgerDatabase, $LedgerKvTable, LedgerKvData>
+    ),
+    LedgerKvData,
+    PrefetchHooks Function()>;
+typedef $$CachedIncomesTableCreateCompanionBuilder = CachedIncomesCompanion
+    Function({
+  required String id,
+  required String payloadJson,
+  required int syncStatus,
+  required DateTime clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  required DateTime incomeSortDate,
+  Value<int> rowid,
+});
+typedef $$CachedIncomesTableUpdateCompanionBuilder = CachedIncomesCompanion
+    Function({
+  Value<String> id,
+  Value<String> payloadJson,
+  Value<int> syncStatus,
+  Value<DateTime> clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<DateTime> incomeSortDate,
+  Value<int> rowid,
+});
+
+class $$CachedIncomesTableFilterComposer
+    extends Composer<_$LedgerDatabase, $CachedIncomesTable> {
+  $$CachedIncomesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get incomeSortDate => $composableBuilder(
+      column: $table.incomeSortDate,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedIncomesTableOrderingComposer
+    extends Composer<_$LedgerDatabase, $CachedIncomesTable> {
+  $$CachedIncomesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get incomeSortDate => $composableBuilder(
+      column: $table.incomeSortDate,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedIncomesTableAnnotationComposer
+    extends Composer<_$LedgerDatabase, $CachedIncomesTable> {
+  $$CachedIncomesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => column);
+
+  GeneratedColumn<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get incomeSortDate => $composableBuilder(
+      column: $table.incomeSortDate, builder: (column) => column);
+}
+
+class $$CachedIncomesTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $CachedIncomesTable,
+    CachedIncome,
+    $$CachedIncomesTableFilterComposer,
+    $$CachedIncomesTableOrderingComposer,
+    $$CachedIncomesTableAnnotationComposer,
+    $$CachedIncomesTableCreateCompanionBuilder,
+    $$CachedIncomesTableUpdateCompanionBuilder,
+    (
+      CachedIncome,
+      BaseReferences<_$LedgerDatabase, $CachedIncomesTable, CachedIncome>
+    ),
+    CachedIncome,
+    PrefetchHooks Function()> {
+  $$CachedIncomesTableTableManager(
+      _$LedgerDatabase db, $CachedIncomesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedIncomesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedIncomesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedIncomesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<int> syncStatus = const Value.absent(),
+            Value<DateTime> clientRevisionAt = const Value.absent(),
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<DateTime> incomeSortDate = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedIncomesCompanion(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            incomeSortDate: incomeSortDate,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String payloadJson,
+            required int syncStatus,
+            required DateTime clientRevisionAt,
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            required DateTime incomeSortDate,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedIncomesCompanion.insert(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            incomeSortDate: incomeSortDate,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedIncomesTableProcessedTableManager = ProcessedTableManager<
+    _$LedgerDatabase,
+    $CachedIncomesTable,
+    CachedIncome,
+    $$CachedIncomesTableFilterComposer,
+    $$CachedIncomesTableOrderingComposer,
+    $$CachedIncomesTableAnnotationComposer,
+    $$CachedIncomesTableCreateCompanionBuilder,
+    $$CachedIncomesTableUpdateCompanionBuilder,
+    (
+      CachedIncome,
+      BaseReferences<_$LedgerDatabase, $CachedIncomesTable, CachedIncome>
+    ),
+    CachedIncome,
+    PrefetchHooks Function()>;
+typedef $$CachedRecurringExpensesTableCreateCompanionBuilder
+    = CachedRecurringExpensesCompanion Function({
+  required String id,
+  required String payloadJson,
+  required int syncStatus,
+  required DateTime clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  required DateTime nextDate,
+  Value<bool> active,
+  Value<int> rowid,
+});
+typedef $$CachedRecurringExpensesTableUpdateCompanionBuilder
+    = CachedRecurringExpensesCompanion Function({
+  Value<String> id,
+  Value<String> payloadJson,
+  Value<int> syncStatus,
+  Value<DateTime> clientRevisionAt,
+  Value<DateTime?> lastKnownServerAt,
+  Value<DateTime> nextDate,
+  Value<bool> active,
+  Value<int> rowid,
+});
+
+class $$CachedRecurringExpensesTableFilterComposer
+    extends Composer<_$LedgerDatabase, $CachedRecurringExpensesTable> {
+  $$CachedRecurringExpensesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get nextDate => $composableBuilder(
+      column: $table.nextDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get active => $composableBuilder(
+      column: $table.active, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedRecurringExpensesTableOrderingComposer
+    extends Composer<_$LedgerDatabase, $CachedRecurringExpensesTable> {
+  $$CachedRecurringExpensesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get nextDate => $composableBuilder(
+      column: $table.nextDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get active => $composableBuilder(
+      column: $table.active, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedRecurringExpensesTableAnnotationComposer
+    extends Composer<_$LedgerDatabase, $CachedRecurringExpensesTable> {
+  $$CachedRecurringExpensesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get payloadJson => $composableBuilder(
+      column: $table.payloadJson, builder: (column) => column);
+
+  GeneratedColumn<int> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get clientRevisionAt => $composableBuilder(
+      column: $table.clientRevisionAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastKnownServerAt => $composableBuilder(
+      column: $table.lastKnownServerAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextDate =>
+      $composableBuilder(column: $table.nextDate, builder: (column) => column);
+
+  GeneratedColumn<bool> get active =>
+      $composableBuilder(column: $table.active, builder: (column) => column);
+}
+
+class $$CachedRecurringExpensesTableTableManager extends RootTableManager<
+    _$LedgerDatabase,
+    $CachedRecurringExpensesTable,
+    CachedRecurringExpense,
+    $$CachedRecurringExpensesTableFilterComposer,
+    $$CachedRecurringExpensesTableOrderingComposer,
+    $$CachedRecurringExpensesTableAnnotationComposer,
+    $$CachedRecurringExpensesTableCreateCompanionBuilder,
+    $$CachedRecurringExpensesTableUpdateCompanionBuilder,
+    (
+      CachedRecurringExpense,
+      BaseReferences<_$LedgerDatabase, $CachedRecurringExpensesTable,
+          CachedRecurringExpense>
+    ),
+    CachedRecurringExpense,
+    PrefetchHooks Function()> {
+  $$CachedRecurringExpensesTableTableManager(
+      _$LedgerDatabase db, $CachedRecurringExpensesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedRecurringExpensesTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedRecurringExpensesTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedRecurringExpensesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> payloadJson = const Value.absent(),
+            Value<int> syncStatus = const Value.absent(),
+            Value<DateTime> clientRevisionAt = const Value.absent(),
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            Value<DateTime> nextDate = const Value.absent(),
+            Value<bool> active = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedRecurringExpensesCompanion(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            nextDate: nextDate,
+            active: active,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String payloadJson,
+            required int syncStatus,
+            required DateTime clientRevisionAt,
+            Value<DateTime?> lastKnownServerAt = const Value.absent(),
+            required DateTime nextDate,
+            Value<bool> active = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedRecurringExpensesCompanion.insert(
+            id: id,
+            payloadJson: payloadJson,
+            syncStatus: syncStatus,
+            clientRevisionAt: clientRevisionAt,
+            lastKnownServerAt: lastKnownServerAt,
+            nextDate: nextDate,
+            active: active,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedRecurringExpensesTableProcessedTableManager
+    = ProcessedTableManager<
+        _$LedgerDatabase,
+        $CachedRecurringExpensesTable,
+        CachedRecurringExpense,
+        $$CachedRecurringExpensesTableFilterComposer,
+        $$CachedRecurringExpensesTableOrderingComposer,
+        $$CachedRecurringExpensesTableAnnotationComposer,
+        $$CachedRecurringExpensesTableCreateCompanionBuilder,
+        $$CachedRecurringExpensesTableUpdateCompanionBuilder,
+        (
+          CachedRecurringExpense,
+          BaseReferences<_$LedgerDatabase, $CachedRecurringExpensesTable,
+              CachedRecurringExpense>
+        ),
+        CachedRecurringExpense,
+        PrefetchHooks Function()>;
 
 class $LedgerDatabaseManager {
   final _$LedgerDatabase _db;
@@ -3099,4 +3838,9 @@ class $LedgerDatabaseManager {
       $$SyncOutboxTableTableManager(_db, _db.syncOutbox);
   $$LedgerKvTableTableManager get ledgerKv =>
       $$LedgerKvTableTableManager(_db, _db.ledgerKv);
+  $$CachedIncomesTableTableManager get cachedIncomes =>
+      $$CachedIncomesTableTableManager(_db, _db.cachedIncomes);
+  $$CachedRecurringExpensesTableTableManager get cachedRecurringExpenses =>
+      $$CachedRecurringExpensesTableTableManager(
+          _db, _db.cachedRecurringExpenses);
 }

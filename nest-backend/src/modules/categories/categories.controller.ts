@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
@@ -36,6 +36,12 @@ export class CategoriesController {
 
   }
 
+  @Get(':id')
+  findOne(@Req() req: RequestWithWorkspace, @Param('id') id: string) {
+    assertWorkspacePermission(req.workspaceContext.role, 'category:read');
+    return this.categories.getCategoryWithDrillDown(req.workspaceContext.ownerUserId, id);
+  }
+
 
 
   @Post()
@@ -66,6 +72,23 @@ export class CategoriesController {
 
     return this.categories.createSubcategory(req.workspaceContext.ownerUserId, categoryId, dto);
 
+  }
+
+  @Delete(':id')
+  remove(@Req() req: RequestWithWorkspace, @Param('id') id: string) {
+    assertWorkspacePermission(req.workspaceContext.role, 'category:create');
+    return this.categories.deleteCategory(req.workspaceContext.ownerUserId, id);
+  }
+
+  @Get(':id/history')
+  history(
+    @Req() req: RequestWithWorkspace,
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    assertWorkspacePermission(req.workspaceContext.role, 'category:read');
+    return this.categories.getCategoryHistory(req.workspaceContext.ownerUserId, id, from, to);
   }
 
 }

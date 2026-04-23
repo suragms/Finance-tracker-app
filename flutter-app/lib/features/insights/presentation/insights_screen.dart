@@ -75,7 +75,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
       final result = await api.chat(
         trimmed,
         history: _apiHistory.isEmpty ? null : List.from(_apiHistory),
-        lang: Localizations.localeOf(context).languageCode == 'ml' ? 'ml' : 'auto',
+        lang: Localizations.localeOf(context).languageCode == 'ml'
+            ? 'ml'
+            : 'auto',
       );
       _apiHistory.add({'role': 'user', 'content': trimmed});
       _apiHistory.add({'role': 'assistant', 'content': result.reply});
@@ -129,7 +131,9 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
       final result = await api.chat(
         approve ? 'confirm' : 'cancel',
         history: _apiHistory.isEmpty ? null : List.from(_apiHistory),
-        lang: Localizations.localeOf(context).languageCode == 'ml' ? 'ml' : 'auto',
+        lang: Localizations.localeOf(context).languageCode == 'ml'
+            ? 'ml'
+            : 'auto',
         actionConfirmation: {
           'proposal': proposal,
           'approve': approve,
@@ -152,7 +156,8 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
           _chatBubbles.add(
             _ChatTurn(
               fromUser: false,
-              text: e.response?.data?.toString() ?? e.message ?? 'Request failed',
+              text:
+                  e.response?.data?.toString() ?? e.message ?? 'Request failed',
             ),
           );
         });
@@ -313,8 +318,8 @@ class _InsightsTab extends StatelessWidget {
                 Text(
                   'Source: ${data.source ?? 'n/a'}',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: cs.onSurface.withValues(alpha: 0.55),
-                  ),
+                        color: cs.onSurface.withValues(alpha: 0.55),
+                      ),
                 ),
               const SizedBox(height: MfSpace.lg),
               _sectionTitle(context, 'Monthly summary'),
@@ -398,9 +403,9 @@ class _InsightsTab extends StatelessWidget {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: accent ?? cs.onSurface,
-          height: 1.45,
-        ),
+              color: accent ?? cs.onSurface,
+              height: 1.45,
+            ),
       ),
     );
   }
@@ -583,7 +588,8 @@ class _ChatTab extends StatelessWidget {
     );
   }
 
-  Widget _actionConfirmCard(BuildContext context, Map<String, dynamic> proposal) {
+  Widget _actionConfirmCard(
+      BuildContext context, Map<String, dynamic> proposal) {
     final cs = Theme.of(context).colorScheme;
     final type = proposal['type']?.toString() ?? 'action';
     return Container(
@@ -606,7 +612,8 @@ class _ChatTab extends StatelessWidget {
           const SizedBox(height: MfSpace.xs),
           Text(
             proposal['payload']?.toString() ?? '',
-            style: GoogleFonts.inter(fontSize: 12, color: cs.onSurface.withValues(alpha: 0.75)),
+            style: GoogleFonts.inter(
+                fontSize: 12, color: cs.onSurface.withValues(alpha: 0.75)),
           ),
           const SizedBox(height: MfSpace.sm),
           Row(

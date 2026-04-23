@@ -15,6 +15,15 @@ export class ReportsController {
     return this.reports.monthlySummary(req.workspaceContext);
   }
 
+  @Get("summary")
+  summary(
+    @Req() req: RequestWithWorkspace,
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+  ) {
+    return this.reports.summary(req.workspaceContext, from, to);
+  }
+
   /** Calendar month income totals and by-source breakdown; optional `year` / `month` (1–12), defaults to now. */
   @Get("monthly-income")
   monthlyIncome(

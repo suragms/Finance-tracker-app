@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/format_amount.dart';
 import '../../../core/design_system/app_card.dart';
 import '../../../core/dio_errors.dart';
 import '../../../core/theme/money_flow_tokens.dart';
@@ -120,7 +121,8 @@ class VehiclesScreen extends ConsumerWidget {
           async.when(
             data: (list) => RefreshIndicator(
               color: MfPalette.neonGreen,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerLow,
+              backgroundColor:
+                  Theme.of(context).colorScheme.surfaceContainerLow,
               onRefresh: () async {
                 ref.invalidate(vehiclesListProvider);
                 await ref.read(vehiclesListProvider.future);
@@ -203,7 +205,8 @@ class VehiclesScreen extends ConsumerWidget {
                                   style: GoogleFonts.manrope(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w800,
-                                    color: Theme.of(context).colorScheme.onSurface,
+                                    color:
+                                        Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               ],
@@ -222,7 +225,8 @@ class VehiclesScreen extends ConsumerWidget {
                               (context, index) {
                                 final v = list[index];
                                 return Padding(
-                                  padding: const EdgeInsets.only(bottom: MfSpace.md),
+                                  padding:
+                                      const EdgeInsets.only(bottom: MfSpace.md),
                                   child: _VehicleAssetCard(
                                     vehicle: v,
                                     onTap: () => _openVehicleDetail(
@@ -330,7 +334,7 @@ class _TotalAssetValueCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    MfCurrency.formatInr(total),
+                    formatAmount(total),
                     style: GoogleFonts.manrope(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -366,7 +370,8 @@ class _InsuranceBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (expiry == null) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: MfSpace.sm, vertical: 4),
+        padding:
+            const EdgeInsets.symmetric(horizontal: MfSpace.sm, vertical: 4),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHigh.withValues(
                 alpha: 0.85,
@@ -379,7 +384,10 @@ class _InsuranceBadge extends StatelessWidget {
             Icon(
               Icons.shield_outlined,
               size: 14,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.5),
             ),
             const SizedBox(width: 4),
             Text(
@@ -387,7 +395,10 @@ class _InsuranceBadge extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.55),
               ),
             ),
           ],
@@ -532,9 +543,8 @@ class _VehicleAssetCard extends StatelessWidget {
                 child: _MiniStat(
                   icon: Icons.payments_outlined,
                   label: 'Value',
-                  value: displayValue != null
-                      ? MfCurrency.formatInr(displayValue)
-                      : '—',
+                  value:
+                      displayValue != null ? formatAmount(displayValue) : '—',
                 ),
               ),
               Expanded(
@@ -630,9 +640,7 @@ class _DepreciationChartCard extends StatelessWidget {
     minY = math.max(0, minY - pad);
     maxY += pad;
 
-    final flatSpots = bookSpots
-        .map((s) => FlSpot(s.x, reportedTotal))
-        .toList();
+    final flatSpots = bookSpots.map((s) => FlSpot(s.x, reportedTotal)).toList();
 
     return AppCard(
       glass: true,
@@ -685,7 +693,8 @@ class _DepreciationChartCard extends StatelessWidget {
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      interval: math.max(1, bookSpots.length / 4).floorToDouble(),
+                      interval:
+                          math.max(1, bookSpots.length / 4).floorToDouble(),
                       getTitlesWidget: (v, _) {
                         final i = v.round();
                         if (i != 0 && i != bookSpots.length - 1) {
@@ -709,14 +718,8 @@ class _DepreciationChartCard extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 40,
                       getTitlesWidget: (v, _) {
-                        final abs = v.abs();
-                        final t = abs >= 100000
-                            ? '${(abs / 100000).toStringAsFixed(1)}L'
-                            : abs >= 1000
-                            ? '${(abs / 1000).toStringAsFixed(0)}k'
-                            : v.toInt().toString();
                         return Text(
-                          t,
+                          formatAmount(v),
                           style: GoogleFonts.inter(
                             fontSize: 9,
                             color: cs.onSurface.withValues(alpha: 0.4),
@@ -770,7 +773,7 @@ class _DepreciationChartCard extends StatelessWidget {
                         cs.surfaceContainerHigh.withValues(alpha: 0.95),
                     getTooltipItems: (touched) => touched.map((t) {
                       return LineTooltipItem(
-                        MfCurrency.formatInr(t.y),
+                        formatAmount(t.y),
                         GoogleFonts.manrope(
                           color: cs.onSurface,
                           fontWeight: FontWeight.w700,
@@ -892,8 +895,10 @@ class _VehiclesEmptyPainter extends CustomPainter {
         ),
       );
     canvas.drawPath(car, Paint()..color = Colors.white.withValues(alpha: 0.2));
-    canvas.drawCircle(Offset(w * 0.32, h * 0.62), w * 0.055, Paint()..color = const Color(0xFF334155));
-    canvas.drawCircle(Offset(w * 0.68, h * 0.62), w * 0.055, Paint()..color = const Color(0xFF334155));
+    canvas.drawCircle(Offset(w * 0.32, h * 0.62), w * 0.055,
+        Paint()..color = const Color(0xFF334155));
+    canvas.drawCircle(Offset(w * 0.68, h * 0.62), w * 0.055,
+        Paint()..color = const Color(0xFF334155));
   }
 
   @override
@@ -952,7 +957,8 @@ class _VehicleDetailSheet {
                 const SizedBox(height: 12),
                 TextField(
                   controller: number,
-                  decoration: const InputDecoration(labelText: 'Plate / number'),
+                  decoration:
+                      const InputDecoration(labelText: 'Plate / number'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -988,7 +994,8 @@ class _VehicleDetailSheet {
                 ),
                 TextField(
                   controller: purchaseCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Purchase price',
                     hintText: 'Cost when bought',
@@ -997,7 +1004,8 @@ class _VehicleDetailSheet {
                 const SizedBox(height: 12),
                 TextField(
                   controller: currentCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Current estimated value',
                   ),
@@ -1015,7 +1023,8 @@ class _VehicleDetailSheet {
                   onTap: () async {
                     final x = await showDatePicker(
                       context: context,
-                      initialDate: insD ?? DateTime.now().add(const Duration(days: 365)),
+                      initialDate:
+                          insD ?? DateTime.now().add(const Duration(days: 365)),
                       firstDate: DateTime(2000),
                       lastDate: DateTime.now().add(const Duration(days: 3650)),
                     );
@@ -1025,21 +1034,24 @@ class _VehicleDetailSheet {
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: () async {
-                    if (name.text.trim().isEmpty || number.text.trim().isEmpty) {
+                    if (name.text.trim().isEmpty ||
+                        number.text.trim().isEmpty) {
                       return;
                     }
                     double? pp;
                     if (purchaseCtrl.text.trim().isEmpty) {
                       pp = null;
                     } else {
-                      pp = double.tryParse(purchaseCtrl.text.replaceAll(',', ''));
+                      pp = double.tryParse(
+                          purchaseCtrl.text.replaceAll(',', ''));
                       if (pp == null) return;
                     }
                     double? cv;
                     if (currentCtrl.text.trim().isEmpty) {
                       cv = null;
                     } else {
-                      cv = double.tryParse(currentCtrl.text.replaceAll(',', ''));
+                      cv =
+                          double.tryParse(currentCtrl.text.replaceAll(',', ''));
                       if (cv == null) return;
                     }
                     try {
@@ -1121,7 +1133,8 @@ class _VehicleFormSheet {
                 const SizedBox(height: 12),
                 TextField(
                   controller: number,
-                  decoration: const InputDecoration(labelText: 'Plate / number'),
+                  decoration:
+                      const InputDecoration(labelText: 'Plate / number'),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
@@ -1157,7 +1170,8 @@ class _VehicleFormSheet {
                 ),
                 TextField(
                   controller: purchaseCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Purchase price (optional)',
                   ),
@@ -1165,7 +1179,8 @@ class _VehicleFormSheet {
                 const SizedBox(height: 12),
                 TextField(
                   controller: currentCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
                     labelText: 'Current value (optional)',
                   ),
@@ -1183,7 +1198,8 @@ class _VehicleFormSheet {
                   onTap: () async {
                     final x = await showDatePicker(
                       context: context,
-                      initialDate: insD ?? DateTime.now().add(const Duration(days: 365)),
+                      initialDate:
+                          insD ?? DateTime.now().add(const Duration(days: 365)),
                       firstDate: DateTime(2000),
                       lastDate: DateTime.now().add(const Duration(days: 3650)),
                     );
@@ -1193,21 +1209,24 @@ class _VehicleFormSheet {
                 const SizedBox(height: 20),
                 LedgerPrimaryGradientButton(
                   onPressed: () async {
-                    if (name.text.trim().isEmpty || number.text.trim().isEmpty) {
+                    if (name.text.trim().isEmpty ||
+                        number.text.trim().isEmpty) {
                       return;
                     }
                     double? pp;
                     if (purchaseCtrl.text.trim().isEmpty) {
                       pp = null;
                     } else {
-                      pp = double.tryParse(purchaseCtrl.text.replaceAll(',', ''));
+                      pp = double.tryParse(
+                          purchaseCtrl.text.replaceAll(',', ''));
                       if (pp == null) return;
                     }
                     double? cv;
                     if (currentCtrl.text.trim().isEmpty) {
                       cv = null;
                     } else {
-                      cv = double.tryParse(currentCtrl.text.replaceAll(',', ''));
+                      cv =
+                          double.tryParse(currentCtrl.text.replaceAll(',', ''));
                       if (cv == null) return;
                     }
                     try {
@@ -1272,7 +1291,8 @@ class _VehicleCostSheet {
               TextField(
                 controller: amount,
                 decoration: const InputDecoration(labelText: 'Amount'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,

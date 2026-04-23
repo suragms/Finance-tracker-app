@@ -1,147 +1,510 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/dio_errors.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../accounts/application/account_providers.dart';
 import '../application/expense_providers.dart';
-import '../data/categories_api.dart';
-
-// Minimal dark expense form palette.
-const Color _aeBg = Color(0xFF0D0D0D);
-const Color _aeSurface = Color(0xFF141418);
-const Color _aeField = Color(0xFF1C1C22);
-const Color _aeBorder = Color(0xFF32323A);
-
-InputDecoration _aeFieldDec({
-  required String label,
-  String? hint,
-  EdgeInsetsGeometry contentPadding = const EdgeInsets.symmetric(
-    horizontal: 16,
-    vertical: 16,
-  ),
-}) {
-  return InputDecoration(
-    labelText: label,
-    hintText: hint,
-    labelStyle: GoogleFonts.inter(
-      fontSize: 13,
-      fontWeight: FontWeight.w500,
-      color: Colors.white.withValues(alpha: 0.45),
-    ),
-    hintStyle: GoogleFonts.inter(
-      color: Colors.white.withValues(alpha: 0.28),
-    ),
-    floatingLabelStyle: GoogleFonts.inter(
-      color: MfPalette.neonGreen,
-      fontWeight: FontWeight.w600,
-    ),
-    filled: true,
-    fillColor: _aeField,
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: const BorderSide(color: _aeBorder),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: const BorderSide(color: _aeBorder),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.md),
-      borderSide: BorderSide(color: MfPalette.neonGreen, width: 2),
-    ),
-    contentPadding: contentPadding,
-  );
-}
-
-InputDecoration _aeAmountDec() {
-  return InputDecoration(
-    filled: true,
-    fillColor: _aeField,
-    prefixText: '${MfCurrency.symbol} ',
-    prefixStyle: GoogleFonts.manrope(
-      fontSize: 32,
-      fontWeight: FontWeight.w700,
-      color: Colors.white.withValues(alpha: 0.5),
-    ),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.lg),
-      borderSide: const BorderSide(color: _aeBorder),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.lg),
-      borderSide: const BorderSide(color: _aeBorder),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(MfRadius.lg),
-      borderSide: BorderSide(color: MfPalette.neonGreen, width: 2.5),
-    ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
-  );
-}
+import '../../../core/services/smart_categorization_service.dart';
 
 class AddExpenseScreen extends ConsumerStatefulWidget {
-  const AddExpenseScreen({super.key, this.initialAccountId});
+  const AddExpenseScreen({
+    super.key,
+    this.initialAccountId,
+    this.initialCategoryId,
+  });
 
   final String? initialAccountId;
+  final String? initialCategoryId;
 
   @override
   ConsumerState<AddExpenseScreen> createState() => _AddExpenseScreenState();
 }
 
 class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
-  final _amount = TextEditingController();
-  final _note = TextEditingController();
-  final _taxAmount = TextEditingController();
+  String _amountStr = '0';
+  final _noteController = TextEditingController();
 
   DateTime _date = DateTime.now();
-  String? _categoryId;
-  String? _subId;
   String? _accountId;
+  Map<String, dynamic>? _selectedCategory;
+  Map<String, dynamic>? _selectedSubcategory;
+  bool _manuallySetCategory = false;
+  bool _isAutoSuggested = false;
   bool _saving = false;
-  bool _taxable = false;
-  String _taxScheme = 'gst_in';
+  String? _errorText;
 
   @override
   void initState() {
     super.initState();
     _accountId = widget.initialAccountId;
+    
+    // If initial category is provided, try to find it
+    if (widget.initialCategoryId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final categories = ref.read(categoriesProvider).valueOrNull ?? [];
+        if (categories.isNotEmpty) {
+          final found = categories.firstWhere(
+            (c) => c['id'].toString() == widget.initialCategoryId,
+            orElse: () => <String, dynamic>{},
+          );
+          if (found.isNotEmpty) {
+            setState(() => _selectedCategory = found);
+          }
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _amount.dispose();
-    _note.dispose();
-    _taxAmount.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
-  void _showSnack(
-    String message, {
-    IconData icon = Icons.info_outline_rounded,
-  }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _aeSurface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(MfRadius.md),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+  void _onKeyPress(String val) {
+    setState(() {
+      _errorText = null;
+      if (val == 'back') {
+        if (_amountStr.length > 1) {
+          _amountStr = _amountStr.substring(0, _amountStr.length - 1);
+        } else {
+          _amountStr = '0';
+        }
+      } else if (val == '.') {
+        if (!_amountStr.contains('.')) {
+          _amountStr += '.';
+        }
+      } else {
+        if (_amountStr == '0') {
+          _amountStr = val;
+        } else if (_amountStr.contains('.') && _amountStr.split('.')[1].length >= 2) {
+          return;
+        } else if (_amountStr.length >= 9) {
+          return; // Prevent excessively large numbers
+        } else {
+          _amountStr += val;
+        }
+      }
+    });
+    HapticFeedback.selectionClick();
+  }
+
+  Future<void> _save() async {
+    if (_saving) return;
+
+    final amount = double.tryParse(_amountStr) ?? 0;
+    if (amount <= 0) {
+      setState(() => _errorText = 'Please enter an amount');
+      HapticFeedback.vibrate();
+      return;
+    }
+
+    if (_selectedCategory == null) {
+      setState(() => _errorText = 'Please select a category');
+      HapticFeedback.vibrate();
+      return;
+    }
+
+    final accountsAsync = ref.read(accountsProvider);
+    final effectiveAccountId = _accountId ?? 
+        accountsAsync.valueOrNull?.accounts.firstOrNull?['id'] as String?;
+
+    if (effectiveAccountId == null) {
+      setState(() => _errorText = 'Please select an account');
+      HapticFeedback.vibrate();
+      return;
+    }
+
+    setState(() {
+      _saving = true;
+      _errorText = null;
+    });
+
+    try {
+      final syncSvc = ref.read(ledgerSyncServiceProvider);
+      await syncSvc.createExpenseOffline(
+        amount: amount,
+        categoryId: _selectedCategory!['id'].toString(),
+        categoryName: _selectedCategory!['name']?.toString(),
+        subCategoryId: _selectedSubcategory?['id']?.toString(),
+        dateIso: _date.toUtc().toIso8601String(),
+        note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
+        accountId: effectiveAccountId,
+      );
+
+      if (mounted) {
+        HapticFeedback.mediumImpact();
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('₹$amount expense recorded'),
+            backgroundColor: MfPalette.expenseRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorText = 'Failed to save: $e';
+          _saving = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final accountsAsync = ref.watch(accountsProvider);
+    final accounts = accountsAsync.valueOrNull?.accounts ?? [];
+
+    return Scaffold(
+      backgroundColor: MfPalette.canvas,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: MfPalette.textPrimary, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
         ),
-        content: Row(
+        title: Text(
+          'Add Expense',
+          style: GoogleFonts.manrope(
+            color: MfPalette.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Amount Display Area
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'TOTAL SPENT',
+                    style: GoogleFonts.inter(
+                      color: MfPalette.textMuted.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: FittedBox(
+                      child: Text(
+                        '₹$_amountStr',
+                        style: GoogleFonts.manrope(
+                          color: MfPalette.textPrimary,
+                          fontSize: 80,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_errorText != null)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        _errorText!,
+                        style: GoogleFonts.inter(
+                          color: MfPalette.expenseRed,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // Action Area
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: MfPalette.surface,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(MfRadius.xl)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 30,
+                  offset: const Offset(0, -10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Category Row
+                categoriesAsync.when(
+                  data: (list) => _buildCategoryRow(list),
+                  loading: () => const SizedBox(height: 48, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+                  error: (e, __) => const Text('Error loading categories', style: TextStyle(color: Colors.red)),
+                ),
+                const SizedBox(height: 24),
+
+                // Account & Date Tiles
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildSelectorTile(
+                        icon: Icons.account_balance_wallet_rounded,
+                        label: 'From Account',
+                        value: _accountId != null 
+                            ? accounts.firstWhere((a) => a['id'] == _accountId, orElse: () => {'name': 'Select'})['name']
+                            : (accounts.isNotEmpty ? accounts.first['name'] : 'Select'),
+                        onTap: () => _showAccountPicker(accounts),
+                        color: MfPalette.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildSelectorTile(
+                        icon: Icons.calendar_month_rounded,
+                        label: 'Date',
+                        value: DateFormat('EEE, dd MMM').format(_date),
+                        onTap: () => _pickDate(),
+                        color: MfPalette.accentSoftPurple,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Note Tile
+                _buildNoteTile(),
+              ],
+            ),
+          ),
+
+          // Numpad
+          _buildModernNumpad(),
+          
+          // Confirm Button
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 16),
+            color: MfPalette.surface,
+            child: ElevatedButton(
+              onPressed: _saving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MfPalette.expenseRed,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
+                elevation: 4,
+                shadowColor: MfPalette.expenseRed.withValues(alpha: 0.4),
+              ),
+              child: _saving
+                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                : Text(
+                    'Save Expense',
+                    style: GoogleFonts.manrope(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryRow(List<Map<String, dynamic>> categories) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, size: 20, color: MfPalette.neonGreen),
-            const SizedBox(width: MfSpace.sm),
+            Text(
+              'CATEGORY',
+              style: GoogleFonts.inter(
+                color: MfPalette.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+              ),
+            ),
+            if (_isAutoSuggested)
+               Text(
+                'AI SUGGESTED',
+                style: GoogleFonts.inter(
+                  color: MfPalette.neonGreen,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 90,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: categories.length,
+            physics: const BouncingScrollPhysics(),
+            itemBuilder: (context, index) {
+              final cat = categories[index];
+              final isSelected = _selectedCategory?['id'] == cat['id'];
+              final systemKey = cat['systemKey']?.toString() ?? 'custom';
+              final color = isSelected ? MfCategoryColors.forSystemKey(systemKey) : MfPalette.textMuted;
+              
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedCategory = cat;
+                    _manuallySetCategory = true;
+                    _isAutoSuggested = false;
+                  });
+                  HapticFeedback.lightImpact();
+                },
+                child: Container(
+                  width: 80,
+                  margin: const EdgeInsets.only(right: 12),
+                  child: Column(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: isSelected 
+                            ? color.withValues(alpha: 0.15) 
+                            : Colors.white.withValues(alpha: 0.05),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: isSelected ? color : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Icon(
+                          _getIcon(systemKey),
+                          size: 24,
+                          color: isSelected ? color : MfPalette.textMuted,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        cat['name']?.toString() ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.inter(
+                          color: isSelected ? Colors.white : MfPalette.textMuted,
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSelectorTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(MfRadius.lg),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(MfRadius.lg),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 20, color: color),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.inter(
+                      color: MfPalette.textMuted,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.manrope(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoteTile() {
+    return InkWell(
+      onTap: () => _showNoteDialog(),
+      borderRadius: BorderRadius.circular(MfRadius.lg),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(MfRadius.lg),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.description_outlined, size: 20, color: MfPalette.textMuted),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                message,
+                _noteController.text.isEmpty ? 'Description (Optional)' : _noteController.text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.92),
+                  color: _noteController.text.isEmpty ? MfPalette.textMuted : Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -151,358 +514,130 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     );
   }
 
-  Future<Map<String, dynamic>> _createCategory(
-    String name, {
-    bool announce = true,
-  }) async {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) {
-      _showSnack(
-        'Enter a category name first.',
-        icon: Icons.label_outline_rounded,
-      );
-      return <String, dynamic>{};
-    }
-
-    try {
-      final created = await ref
-          .read(categoriesApiProvider)
-          .createCategory(trimmed);
-      ref.invalidate(categoriesProvider);
-      if (announce) {
-        _showSnack(
-          'Category added successfully.',
-          icon: Icons.check_circle_outline_rounded,
-        );
-      }
-      return created;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        final data = e.response?.data;
-        if (data is Map && data['existingCategoryId'] != null) {
-          final id = data['existingCategoryId']?.toString();
-          if (id != null && mounted) {
-            setState(() {
-              _categoryId = id;
-              _subId = null;
-            });
-            ref.invalidate(categoriesProvider);
-            _showSnack(
-              'That category already exists — using it.',
-              icon: Icons.label_rounded,
-            );
-            return {'id': id};
-          }
-        }
-      }
-      _showSnack(dioErrorMessage(e), icon: Icons.error_outline_rounded);
-      rethrow;
-    }
+  Widget _buildModernNumpad() {
+    return Container(
+      color: MfPalette.surface,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _numpadBtn('1'), _numpadBtn('2'), _numpadBtn('3'),
+            ],
+          ),
+          Row(
+            children: [
+              _numpadBtn('4'), _numpadBtn('5'), _numpadBtn('6'),
+            ],
+          ),
+          Row(
+            children: [
+              _numpadBtn('7'), _numpadBtn('8'), _numpadBtn('9'),
+            ],
+          ),
+          Row(
+            children: [
+              _numpadBtn('.'), _numpadBtn('0'), _numpadBtn('back', icon: Icons.backspace_rounded),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
-  Future<Map<String, dynamic>> _createSubcategory(
-    String categoryId,
-    String name, {
-    bool announce = true,
-  }) async {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) {
-      _showSnack(
-        'Enter a subcategory name.',
-        icon: Icons.label_outline_rounded,
-      );
-      return <String, dynamic>{};
-    }
-    try {
-      final created = await ref
-          .read(categoriesApiProvider)
-          .createSubcategory(categoryId, trimmed);
-      ref.invalidate(categoriesProvider);
-      if (announce) {
-        _showSnack(
-          'Subcategory added.',
-          icon: Icons.check_circle_outline_rounded,
-        );
-      }
-      return created;
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 409) {
-        final data = e.response?.data;
-        if (data is Map && data['existingSubCategoryId'] != null) {
-          final id = data['existingSubCategoryId']?.toString();
-          if (id != null && mounted) {
-            setState(() => _subId = id);
-            ref.invalidate(categoriesProvider);
-            _showSnack(
-              'That subcategory already exists — selected it.',
-              icon: Icons.label_rounded,
-            );
-            return {'id': id};
-          }
-        }
-      }
-      _showSnack(dioErrorMessage(e), icon: Icons.error_outline_rounded);
-      rethrow;
-    }
+  Widget _numpadBtn(String label, {IconData? icon}) {
+    return Expanded(
+      child: InkWell(
+        onTap: () => _onKeyPress(label),
+        child: Container(
+          height: 60,
+          alignment: Alignment.center,
+          child: icon != null 
+            ? Icon(icon, color: MfPalette.textMuted, size: 22)
+            : Text(
+                label,
+                style: GoogleFonts.manrope(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+        ),
+      ),
+    );
   }
 
-  Future<void> _showAddSubcategoryDialog() async {
-    final cid = _categoryId;
-    if (cid == null) {
-      _showSnack(
-        'Pick a category first.',
-        icon: Icons.category_outlined,
-      );
-      return;
-    }
-    final controller = TextEditingController();
-    var creating = false;
+  IconData _getIcon(String k) {
+    k = k.toLowerCase();
+    if (k.contains('food')) return Icons.restaurant_rounded;
+    if (k.contains('home')) return Icons.home_rounded;
+    if (k.contains('tran')) return Icons.directions_car_rounded;
+    if (k.contains('shop')) return Icons.shopping_bag_rounded;
+    if (k.contains('health')) return Icons.medical_services_rounded;
+    if (k.contains('ent')) return Icons.movie_rounded;
+    if (k.contains('bill')) return Icons.receipt_long_rounded;
+    if (k.contains('educ')) return Icons.school_rounded;
+    return Icons.grid_view_rounded;
+  }
 
-    await showDialog<void>(
+  void _showNoteDialog() {
+    showDialog(
       context: context,
-      builder: (dialogContext) {
-        return Theme(
-          data: ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: MfPalette.neonGreen,
-              surface: _aeSurface,
-            ),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: MfPalette.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
+        title: Text('Expense Note', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: _noteController,
+          autofocus: true,
+          maxLines: 3,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'What was this expense for?',
+            hintStyle: const TextStyle(color: MfPalette.textHint),
+            filled: true,
+            fillColor: Colors.white.withValues(alpha: 0.05),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(MfRadius.md), borderSide: BorderSide.none),
           ),
-          child: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                backgroundColor: _aeSurface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MfRadius.lg),
-                ),
-                title: Text(
-                  'Add subcategory',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                content: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: GoogleFonts.inter(color: Colors.white),
-                  decoration: _aeFieldDec(
-                    label: 'Subcategory name',
-                    hint: 'e.g. Groceries',
-                  ),
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) async {
-                    if (creating) return;
-                    final created = await _createSubcategory(
-                      cid,
-                      controller.text,
-                      announce: false,
-                    );
-                    if (!mounted || created.isEmpty) return;
-                    setState(() {
-                      _subId = created['id']?.toString() ?? _subId;
-                    });
-                    if (dialogContext.mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
-                    _showSnack(
-                      'Subcategory added.',
-                      icon: Icons.check_circle_outline_rounded,
-                    );
-                  },
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: creating
-                        ? null
-                        : () => Navigator.of(dialogContext).pop(),
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MfPalette.neonGreen,
-                      foregroundColor: MfPalette.onNeonGreen,
-                    ),
-                    onPressed: creating
-                        ? null
-                        : () async {
-                            setDialogState(() => creating = true);
-                            try {
-                              final created = await _createSubcategory(
-                                cid,
-                                controller.text,
-                                announce: false,
-                              );
-                              if (!mounted || created.isEmpty) return;
-                              setState(() {
-                                _subId = created['id']?.toString() ?? _subId;
-                              });
-                              if (dialogContext.mounted) {
-                                Navigator.of(dialogContext).pop();
-                              }
-                              _showSnack(
-                                'Subcategory added.',
-                                icon: Icons.check_circle_outline_rounded,
-                              );
-                            } catch (_) {
-                              if (dialogContext.mounted) {
-                                setDialogState(() => creating = false);
-                              }
-                            }
-                          },
-                    child: creating
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            'Add',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ],
-              );
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel', style: TextStyle(color: MfPalette.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _applySmartCategorization();
+              Navigator.pop(ctx);
+              setState(() {});
             },
+            style: ElevatedButton.styleFrom(backgroundColor: MfPalette.primary),
+            child: const Text('Save'),
           ),
-        );
-      },
+        ],
+      ),
+    );
+  }
+
+  void _applySmartCategorization() {
+    if (_manuallySetCategory || _noteController.text.trim().isEmpty) return;
+
+    final categoriesAsync = ref.read(categoriesProvider);
+    final categories = categoriesAsync.valueOrNull ?? [];
+    
+    final suggestedId = SmartCategorizationService.suggestCategoryId(
+      _noteController.text, 
+      categories,
     );
 
-    controller.dispose();
-  }
-
-  Future<void> _showAddCategoryDialog() async {
-    final controller = TextEditingController();
-    var creating = false;
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return Theme(
-          data: ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: MfPalette.neonGreen,
-              surface: _aeSurface,
-            ),
-          ),
-          child: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                backgroundColor: _aeSurface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(MfRadius.lg),
-                ),
-                title: Text(
-                  'Add category',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
-                ),
-                content: TextField(
-                  controller: controller,
-                  autofocus: true,
-                  style: GoogleFonts.inter(color: Colors.white),
-                  decoration: _aeFieldDec(
-                    label: 'Category name',
-                    hint: 'e.g. Groceries',
-                  ),
-                  textInputAction: TextInputAction.done,
-                  onSubmitted: (_) async {
-                    if (creating) return;
-                    final created = await _createCategory(
-                      controller.text,
-                      announce: false,
-                    );
-                    if (!mounted || created.isEmpty) return;
-                    setState(() {
-                      _categoryId = created['id']?.toString() ?? _categoryId;
-                      _subId = null;
-                    });
-                    if (dialogContext.mounted) {
-                      Navigator.of(dialogContext).pop();
-                    }
-                    _showSnack(
-                      'Category added successfully.',
-                      icon: Icons.check_circle_outline_rounded,
-                    );
-                  },
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: creating
-                        ? null
-                        : () => Navigator.of(dialogContext).pop(),
-                    child: Text(
-                      'Cancel',
-                      style: GoogleFonts.inter(
-                        color: Colors.white.withValues(alpha: 0.6),
-                      ),
-                    ),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MfPalette.neonGreen,
-                      foregroundColor: MfPalette.onNeonGreen,
-                    ),
-                    onPressed: creating
-                        ? null
-                        : () async {
-                            setDialogState(() => creating = true);
-                            try {
-                              final created = await _createCategory(
-                                controller.text,
-                                announce: false,
-                              );
-                              if (!mounted || created.isEmpty) return;
-                              setState(() {
-                                _categoryId =
-                                    created['id']?.toString() ?? _categoryId;
-                                _subId = null;
-                              });
-                              if (dialogContext.mounted) {
-                                Navigator.of(dialogContext).pop();
-                              }
-                              _showSnack(
-                                'Category added successfully.',
-                                icon: Icons.check_circle_outline_rounded,
-                              );
-                            } catch (_) {
-                              if (dialogContext.mounted) {
-                                setDialogState(() => creating = false);
-                              }
-                            }
-                          },
-                    child: creating
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            'Add',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    controller.dispose();
+    if (suggestedId != null) {
+      final suggestedCat = categories.firstWhere((c) => c['id'].toString() == suggestedId.toString());
+      setState(() {
+        _selectedCategory = suggestedCat;
+        _isAutoSuggested = true;
+      });
+      HapticFeedback.mediumImpact();
+    }
   }
 
   Future<void> _pickDate() async {
@@ -510,714 +645,59 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
       context: context,
       initialDate: _date,
       firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now(),
       builder: (context, child) {
         return Theme(
-          data: ThemeData.dark(useMaterial3: true).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: MfPalette.neonGreen,
-              onPrimary: MfPalette.onNeonGreen,
-              surface: _aeSurface,
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: MfPalette.accentSoftPurple,
+              onPrimary: Colors.white,
+              surface: MfPalette.surface,
+              onSurface: Colors.white,
             ),
           ),
           child: child!,
         );
       },
     );
-    if (picked != null) {
-      setState(() => _date = picked);
-    }
-  }
-
-  Future<void> _save() async {
-    if (_categoryId == null) {
-      _showSnack(
-        'Pick a category before saving.',
-        icon: Icons.category_outlined,
-      );
-      return;
-    }
-    if (_accountId == null || _accountId!.isEmpty) {
-      _showSnack(
-        'Pick an account before saving.',
-        icon: Icons.account_balance_wallet_outlined,
-      );
-      return;
-    }
-
-    final amt = double.tryParse(_amount.text.trim().replaceAll(',', ''));
-    if (amt == null || amt <= 0) {
-      _showSnack(
-        'Enter a valid expense amount.',
-        icon: Icons.currency_rupee_rounded,
-      );
-      return;
-    }
-
-    double? taxAmt;
-    if (_taxable) {
-      taxAmt = double.tryParse(_taxAmount.text.trim().replaceAll(',', ''));
-      if (taxAmt == null || taxAmt < 0 || taxAmt > amt) {
-        _showSnack(
-          'Enter a valid tax amount between 0 and the expense amount.',
-          icon: Icons.receipt_long_outlined,
-        );
-        return;
-      }
-    }
-
-    setState(() => _saving = true);
-    try {
-      final iso = _date.toUtc().toIso8601String();
-      final cats =
-          ref.read(categoriesProvider).value ?? const <Map<String, dynamic>>[];
-      String? catName;
-      for (final c in cats) {
-        if (c['id']?.toString() == _categoryId) {
-          catName = c['name']?.toString();
-          break;
-        }
-      }
-      await ref
-          .read(ledgerSyncServiceProvider)
-          .createExpenseOffline(
-            amount: amt,
-            categoryId: _categoryId!,
-            categoryName: catName,
-            subCategoryId: _subId,
-            dateIso: iso,
-            note: _note.text.trim().isEmpty ? null : _note.text.trim(),
-            accountId: _accountId,
-            taxable: _taxable,
-            taxScheme: _taxable ? _taxScheme : null,
-            taxAmount: _taxable ? taxAmt : null,
-          );
-      await ref.read(ledgerSyncServiceProvider).pullAndFlush();
-      if (!mounted) return;
-      await HapticFeedback.mediumImpact();
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    } on DioException catch (e) {
-      if (!mounted) return;
-      _showSnack(dioErrorMessage(e), icon: Icons.error_outline_rounded);
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cats = ref.watch(categoriesProvider);
-    final accs = ref.watch(accountsProvider);
-    final today = DateTime.now();
-    final isToday =
-        _date.year == today.year &&
-        _date.month == today.month &&
-        _date.day == today.day;
-
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-
-    return Scaffold(
-      backgroundColor: _aeBg,
-      appBar: AppBar(
-        backgroundColor: _aeBg,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        title: Text(
-          'Add expense',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800,
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
-      ),
-      body: SafeArea(
-        top: false,
-        child: cats.when(
-          data: (list) {
-            if (list.isEmpty) {
-              return ListView(
-                padding: const EdgeInsets.all(MfSpace.xxl),
-                children: [
-                  Text(
-                    'No categories yet',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 18,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: MfSpace.sm),
-                  Text(
-                    'Create your first expense category to continue.',
-                    style: GoogleFonts.inter(
-                      color: Colors.white.withValues(alpha: 0.55),
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: MfSpace.xl),
-                  _InlineCategoryCreator(
-                    onCreated: (name) async {
-                      final created = await _createCategory(name);
-                      if (!mounted || created.isEmpty) return;
-                      setState(() {
-                        _categoryId =
-                            created['id']?.toString() ?? _categoryId;
-                      });
-                    },
-                  ),
-                ],
+    if (picked != null) setState(() => _date = picked);
+  }  void _showAccountPicker(List accounts) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: MfPalette.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(MfRadius.xl))),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Select Account', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 20)),
+            const SizedBox(height: 20),
+            ...accounts.map((a) {
+              final isSelected = _accountId == a['id'];
+              return ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
+                tileColor: isSelected ? Colors.white.withValues(alpha: 0.1) : Colors.transparent,
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: MfPalette.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                  child: const Icon(Icons.account_balance_wallet_rounded, color: MfPalette.primary, size: 20),
+                ),
+                title: Text(a['name']?.toString() ?? '', style: GoogleFonts.inter(color: Colors.white, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500)),
+                trailing: isSelected ? const Icon(Icons.check_circle_rounded, color: MfPalette.neonGreen) : null,
+                onTap: () {
+                  setState(() => _accountId = a['id']);
+                  Navigator.pop(ctx);
+                },
               );
-            }
-
-            Map<String, dynamic>? selected;
-            for (final c in list) {
-              if (c['id']?.toString() == _categoryId) {
-                selected = c;
-              }
-            }
-
-            final subs =
-                (selected?['subCategoryRows'] as List<dynamic>?)
-                    ?.cast<Map<String, dynamic>>() ??
-                [];
-
-            final dropdownStyle = GoogleFonts.inter(
-              color: Colors.white,
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-            );
-
-            return ListView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                MfSpace.xxl,
-                MfSpace.md,
-                MfSpace.xxl,
-                MfSpace.xxl + bottomInset,
-              ),
-              children: [
-                Text(
-                  'Amount',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.6,
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
-                ),
-                const SizedBox(height: MfSpace.sm),
-                TextField(
-                  controller: _amount,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  style: GoogleFonts.manrope(
-                    fontSize: 44,
-                    fontWeight: FontWeight.w800,
-                    height: 1.05,
-                    letterSpacing: -1,
-                    color: Colors.white,
-                  ),
-                  cursorColor: MfPalette.neonGreen,
-                  decoration: _aeAmountDec(),
-                ),
-                const SizedBox(height: MfSpace.xl),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Category',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.4,
-                          color: Colors.white.withValues(alpha: 0.45),
-                        ),
-                      ),
-                    ),
-                    IconButton.filledTonal(
-                      style: IconButton.styleFrom(
-                        backgroundColor: _aeField,
-                        foregroundColor: MfPalette.neonGreen,
-                      ),
-                      onPressed: _showAddCategoryDialog,
-                      icon: const Icon(Icons.add_rounded, size: 22),
-                      tooltip: 'Add category',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: MfSpace.sm),
-                DropdownButtonFormField<String>(
-                  key: ValueKey('cat-$_categoryId'),
-                  initialValue: _categoryId,
-                  borderRadius: BorderRadius.circular(MfRadius.md),
-                  dropdownColor: _aeField,
-                  iconEnabledColor: Colors.white.withValues(alpha: 0.65),
-                  style: dropdownStyle,
-                  decoration: _aeFieldDec(
-                    label: 'Select category',
-                    hint: 'Shopping, food…',
-                  ),
-                  items: list
-                      .map(
-                        (c) => DropdownMenuItem<String>(
-                          value: c['id']?.toString(),
-                          child: Text(c['name']?.toString() ?? ''),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setState(() {
-                    _categoryId = v;
-                    _subId = null;
-                  }),
-                ),
-                if (_categoryId != null) ...[
-                  const SizedBox(height: MfSpace.lg),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Subcategory',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.4,
-                            color: Colors.white.withValues(alpha: 0.45),
-                          ),
-                        ),
-                      ),
-                      IconButton.filledTonal(
-                        style: IconButton.styleFrom(
-                          backgroundColor: _aeField,
-                          foregroundColor: MfPalette.neonGreen,
-                        ),
-                        onPressed: _showAddSubcategoryDialog,
-                        icon: const Icon(Icons.add_rounded, size: 22),
-                        tooltip: 'Add subcategory',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: MfSpace.sm),
-                  DropdownButtonFormField<String?>(
-                    key: ValueKey('sub-$_categoryId-$_subId'),
-                    initialValue: _subId,
-                    borderRadius: BorderRadius.circular(MfRadius.md),
-                    dropdownColor: _aeField,
-                    iconEnabledColor: Colors.white.withValues(alpha: 0.65),
-                    style: dropdownStyle,
-                    decoration: _aeFieldDec(
-                      label: 'Select subcategory',
-                      hint: subs.isEmpty ? 'Add one with +' : 'Optional',
-                    ),
-                    items: [
-                      DropdownMenuItem<String?>(
-                        value: null,
-                        child: Text(
-                          'None',
-                          style: dropdownStyle,
-                        ),
-                      ),
-                      ...subs.map(
-                        (s) => DropdownMenuItem<String?>(
-                          value: s['id']?.toString(),
-                          child: Text(s['name']?.toString() ?? ''),
-                        ),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _subId = v),
-                  ),
-                  if (subs.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: MfSpace.sm),
-                      child: Text(
-                        'Optional — curated categories include subcategories; tap + if yours is missing.',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          height: 1.4,
-                          color: Colors.white.withValues(alpha: 0.38),
-                        ),
-                      ),
-                    ),
-                ],
-                const SizedBox(height: MfSpace.lg),
-                accs.when(
-                  data: (ledger) {
-                    final accounts = ledger.accounts;
-                    if (accounts.isEmpty) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: MfSpace.md),
-                        child: Text(
-                          'Add an account under Profile → Accounts first.',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: MfPalette.expenseRed.withValues(alpha: 0.9),
-                          ),
-                        ),
-                      );
-                    }
-
-                    final accVal =
-                        _accountId != null &&
-                            accounts.any(
-                              (a) => a['id']?.toString() == _accountId,
-                            )
-                        ? _accountId
-                        : null;
-
-                    return DropdownButtonFormField<String>(
-                      key: ValueKey('acc-$accVal'),
-                      initialValue: accVal,
-                      borderRadius: BorderRadius.circular(MfRadius.md),
-                      dropdownColor: _aeField,
-                      iconEnabledColor: Colors.white.withValues(alpha: 0.65),
-                      style: dropdownStyle,
-                      decoration: _aeFieldDec(label: 'Account'),
-                      items: accounts
-                          .map(
-                            (a) => DropdownMenuItem<String>(
-                              value: a['id']?.toString(),
-                              child: Text(
-                                '${a['name']?.toString() ?? ''} (${MfCurrency.formatInr(a['balance'])})',
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (v) => setState(() => _accountId = v),
-                    );
-                  },
-                  loading: () => LinearProgressIndicator(
-                    color: MfPalette.neonGreen,
-                    backgroundColor: _aeField,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  error: (e, _) => Text(
-                    'Could not load accounts.',
-                    style: GoogleFonts.inter(color: MfPalette.expenseRed),
-                  ),
-                ),
-                const SizedBox(height: MfSpace.lg),
-                Text(
-                  'Date',
-                  style: GoogleFonts.inter(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.4,
-                    color: Colors.white.withValues(alpha: 0.45),
-                  ),
-                ),
-                const SizedBox(height: MfSpace.sm),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _pickDate,
-                    borderRadius: BorderRadius.circular(MfRadius.md),
-                    child: Ink(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: MfSpace.lg,
-                        vertical: MfSpace.lg,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _aeField,
-                        borderRadius: BorderRadius.circular(MfRadius.md),
-                        border: Border.all(color: _aeBorder),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_today_rounded,
-                            size: 20,
-                            color: MfPalette.neonGreen,
-                          ),
-                          const SizedBox(width: MfSpace.md),
-                          Expanded(
-                            child: Text(
-                              DateFormat('EEEE, d MMM yyyy').format(_date),
-                              style: GoogleFonts.inter(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white.withValues(alpha: 0.92),
-                              ),
-                            ),
-                          ),
-                          if (isToday)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: MfPalette.neonGreen.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(
-                                  color: MfPalette.neonGreen.withValues(alpha: 0.45),
-                                ),
-                              ),
-                              child: Text(
-                                'Today',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: MfPalette.neonGreen,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: MfSpace.lg),
-                TextField(
-                  controller: _note,
-                  minLines: 1,
-                  maxLines: 4,
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    color: Colors.white.withValues(alpha: 0.92),
-                  ),
-                  cursorColor: MfPalette.neonGreen,
-                  decoration: _aeFieldDec(
-                    label: 'Description',
-                    hint: 'What was this for?',
-                  ),
-                ),
-                const SizedBox(height: MfSpace.xl),
-                SwitchTheme(
-                  data: SwitchThemeData(
-                    thumbColor: WidgetStateProperty.resolveWith(
-                      (s) => s.contains(WidgetState.selected)
-                          ? MfPalette.neonGreen
-                          : Colors.white54,
-                    ),
-                    trackColor: WidgetStateProperty.resolveWith(
-                      (s) => s.contains(WidgetState.selected)
-                          ? MfPalette.neonGreen.withValues(alpha: 0.35)
-                          : _aeBorder,
-                    ),
-                  ),
-                  child: SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    value: _taxable,
-                    onChanged: (v) => setState(() => _taxable = v),
-                    title: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            'Taxable (GST / VAT)',
-                            style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white.withValues(alpha: 0.88),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Tooltip(
-                          message:
-                              'Track GST or VAT on this expense.',
-                          child: Icon(
-                            Icons.info_outline_rounded,
-                            size: 18,
-                            color: Colors.white.withValues(alpha: 0.4),
-                          ),
-                        ),
-                      ],
-                    ),
-                    subtitle: Text(
-                      'Optional — for business or tax reporting',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.45),
-                      ),
-                    ),
-                  ),
-                ),
-                if (_taxable) ...[
-                  const SizedBox(height: MfSpace.md),
-                  DropdownButtonFormField<String>(
-                    key: ValueKey(_taxScheme),
-                    initialValue: _taxScheme,
-                    borderRadius: BorderRadius.circular(MfRadius.md),
-                    dropdownColor: _aeField,
-                    iconEnabledColor: Colors.white.withValues(alpha: 0.65),
-                    style: dropdownStyle,
-                    decoration: _aeFieldDec(label: 'Tax type'),
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'gst_in',
-                        child: Text('India GST'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'vat_ae',
-                        child: Text('UAE VAT'),
-                      ),
-                    ],
-                    onChanged: (v) =>
-                        setState(() => _taxScheme = v ?? 'gst_in'),
-                  ),
-                  const SizedBox(height: MfSpace.lg),
-                  TextField(
-                    controller: _taxAmount,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: Colors.white.withValues(alpha: 0.92),
-                    ),
-                    cursorColor: MfPalette.neonGreen,
-                    decoration: _aeFieldDec(
-                      label: 'Tax amount',
-                      hint: 'Included in amount above',
-                    ).copyWith(
-                      prefixText: '${MfCurrency.symbol} ',
-                      prefixStyle: GoogleFonts.manrope(
-                        color: MfPalette.neonGreen,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-                const SizedBox(height: MfSpace.xxxl),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: _saving ? null : _save,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: MfPalette.neonGreen,
-                      foregroundColor: MfPalette.onNeonGreen,
-                      disabledBackgroundColor: MfPalette.neonGreen.withValues(
-                        alpha: 0.35,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(MfRadius.lg),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: _saving
-                        ? SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: MfPalette.onNeonGreen.withValues(alpha: 0.9),
-                            ),
-                          )
-                        : Text(
-                            'Save expense',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                              letterSpacing: 0.2,
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => Center(
-            child: CircularProgressIndicator(color: MfPalette.neonGreen),
-          ),
-          error: (e, _) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(MfSpace.xl),
-              child: Text(
-                'Something went wrong. Pull to refresh or try again.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: Colors.white.withValues(alpha: 0.7),
-                ),
-              ),
-            ),
-          ),
+            }),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
-    );
-  }
-}
-
-class _InlineCategoryCreator extends StatefulWidget {
-  const _InlineCategoryCreator({required this.onCreated});
-
-  final Future<void> Function(String name) onCreated;
-
-  @override
-  State<_InlineCategoryCreator> createState() => _InlineCategoryCreatorState();
-}
-
-class _InlineCategoryCreatorState extends State<_InlineCategoryCreator> {
-  final _controller = TextEditingController();
-  bool _creating = false;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    final name = _controller.text.trim();
-    if (name.isEmpty || _creating) return;
-    setState(() => _creating = true);
-    try {
-      await widget.onCreated(name);
-      if (!mounted) return;
-      _controller.clear();
-    } finally {
-      if (mounted) {
-        setState(() => _creating = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _controller,
-          style: GoogleFonts.inter(color: Colors.white),
-          decoration: _aeFieldDec(
-            label: 'Category name',
-            hint: 'e.g. Groceries',
-          ),
-          textInputAction: TextInputAction.done,
-          onSubmitted: (_) => _submit(),
-        ),
-        const SizedBox(height: MfSpace.lg),
-        FilledButton(
-          onPressed: _creating ? null : _submit,
-          style: FilledButton.styleFrom(
-            backgroundColor: MfPalette.neonGreen,
-            foregroundColor: MfPalette.onNeonGreen,
-            padding: const EdgeInsets.symmetric(vertical: MfSpace.md),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(MfRadius.lg),
-            ),
-          ),
-          child: _creating
-              ? SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: MfPalette.onNeonGreen.withValues(alpha: 0.9),
-                  ),
-                )
-              : Text(
-                  'Create & continue',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-        ),
-      ],
     );
   }
 }

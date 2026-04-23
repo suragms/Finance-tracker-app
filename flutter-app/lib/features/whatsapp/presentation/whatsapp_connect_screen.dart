@@ -324,9 +324,7 @@ class _PrefsTogglesState extends ConsumerState<_PrefsToggles> {
     bool? alerts,
   }) async {
     try {
-      await ref
-          .read(whatsappApiProvider)
-          .updatePreferences(
+      await ref.read(whatsappApiProvider).updatePreferences(
             dailySummary: dailySummary,
             monthlyReport: monthlyReport,
             alerts: alerts,

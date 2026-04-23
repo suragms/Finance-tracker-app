@@ -25,7 +25,8 @@ class MoneyFlowPremiumExtendedFab extends StatefulWidget {
       _MoneyFlowPremiumExtendedFabState();
 }
 
-class _MoneyFlowPremiumExtendedFabState extends State<MoneyFlowPremiumExtendedFab> {
+class _MoneyFlowPremiumExtendedFabState
+    extends State<MoneyFlowPremiumExtendedFab> {
   bool _pressed = false;
 
   @override
@@ -72,7 +73,8 @@ class _MoneyFlowPremiumExtendedFabState extends State<MoneyFlowPremiumExtendedFa
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -129,7 +131,8 @@ class MoneyFlowPremiumCircularFab extends StatefulWidget {
       _MoneyFlowPremiumCircularFabState();
 }
 
-class _MoneyFlowPremiumCircularFabState extends State<MoneyFlowPremiumCircularFab> {
+class _MoneyFlowPremiumCircularFabState
+    extends State<MoneyFlowPremiumCircularFab> {
   bool _pressed = false;
 
   @override

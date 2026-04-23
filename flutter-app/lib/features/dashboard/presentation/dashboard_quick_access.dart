@@ -158,6 +158,18 @@ class DashboardQuickAccess extends StatelessWidget {
       ),
     ];
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final crossCount = screenWidth > 600
+        ? 4
+        : screenWidth > 400
+            ? 3
+            : 2;
+    final aspectRatio = crossCount == 4
+        ? 1.1
+        : crossCount == 3
+            ? 0.92
+            : 1.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -183,31 +195,17 @@ class DashboardQuickAccess extends StatelessWidget {
           ],
         ),
         const SizedBox(height: MfSpace.md),
-        LayoutBuilder(
-          builder: (context, c) {
-            final cols = c.maxWidth > 640
-                ? 4
-                : c.maxWidth > 400
-                    ? 3
-                    : 2;
-            final ratio = cols == 4
-                ? 1.1
-                : cols == 3
-                    ? 0.92
-                    : 1.0;
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: cols,
-                mainAxisSpacing: MfSpace.sm + 2,
-                crossAxisSpacing: MfSpace.sm + 2,
-                childAspectRatio: ratio,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, i) => _QuickTile(link: items[i]),
-            );
-          },
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossCount,
+            childAspectRatio: aspectRatio,
+            crossAxisSpacing: MfSpace.sm,
+            mainAxisSpacing: MfSpace.sm,
+          ),
+          itemCount: items.length,
+          itemBuilder: (context, i) => _QuickTile(link: items[i]),
         ),
       ],
     );
@@ -285,7 +283,7 @@ class _QuickTile extends StatelessWidget {
                   color: cs.onSurface.withValues(alpha: 0.45),
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ],

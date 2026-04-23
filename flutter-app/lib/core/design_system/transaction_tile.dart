@@ -1,198 +1,152 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
 import '../theme/money_flow_tokens.dart';
 
-Color _categoryColor(String? name) {
-  final colors = [
-    const Color(0xFF4B79F8),
-    const Color(0xFF10997A),
-    const Color(0xFFE6A93D),
-    const Color(0xFFD06B5E),
-    const Color(0xFF6B74F8),
-    const Color(0xFF8E5CF6),
-  ];
-  final idx = (name?.codeUnits.fold(0, (a, b) => a + b) ?? 0) % colors.length;
-  return colors[idx];
+IconData categoryIconFor(String key) {
+  switch (key) {
+    case 'daily_expenses':
+      return Icons.shopping_bag_outlined;
+    case 'household':
+      return Icons.home_outlined;
+    case 'vehicle':
+      return Icons.directions_car_outlined;
+    case 'insurance':
+      return Icons.shield_outlined;
+    case 'financial':
+      return Icons.account_balance_outlined;
+    case 'donations':
+      return Icons.favorite_outline;
+    case 'business':
+      return Icons.business_center_outlined;
+    case 'food':
+      return Icons.restaurant_outlined;
+    case 'transport':
+      return Icons.directions_bus_outlined;
+    case 'shopping':
+      return Icons.local_mall_outlined;
+    case 'entertainment':
+      return Icons.movie_outlined;
+    case 'health':
+      return Icons.health_and_safety_outlined;
+    case 'fuel':
+      return Icons.local_gas_station_outlined;
+    default:
+      return Icons.attach_money_rounded;
+  }
 }
 
-class TransactionTile extends StatelessWidget {
-  const TransactionTile({
+class BuddyTransactionTile extends StatelessWidget {
+  const BuddyTransactionTile({
     super.key,
     required this.title,
     required this.subtitle,
     required this.amount,
     required this.isExpense,
-    required this.avatarColor,
-    required this.avatarLabel,
-    this.endAction,
+    required this.categoryColor,
+    required this.categoryIcon,
+    required this.date,
+    this.animationIndex = 0,
     this.onTap,
-    this.animationIndex,
+    this.trailing,
   });
 
   final String title;
   final String subtitle;
-  final String amount;
+  final double amount;
   final bool isExpense;
-  final Color avatarColor;
-  final String avatarLabel;
-  final Widget? endAction;
+  final Color categoryColor;
+  final IconData categoryIcon;
+  final DateTime date;
+  final int animationIndex;
   final VoidCallback? onTap;
-  /// When set (e.g. list index), plays a short staggered entrance animation.
-  final int? animationIndex;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final accent = isExpense ? MfPalette.expenseRed : MfPalette.incomeGreen;
-
-    final content = Material(
-      color: Colors.transparent,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 300 + animationIndex * 60),
+      curve: Curves.easeOutCubic,
+      builder: (_, t, child) => Transform.translate(
+        offset: Offset(0, 20 * (1 - t)),
+        child: Opacity(opacity: t, child: child),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(MfRadius.lg),
-        splashColor: MfPalette.accentSoftPurple.withValues(alpha: 0.12),
-        highlightColor: MfPalette.neonGreen.withValues(alpha: 0.06),
-        child: Container(
-          decoration: glassCard(
-            borderRadius: MfRadius.lg,
-            color: cs.surfaceContainerLowest.withValues(alpha: 0.5),
-            borderColor: cs.outlineVariant.withValues(alpha: 0.14),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: MfSpace.lg,
-            vertical: MfSpace.lg,
-          ),
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
           child: Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  gradient: isExpense
-                      ? expenseGradient(avatarColor)
-                      : incomeGradient(),
-                  borderRadius: BorderRadius.circular(MfRadius.md),
+                  color: categoryColor.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
-                alignment: Alignment.center,
-                child: Text(
-                  avatarLabel.toUpperCase(),
-                  style: GoogleFonts.manrope(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
+                child: Icon(categoryIcon, color: categoryColor, size: 22),
               ),
               const SizedBox(width: MfSpace.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: _categoryColor(title),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: GoogleFonts.manrope(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: cs.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                          fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerLow.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        subtitle.isEmpty ? 'No note attached' : subtitle,
+                    if (subtitle.isNotEmpty)
+                      Text(
+                        subtitle,
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: cs.onSurface.withValues(alpha: 0.64),
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white38,
                         ),
-                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
-                    ),
                   ],
                 ),
               ),
-              const SizedBox(width: MfSpace.md),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      isExpense ? '-$amount' : '+$amount',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                      ),
+                  Text(
+                    '${isExpense ? '-' : '+'}${MfCurrency.formatInr(amount)}',
+                    style: GoogleFonts.manrope(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isExpense
+                          ? MfPalette.expenseRed
+                          : MfPalette.incomeGreen,
                     ),
                   ),
-                  if (endAction != null) ...[
-                    const SizedBox(height: MfSpace.xs),
-                    endAction!,
-                  ],
+                  Text(
+                    DateFormat('d MMM').format(date),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white24,
+                    ),
+                  ),
                 ],
               ),
+              if (trailing != null) ...[
+                const SizedBox(width: 8),
+                trailing!,
+              ],
             ],
           ),
         ),
       ),
-    );
-
-    final idx = animationIndex;
-    if (idx == null) return content;
-
-    final stagger = (idx.clamp(0, 12)) * 45;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 380 + stagger),
-      curve: Curves.easeOutCubic,
-      builder: (context, t, child) {
-        return Opacity(
-          opacity: t,
-          child: Transform.translate(
-            offset: Offset(0, 12 * (1 - t)),
-            child: Transform.scale(
-              scale: 0.98 + 0.02 * t,
-              child: child,
-            ),
-          ),
-        );
-      },
-      child: content,
     );
   }
 }

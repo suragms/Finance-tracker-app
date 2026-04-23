@@ -25,6 +25,8 @@ dependencies:
   path: ^1.9.0
   connectivity_plus: ^6.1.0
   uuid: ^4.5.1
+  telephony: ^0.2.0
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

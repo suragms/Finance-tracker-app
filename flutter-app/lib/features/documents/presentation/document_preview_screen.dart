@@ -90,23 +90,25 @@ class _DocumentPreviewScreenState extends ConsumerState<DocumentPreviewScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
-            )
-          : _bytes == null
-          ? const SizedBox.shrink()
-          : _isImage
-          ? InteractiveViewer(
-              minScale: 0.5,
-              maxScale: 4,
-              child: Center(child: Image.memory(_bytes!, fit: BoxFit.contain)),
-            )
-          : _isPdf && _pdf != null
-          ? PdfViewPinch(controller: _pdf!)
-          : _fallback(cs),
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(_error!, textAlign: TextAlign.center),
+                  ),
+                )
+              : _bytes == null
+                  ? const SizedBox.shrink()
+                  : _isImage
+                      ? InteractiveViewer(
+                          minScale: 0.5,
+                          maxScale: 4,
+                          child: Center(
+                              child:
+                                  Image.memory(_bytes!, fit: BoxFit.contain)),
+                        )
+                      : _isPdf && _pdf != null
+                          ? PdfViewPinch(controller: _pdf!)
+                          : _fallback(cs),
     );
   }
 

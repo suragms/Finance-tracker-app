@@ -8,6 +8,51 @@ import { WorkspaceContext } from "../workspaces/workspace.types";
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private categoryColor(systemKey: string | null) {
+    switch (systemKey) {
+      case "daily_expenses":
+        return "#EF4444";
+      case "household":
+        return "#F59E0B";
+      case "vehicle":
+        return "#3B82F6";
+      case "insurance":
+        return "#10B981";
+      case "financial":
+        return "#6366F1";
+      case "donations":
+        return "#EC4899";
+      case "business":
+        return "#8B5CF6";
+      case "custom":
+        return "#64748B";
+      default:
+        return "#64748B";
+    }
+  }
+
+  private monthShortLabel(date: Date) {
+    return date.toLocaleString("en-US", { month: "short" });
+  }
+
+  private resolveIsoDateRange(from?: string, to?: string) {
+    const start = from ? new Date(from) : null;
+    const end = to ? new Date(to) : null;
+    if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+      return null;
+    }
+    const endExclusive = new Date(
+      end.getFullYear(),
+      end.getMonth(),
+      end.getDate() + 1,
+      0,
+      0,
+      0,
+      0,
+    );
+    return { start, endExclusive };
+  }
+
   private monthRange(now = new Date()) {
     const start = new Date(now.getFullYear(), now.getMonth(), 1);
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -293,6 +338,333 @@ export class ReportsService {
       recurringMonthlyTotal: "0",
       recurringNote: "Recurring total — fuller module after MVP.",
       upcomingPayments: { count: 0, note: "Upcoming — after MVP." },
+    };
+  }
+
+  async dashboardOverview(ctx: WorkspaceContext) {
+    assertWorkspacePermission(ctx.role, "expense:read");
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const currentYearMonth = now.getFullYear() * 100 + (now.getMonth() + 1);
+
+    const sixMonthStart = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+    const [
+      monthExpenses,
+      monthIncomes,
+      recurringRows,
+      budgetRows,
+      budgetSpentGroups,
+      categoryExpenseGroups,
+      recentExpenses,
+      recentIncomes,
+      monthlyExpenseRows,
+      monthlyIncomeRows,
+    ] = await Promise.all([
+      this.prisma.expense.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: monthStart, lt: monthEnd },
+          category: { type: CategoryType.expense },
+        },
+        select: {
+          id: true,
+          amount: true,
+          date: true,
+          note: true,
+          category: { select: { id: true, name: true, systemKey: true } },
+        },
+      }),
+      this.prisma.income.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          date: { gte: monthStart, lt: monthEnd },
+          account: { workspaceId: ctx.workspaceId },
+        },
+        select: { id: true, amount: true, date: true, note: true, source: true },
+      }),
+      this.prisma.recurringExpense.findMany({
+        where: { userId: ctx.ownerUserId, active: true },
+        select: { amount: true, frequency: true },
+      }),
+      this.prisma.budget.findMany({
+        where: { userId: ctx.ownerUserId, yearMonth: currentYearMonth },
+        include: { category: { select: { name: true } } },
+      }),
+      this.prisma.expense.groupBy({
+        by: ["categoryId"],
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: monthStart, lt: monthEnd },
+          category: { type: CategoryType.expense },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.groupBy({
+        by: ["categoryId"],
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: monthStart, lt: monthEnd },
+          category: { type: CategoryType.expense },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          category: { type: CategoryType.expense },
+        },
+        select: {
+          id: true,
+          amount: true,
+          date: true,
+          note: true,
+          category: { select: { name: true } },
+        },
+        orderBy: { date: "desc" },
+        take: 10,
+      }),
+      this.prisma.income.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          account: { workspaceId: ctx.workspaceId },
+        },
+        select: { id: true, amount: true, date: true, note: true, source: true },
+        orderBy: { date: "desc" },
+        take: 10,
+      }),
+      this.prisma.expense.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: sixMonthStart, lt: monthEnd },
+          category: { type: CategoryType.expense },
+        },
+        select: { amount: true, date: true },
+      }),
+      this.prisma.income.findMany({
+        where: {
+          userId: ctx.ownerUserId,
+          date: { gte: sixMonthStart, lt: monthEnd },
+          account: { workspaceId: ctx.workspaceId },
+        },
+        select: { amount: true, date: true },
+      }),
+    ]);
+
+    const totalExpense = monthExpenses.reduce((s, e) => s + Number(e.amount), 0);
+    const totalIncome = monthIncomes.reduce((s, i) => s + Number(i.amount), 0);
+    const profit = totalIncome - totalExpense;
+    const savingsRate = totalIncome > 0 ? (profit / totalIncome) * 100 : 0;
+
+    const recurringTotal = recurringRows.reduce((sum, row) => {
+      const amt = Number(row.amount);
+      switch (row.frequency) {
+        case "daily":
+          return sum + amt * 30;
+        case "weekly":
+          return sum + (amt * 52) / 12;
+        case "monthly":
+          return sum + amt;
+        case "quarterly":
+          return sum + amt / 3;
+        case "yearly":
+          return sum + amt / 12;
+        default:
+          return sum + amt;
+      }
+    }, 0);
+
+    const monthCategoryMeta = new Map<
+      string,
+      { name: string; amount: number; color: string }
+    >();
+    for (const expense of monthExpenses) {
+      const categoryId = expense.category.id;
+      const prev = monthCategoryMeta.get(categoryId);
+      const add = Number(expense.amount);
+      if (prev) {
+        prev.amount += add;
+      } else {
+        monthCategoryMeta.set(categoryId, {
+          name: expense.category.name,
+          amount: add,
+          color: this.categoryColor(expense.category.systemKey),
+        });
+      }
+    }
+    const topCategories = [...monthCategoryMeta.values()]
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+      .map((row) => ({
+        name: row.name,
+        amount: row.amount,
+        percentage: totalExpense > 0 ? (row.amount / totalExpense) * 100 : 0,
+        color: row.color,
+      }));
+
+    const mixedRecent = [
+      ...recentExpenses.map((row) => ({
+        id: row.id,
+        type: "expense" as const,
+        amount: Number(row.amount),
+        category: row.category?.name ?? "Expense",
+        date: row.date,
+        note: row.note,
+      })),
+      ...recentIncomes.map((row) => ({
+        id: row.id,
+        type: "income" as const,
+        amount: Number(row.amount),
+        category: row.source,
+        date: row.date,
+        note: row.note,
+      })),
+    ]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10)
+      .map((row) => ({
+        id: row.id,
+        type: row.type,
+        amount: row.amount,
+        category: row.category,
+        date: row.date.toISOString(),
+        note: row.note,
+      }));
+
+    const incomeByMonth = new Map<string, number>();
+    const expenseByMonth = new Map<string, number>();
+    for (const row of monthlyIncomeRows) {
+      const key = this.monthKey(row.date);
+      incomeByMonth.set(key, (incomeByMonth.get(key) ?? 0) + Number(row.amount));
+    }
+    for (const row of monthlyExpenseRows) {
+      const key = this.monthKey(row.date);
+      expenseByMonth.set(key, (expenseByMonth.get(key) ?? 0) + Number(row.amount));
+    }
+    const monthlyComparison: { month: string; income: number; expense: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = this.monthKey(d);
+      monthlyComparison.push({
+        month: this.monthShortLabel(d),
+        income: incomeByMonth.get(key) ?? 0,
+        expense: expenseByMonth.get(key) ?? 0,
+      });
+    }
+
+    const budgetSpentByCategory = new Map(
+      budgetSpentGroups.map((g) => [g.categoryId, Number(g._sum.amount ?? 0)]),
+    );
+    const budgetStatus = budgetRows.map((budget) => {
+      const spent = budgetSpentByCategory.get(budget.categoryId) ?? 0;
+      const limit = Number(budget.amountLimit);
+      return {
+        category: budget.category.name,
+        limit,
+        spent,
+        percentage: limit > 0 ? (spent / limit) * 100 : 0,
+      };
+    });
+
+    return {
+      data: {
+        totalIncome,
+        totalExpense,
+        profit,
+        savingsRate,
+        recurringTotal,
+        topCategories,
+        recentTransactions: mixedRecent,
+        monthlyComparison,
+        budgetStatus,
+      },
+    };
+  }
+
+  async summary(
+    ctx: WorkspaceContext,
+    from?: string,
+    to?: string,
+  ) {
+    assertWorkspacePermission(ctx.role, "expense:read");
+    const parsed = this.resolveIsoDateRange(from, to);
+    const now = new Date();
+    const fallbackStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const fallbackEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const start = parsed?.start ?? fallbackStart;
+    const endExclusive = parsed?.endExclusive ?? fallbackEnd;
+
+    const [expenseAgg, incomeAgg, categoryGroups] = await Promise.all([
+      this.prisma.expense.aggregate({
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: start, lt: endExclusive },
+          category: { type: CategoryType.expense },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.income.aggregate({
+        where: {
+          userId: ctx.ownerUserId,
+          date: { gte: start, lt: endExclusive },
+          account: { workspaceId: ctx.workspaceId },
+        },
+        _sum: { amount: true },
+      }),
+      this.prisma.expense.groupBy({
+        by: ["categoryId"],
+        where: {
+          userId: ctx.ownerUserId,
+          workspaceId: ctx.workspaceId,
+          date: { gte: start, lt: endExclusive },
+          category: { type: CategoryType.expense },
+        },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    const totalExpense = Number(expenseAgg._sum.amount ?? 0);
+    const totalIncome = Number(incomeAgg._sum.amount ?? 0);
+    const net = totalIncome - totalExpense;
+    const savingsRate = totalIncome > 0 ? (net / totalIncome) * 100 : 0;
+
+    const categoryIds = categoryGroups.map((g) => g.categoryId);
+    const categoryRows = categoryIds.length
+      ? await this.prisma.category.findMany({
+          where: { id: { in: categoryIds } },
+          select: { id: true, name: true, systemKey: true },
+        })
+      : [];
+    const byId = new Map(categoryRows.map((c) => [c.id, c]));
+    const categoryBreakdown = categoryGroups
+      .map((g) => {
+        const meta = byId.get(g.categoryId);
+        return {
+          id: g.categoryId,
+          name: meta?.name ?? "Category",
+          amount: Number(g._sum.amount ?? 0),
+          color: this.categoryColor(meta?.systemKey ?? null),
+        };
+      })
+      .sort((a, b) => b.amount - a.amount);
+
+    return {
+      data: {
+        from: start.toISOString(),
+        to: new Date(endExclusive.getTime() - 1).toISOString(),
+        totalIncome,
+        totalExpense,
+        net,
+        savingsRate,
+        categoryBreakdown,
+      },
     };
   }
 

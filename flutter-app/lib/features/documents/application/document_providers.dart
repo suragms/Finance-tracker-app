@@ -18,30 +18,30 @@ class DocumentsQueryNotifier extends Notifier<DocumentsQuery> {
       state = DocumentsQuery(q: v, type: state.type, tag: state.tag);
 
   void setType(String? v) => state = DocumentsQuery(
-    q: state.q,
-    type: (v == null || v.isEmpty) ? null : v,
-    tag: state.tag,
-  );
+        q: state.q,
+        type: (v == null || v.isEmpty) ? null : v,
+        tag: state.tag,
+      );
 
   void setTag(String? v) => state = DocumentsQuery(
-    q: state.q,
-    type: state.type,
-    tag: (v == null || v.isEmpty) ? null : v,
-  );
+        q: state.q,
+        type: state.type,
+        tag: (v == null || v.isEmpty) ? null : v,
+      );
 }
 
 final documentsQueryProvider =
     NotifierProvider<DocumentsQueryNotifier, DocumentsQuery>(
-      DocumentsQueryNotifier.new,
-    );
+  DocumentsQueryNotifier.new,
+);
 
 final documentsListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      final api = ref.watch(documentsApiProvider);
-      final query = ref.watch(documentsQueryProvider);
-      return api.list(
-        q: query.q.trim().isEmpty ? null : query.q.trim(),
-        type: query.type,
-        tag: query.tag,
-      );
-    });
+  final api = ref.watch(documentsApiProvider);
+  final query = ref.watch(documentsQueryProvider);
+  return api.list(
+    q: query.q.trim().isEmpty ? null : query.q.trim(),
+    type: query.type,
+    tag: query.tag,
+  );
+});

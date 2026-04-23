@@ -53,31 +53,32 @@ class LedgerPrimaryGradientButton extends StatelessWidget {
                   end: Alignment.bottomRight,
                 ),
               ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-              alignment: Alignment.center,
-              child: loading
-                  ? SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: MfPalette.onNeonGreen,
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                alignment: Alignment.center,
+                child: loading
+                    ? SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: MfPalette.onNeonGreen,
+                        ),
+                      )
+                    : DefaultTextStyle(
+                        style: GoogleFonts.inter(
+                          color: MfPalette.onNeonGreen,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                        child: child,
                       ),
-                    )
-                  : DefaultTextStyle(
-                      style: GoogleFonts.inter(
-                        color: MfPalette.onNeonGreen,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                      child: child,
-                    ),
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -88,7 +89,7 @@ class LedgerActionLayer extends StatelessWidget {
   const LedgerActionLayer({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(20),
+    this.padding = const EdgeInsets.all(MfSpace.lg),
     this.shadow = false,
   });
 
@@ -102,7 +103,7 @@ class LedgerActionLayer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(MfRadius.lg),
         boxShadow: shadow ? ledgerAmbientFabShadows(cs) : null,
       ),
       padding: padding,
@@ -128,7 +129,7 @@ class LedgerSectionLayer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(MfRadius.md),
       ),
       padding: padding,
       child: child,
@@ -142,7 +143,7 @@ class LedgerStaggerItem extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    this.marginBottom = 12,
+    this.marginBottom = MfSpace.lg,
   });
 
   final Widget child;
@@ -156,7 +157,7 @@ class LedgerStaggerItem extends StatelessWidget {
       padding: EdgeInsets.only(bottom: marginBottom),
       child: Material(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(MfRadius.md),
         clipBehavior: Clip.antiAlias,
         child: Padding(padding: padding, child: child),
       ),
@@ -175,7 +176,7 @@ class LedgerGlassBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: DecoratedBox(
           decoration: BoxDecoration(color: cs.surface.withValues(alpha: 0.82)),
           child: child,

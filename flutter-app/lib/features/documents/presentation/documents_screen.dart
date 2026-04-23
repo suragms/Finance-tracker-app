@@ -238,8 +238,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   Future<void> _editTags(Map<String, dynamic> row) async {
     final id = row['id'] as String? ?? '';
     if (id.isEmpty) return;
-    final tags =
-        (row['tags'] as List<dynamic>?)?.map((e) => '$e').toList() ??
+    final tags = (row['tags'] as List<dynamic>?)?.map((e) => '$e').toList() ??
         <String>[];
     final ctrl = TextEditingController(text: tags.join(', '));
     final ok = await showDialog<bool>(
@@ -332,7 +331,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(MfSpace.xxl, 8, MfSpace.xxl, MfSpace.sm),
+                padding: const EdgeInsets.fromLTRB(
+                    MfSpace.xxl, 8, MfSpace.xxl, MfSpace.sm),
                 child: _GlassSearchBarWrapper(
                   controller: _searchCtrl,
                   onClear: () {
@@ -344,7 +344,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(MfSpace.xxl, 0, MfSpace.xxl, MfSpace.sm),
+                padding: const EdgeInsets.fromLTRB(
+                    MfSpace.xxl, 0, MfSpace.xxl, MfSpace.sm),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
@@ -353,7 +354,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         label: 'All',
                         selected: query.type == null,
                         onSelected: (_) {
-                          ref.read(documentsQueryProvider.notifier).setType(null);
+                          ref
+                              .read(documentsQueryProvider.notifier)
+                              .setType(null);
                           ref.invalidate(documentsListProvider);
                         },
                       ),
@@ -362,7 +365,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         label: 'Bills',
                         selected: query.type == 'bill',
                         onSelected: (_) {
-                          ref.read(documentsQueryProvider.notifier).setType('bill');
+                          ref
+                              .read(documentsQueryProvider.notifier)
+                              .setType('bill');
                           ref.invalidate(documentsListProvider);
                         },
                       ),
@@ -382,7 +387,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(MfSpace.xxl, 0, MfSpace.xxl, MfSpace.md),
+                padding: const EdgeInsets.fromLTRB(
+                    MfSpace.xxl, 0, MfSpace.xxl, MfSpace.md),
                 child: _GlassTagField(
                   controller: _tagCtrl,
                   hasTag: query.tag != null && query.tag!.isNotEmpty,
@@ -439,8 +445,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               onOpen: () {
                                 final id = row['id'] as String? ?? '';
                                 if (id.isEmpty) return;
-                                final name =
-                                    row['originalName'] as String? ??
+                                final name = row['originalName'] as String? ??
                                     row['fileUrl'] as String? ??
                                     'Document';
                                 final mime = row['mimeType'] as String?;
@@ -460,12 +465,14 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       ),
                     );
                   },
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Padding(
                     padding: const EdgeInsets.all(MfSpace.xxl),
                     child: LedgerErrorState(
                       title: 'Could not load documents',
-                      message: e is DioException ? dioErrorMessage(e) : e.toString(),
+                      message:
+                          e is DioException ? dioErrorMessage(e) : e.toString(),
                       onRetry: () => ref.invalidate(documentsListProvider),
                     ),
                   ),
@@ -614,7 +621,8 @@ class _DocFilterChip extends StatelessWidget {
             : cs.outlineVariant.withValues(alpha: 0.35),
         width: selected ? 1.5 : 1,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(MfRadius.lg)),
       onSelected: onSelected,
     );
   }
@@ -693,8 +701,7 @@ class _DocumentFileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final id = row['id'] as String? ?? '';
-    final name =
-        row['originalName'] as String? ??
+    final name = row['originalName'] as String? ??
         row['fileUrl'] as String? ??
         'Document';
     final type = row['type'] as String? ?? '';
@@ -702,9 +709,8 @@ class _DocumentFileCard extends StatelessWidget {
     final uploaded = row['uploadedAt'] as String?;
     DateTime? dt;
     if (uploaded != null) dt = DateTime.tryParse(uploaded);
-    final dateStr = dt != null
-        ? DateFormat.yMMMd().add_jm().format(dt.toLocal())
-        : '';
+    final dateStr =
+        dt != null ? DateFormat.yMMMd().add_jm().format(dt.toLocal()) : '';
     final icon = _mimeIcon(mime, name);
     final grads = _mimeIconColors(mime, name);
     final typeLabel = _typeDisplayLabel(type);
@@ -770,7 +776,8 @@ class _DocumentFileCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: type.toLowerCase() == 'insurance'
-                                ? MfPalette.accentSoftPurple.withValues(alpha: 0.18)
+                                ? MfPalette.accentSoftPurple
+                                    .withValues(alpha: 0.18)
                                 : MfPalette.neonGreen.withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(999),
                           ),

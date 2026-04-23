@@ -3,5 +3,5 @@ import '../data/insurance_api.dart';
 
 final insuranceListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) {
-      return ref.watch(insuranceApiProvider).list();
-    });
+  return ref.watch(insuranceApiProvider).list();
+});

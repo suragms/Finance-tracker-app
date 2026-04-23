@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/format_amount.dart';
 import '../../../core/widgets/ledger_ui.dart';
 import '../application/insurance_providers.dart';
 import '../data/insurance_api.dart';
@@ -44,7 +45,9 @@ class InsuranceScreen extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             'Expires ${p['expiryDate']?.toString().split('T').first ?? ''}',
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
                                 ?.copyWith(
                                   color: cs.onSurface.withValues(alpha: 0.55),
                                 ),
@@ -53,7 +56,7 @@ class InsuranceScreen extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      p['premium']?.toString() ?? '',
+                      formatAmount(p['premium']),
                       style: GoogleFonts.manrope(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
@@ -154,9 +157,7 @@ class InsuranceScreen extends ConsumerWidget {
                   final pr = double.tryParse(premium.text.trim());
                   if (pr == null || name.text.trim().isEmpty) return;
                   try {
-                    await ref
-                        .read(insuranceApiProvider)
-                        .create(
+                    await ref.read(insuranceApiProvider).create(
                           name: name.text.trim(),
                           type: type.text.trim(),
                           premium: pr,

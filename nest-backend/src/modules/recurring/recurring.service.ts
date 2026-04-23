@@ -2,11 +2,14 @@ import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/com
 import {
   ExpenseSource,
   Frequency,
+  IncomeSource,
+  NotificationChannel,
   NotificationCategory,
   RecurringMode,
   RecurringStatus,
 } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { addDays, addMonths, addWeeks, addYears } from 'date-fns';
 import { PrismaService } from '../../prisma/prisma.service';
 import { QueueService } from '../../queue/queue.service';
 import { AccountsService } from '../accounts/accounts.service';
@@ -70,11 +73,19 @@ export class RecurringService implements OnModuleInit {
     });
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_DAY_AT_8AM)
   async scheduleDueRecurring() {
+    await this.checkAndProcessDueRecurring();
+  }
+
+  async checkAndProcessDueRecurring() {
     if (this.prisma.databaseDisabled) return;
     const due = await this.prisma.recurringExpense.findMany({
-      where: { active: true, nextDate: { lte: new Date() } },
+      where: {
+        active: true,
+        status: RecurringStatus.pending,
+        nextDate: { lte: new Date() },
+      },
     });
     for (const item of due) {
       if (!this.queue.recurringQueue) {
@@ -91,52 +102,72 @@ export class RecurringService implements OnModuleInit {
 
   async processRecurring(recurringId: string) {
     const item = await this.prisma.recurringExpense.findUnique({ where: { id: recurringId } });
-    if (!item || !item.active) return;
+    if (!item || !item.active || item.status !== RecurringStatus.pending) return;
 
     if (item.mode === RecurringMode.reminder_only) {
       const dueDay = item.nextDate.toISOString().slice(0, 10);
       const dedupeKey = `recurring-reminder-${item.id}-${dueDay}`;
-      await this.notifications.create(item.userId, `Recurring due: ${item.title}`, NotificationCategory.recurring, {
-        body: `${item.amount.toFixed(2)} ${item.currency} · ${item.frequency}`,
-        dedupeKey,
-      });
-      await this.prisma.recurringExpense.update({
-        where: { id: recurringId },
-        data: {
-          status: RecurringStatus.pending,
-          nextDate: this.nextDate(item.nextDate, item.frequency),
-        },
+      await this.prisma.$transaction(async (tx) => {
+        await tx.notification.create({
+          data: {
+            userId: item.userId,
+            title: `${item.title} due today`,
+            body: `₹${item.amount.toFixed(2)} payment is due`,
+            category: NotificationCategory.recurring,
+            channel: NotificationChannel.in_app,
+            dedupeKey,
+            date: new Date(),
+          },
+        });
+        await tx.recurringExpense.update({
+          where: { id: recurringId },
+          data: { status: RecurringStatus.pending },
+        });
       });
       return;
     }
 
-    const occurrenceDate = item.nextDate;
+    const occurrenceDate = new Date();
     await this.prisma.$transaction(async (tx) => {
-      const expense = await tx.expense.create({
-        data: {
-          userId: item.userId,
-          categoryId: item.categoryId,
-          amount: item.amount,
-          date: item.nextDate,
-          note: item.note ?? item.title,
-          currency: item.currency,
-          source: ExpenseSource.recurring_generated,
-          recurringExpenseId: item.id,
-          accountId: item.accountId ?? undefined,
-        },
-        include: { category: true },
-      });
-      if (item.accountId) {
-        await this.accounts.applyExpenseCreatedTx(tx, item.userId, {
-          accountId: expense.accountId,
-          amount: expense.amount,
-          category: expense.category,
+      const recurringType = (item as unknown as { type?: string }).type;
+      if (recurringType === 'income' && item.accountId) {
+        await tx.income.create({
+          data: {
+            userId: item.userId,
+            accountId: item.accountId,
+            amount: item.amount,
+            date: occurrenceDate,
+            note: `Auto: ${item.title}`,
+            source: IncomeSource.other,
+          },
         });
+      } else {
+        const expense = await tx.expense.create({
+          data: {
+            userId: item.userId,
+            categoryId: item.categoryId,
+            amount: item.amount,
+            date: occurrenceDate,
+            note: `Auto: ${item.title}`,
+            currency: item.currency,
+            source: ExpenseSource.recurring_generated,
+            recurringExpenseId: item.id,
+            accountId: item.accountId ?? undefined,
+          },
+          include: { category: true },
+        });
+        if (item.accountId) {
+          await this.accounts.applyExpenseCreatedTx(tx, item.userId, {
+            accountId: expense.accountId,
+            amount: expense.amount,
+            category: expense.category,
+          });
+        }
       }
       await tx.recurringExpense.update({
         where: { id: recurringId },
         data: {
-          status: 'paid',
+          status: RecurringStatus.paid,
           nextDate: this.nextDate(item.nextDate, item.frequency),
         },
       });
@@ -151,13 +182,33 @@ export class RecurringService implements OnModuleInit {
       .catch((e) => this.logger.warn(`recurring push notify: ${(e as Error).message}`));
   }
 
+  async markPaid(userId: string, id: string) {
+    const row = await this.prisma.recurringExpense.findFirst({ where: { id, userId } });
+    if (!row) throw new NotFoundException('Recurring expense not found');
+    return this.prisma.recurringExpense.update({
+      where: { id },
+      data: {
+        status: RecurringStatus.paid,
+        nextDate: this.nextDate(row.nextDate, row.frequency),
+      },
+      include: { category: true, account: true },
+    });
+  }
+
   private nextDate(date: Date, frequency: Frequency) {
-    const next = new Date(date);
-    if (frequency === Frequency.daily) next.setDate(next.getDate() + 1);
-    if (frequency === Frequency.weekly) next.setDate(next.getDate() + 7);
-    if (frequency === Frequency.monthly) next.setMonth(next.getMonth() + 1);
-    if (frequency === Frequency.quarterly) next.setMonth(next.getMonth() + 3);
-    if (frequency === Frequency.yearly) next.setFullYear(next.getFullYear() + 1);
-    return next;
+    switch (frequency) {
+      case Frequency.daily:
+        return addDays(date, 1);
+      case Frequency.weekly:
+        return addWeeks(date, 1);
+      case Frequency.monthly:
+        return addMonths(date, 1);
+      case Frequency.quarterly:
+        return addMonths(date, 3);
+      case Frequency.yearly:
+        return addYears(date, 1);
+      default:
+        return addMonths(date, 1);
+    }
   }
 }

@@ -146,6 +146,8 @@ enum AccountType {
   bank
   cash
   credit
+  upi
+  wallet
 }
 
 enum IncomeSource {

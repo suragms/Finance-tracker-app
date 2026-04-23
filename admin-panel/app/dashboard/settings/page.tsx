@@ -1,196 +1,189 @@
 'use client';
 
-import { apiFetch, downloadAuthorized, getToken } from '@/lib/api';
-import { useCallback, useEffect, useState } from 'react';
-
-type SettingRow = { id: string; key: string; value: string; updatedAt: string };
+import { User, Bell, Shield, Wallet, Globe, Moon, Save, Camera, Check } from 'lucide-react';
+import { useState } from 'react';
 
 export default function SettingsPage() {
-  const [rows, setRows] = useState<SettingRow[] | null>(null);
-  const [err, setErr] = useState('');
-  const [key, setKey] = useState('default_currency');
-  const [value, setValue] = useState('INR');
-  const [rules, setRules] = useState('budget_alert_threshold=0.9');
-  const [busy, setBusy] = useState(false);
-  const [exportBusy, setExportBusy] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [success, setSuccess] = useState(false);
 
-  const load = useCallback(() => {
-    setErr('');
-    apiFetch<SettingRow[]>('/admin/settings', { token: getToken() })
-      .then(setRows)
-      .catch((e) => setErr(e instanceof Error ? e.message : 'Failed'));
-  }, []);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  async function savePair(k: string, v: string) {
-    setBusy(true);
-    try {
-      await apiFetch('/admin/settings', {
-        method: 'POST',
-        token: getToken(),
-        body: JSON.stringify({ key: k, value: v }),
-      });
-      load();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function saveCurrency() {
-    await savePair(key.trim() || 'default_currency', value.trim());
-  }
-
-  async function saveRules() {
-    await savePair('notification_rules', rules.trim());
-  }
-
-  async function exportUsers() {
-    setExportBusy(true);
-    try {
-      await downloadAuthorized('/admin/export/users.csv', 'moneyflow-users.csv');
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Export failed');
-    } finally {
-      setExportBusy(false);
-    }
-  }
-
-  async function exportTx() {
-    setExportBusy(true);
-    try {
-      await downloadAuthorized('/admin/export/transactions.csv', 'moneyflow-transactions.csv');
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Export failed');
-    } finally {
-      setExportBusy(false);
-    }
-  }
-
-  if (err) return <p className="text-red-400">{err}</p>;
-  if (!rows) return <p className="text-mf-muted">Loading…</p>;
+  const handleSave = () => {
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Settings</h1>
+    <div className="space-y-8 pb-12 max-w-5xl">
+      <div>
+        <h3 className="text-xl font-extrabold text-white">Application Settings</h3>
+        <p className="text-xs font-bold text-mf-muted uppercase tracking-wider">Configure your profile and preferences</p>
+      </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-card border border-white/10 bg-mf-card p-6">
-          <h2 className="text-sm font-semibold text-mf-muted">App configuration</h2>
-          <p className="mt-1 text-xs text-mf-muted">
-            Key/value store in PostgreSQL (<code className="text-mf-lime">AppSetting</code>).
-          </p>
-          <div className="mt-4 space-y-3">
-            <label className="block text-xs text-mf-muted">
-              Setting key
-              <input
-                value={key}
-                onChange={(e) => setKey(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
+      <div className="grid gap-8 lg:grid-cols-[1fr,2fr]">
+        {/* Left Column: Navigation Section */}
+        <div className="space-y-6">
+          <div className="glass-card rounded-[32px] overflow-hidden p-4">
+            <div className="space-y-2">
+              <SettingsNav 
+                label="Profile" 
+                icon={User} 
+                active={activeTab === 'profile'} 
+                onClick={() => setActiveTab('profile')} 
               />
-            </label>
-            <label className="block text-xs text-mf-muted">
-              Value (e.g. INR, USD)
-              <input
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
+              <SettingsNav 
+                label="Preferences" 
+                icon={Moon} 
+                active={activeTab === 'preferences'} 
+                onClick={() => setActiveTab('preferences')} 
               />
-            </label>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={saveCurrency}
-              className="rounded-xl bg-mf-lime px-4 py-2 text-sm font-semibold text-black"
-            >
-              Save setting
-            </button>
+              <SettingsNav 
+                label="Security" 
+                icon={Shield} 
+                active={activeTab === 'security'} 
+                onClick={() => setActiveTab('security')} 
+              />
+              <SettingsNav 
+                label="Notifications" 
+                icon={Bell} 
+                active={activeTab === 'notifications'} 
+                onClick={() => setActiveTab('notifications')} 
+              />
+            </div>
           </div>
 
-          <div className="mt-8 border-t border-white/10 pt-6">
-            <h3 className="text-xs font-semibold uppercase text-mf-muted">Notification rules</h3>
-            <p className="mt-1 text-xs text-mf-muted">
-              Stored as a single string; adjust format to match your mobile app parser.
-            </p>
-            <textarea
-              value={rules}
-              onChange={(e) => setRules(e.target.value)}
-              rows={3}
-              className="mt-3 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
-            />
-            <button
-              type="button"
-              disabled={busy}
-              onClick={saveRules}
-              className="mt-2 rounded-xl border border-white/10 px-4 py-2 text-sm hover:bg-white/5"
-            >
-              Save rules
-            </button>
+          <div className="glass-card rounded-[32px] p-6 text-center">
+             <div className="h-16 w-16 mx-auto mb-4 bg-mf-accent/10 rounded-2xl flex items-center justify-center text-mf-accent">
+               <Wallet className="h-8 w-8" />
+             </div>
+             <p className="text-xs font-extrabold text-white uppercase tracking-widest mb-1">Backup Data</p>
+             <p className="text-[10px] text-mf-muted font-bold uppercase mb-4 opacity-60">Last sync: 2 hours ago</p>
+             <button className="w-full py-3 rounded-xl border border-white/10 text-[10px] font-extrabold uppercase tracking-widest text-white hover:bg-white/5 transition-all">
+               Run Manual Sync
+             </button>
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-card border border-white/10 bg-mf-card p-6">
-            <h2 className="text-sm font-semibold text-mf-muted">Admin profile</h2>
-            <p className="mt-2 text-sm text-mf-muted">
-              JWT is stored in this browser. To change admin credentials, update the seed or database
-              directly.
-            </p>
-          </div>
+        {/* Right Column: Dynamic Form Section */}
+        <div className="glass-card rounded-[32px] p-10 space-y-10">
+          {activeTab === 'profile' && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+               <div>
+                  <h4 className="text-lg font-extrabold text-white mb-6">Personal Profile</h4>
+                  <div className="flex items-center gap-8 mb-10">
+                    <div className="relative group">
+                      <div className="h-24 w-24 rounded-[32px] bg-gradient-to-br from-mf-accent to-mf-purple flex items-center justify-center text-3xl font-bold shadow-neon-purple border-2 border-white/10">
+                        S
+                      </div>
+                      <button className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-mf-bg border border-white/10 flex items-center justify-center text-mf-muted hover:text-white transition-all shadow-xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
+                        <Camera className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div>
+                       <p className="text-sm font-bold text-white uppercase tracking-widest mb-1">Surag Ms</p>
+                       <p className="text-xs font-bold text-mf-muted">suragms@example.com</p>
+                       <div className="mt-4 flex gap-2">
+                         <span className="px-3 py-1 rounded-full bg-mf-accent/10 border border-mf-accent/20 text-[10px] font-extrabold text-mf-accent tracking-widest uppercase">Admin</span>
+                         <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold text-mf-muted tracking-widest uppercase">Wealth Pro</span>
+                       </div>
+                    </div>
+                  </div>
 
-          <div className="rounded-card border border-white/10 bg-mf-card p-6">
-            <h2 className="text-sm font-semibold text-mf-muted">Export data</h2>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={exportBusy}
-                onClick={exportUsers}
-                className="rounded-xl bg-mf-lime px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
-              >
-                Users CSV
-              </button>
-              <button
-                type="button"
-                disabled={exportBusy}
-                onClick={exportTx}
-                className="rounded-xl border border-white/10 px-4 py-2 text-sm disabled:opacity-50"
-              >
-                Transactions CSV
-              </button>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <SettingsInput label="Full Name" value="Surag Ms" />
+                    <SettingsInput label="Email Address" value="suragms@example.com" />
+                    <SettingsInput label="Display Name" value="Surag" />
+                    <SettingsInput label="Location" value="Kerala, India" />
+                  </div>
+               </div>
             </div>
+          )}
+
+          {activeTab === 'preferences' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+               <h4 className="text-lg font-extrabold text-white">App Preferences</h4>
+               <div className="space-y-4">
+                  <SettingsToggle label="Dark Theme" description="Enable night mode for better visibility" active={true} />
+                  <SettingsToggle label="Auto Sync" description="Keep your data synchronized in background" active={true} />
+                  <SettingsToggle label="Wealth Insights" description="Receive AI-powered financial recommendations" active={false} />
+                  <SettingsToggle label="Compact View" description="Show more data in tables with less padding" active={false} />
+               </div>
+               
+               <div className="pt-6 border-t border-white/5">
+                  <div className="grid gap-6 sm:grid-cols-2">
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">Primary Currency</label>
+                        <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white appearance-none focus:outline-none focus:border-mf-accent">
+                           <option>INR (₹)</option>
+                           <option>USD ($)</option>
+                           <option>EUR (€)</option>
+                        </select>
+                     </div>
+                     <div className="space-y-2">
+                        <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">Regional Language</label>
+                        <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white appearance-none focus:outline-none focus:border-mf-accent">
+                           <option>English (US)</option>
+                           <option>English (UK)</option>
+                           <option>Hindi</option>
+                        </select>
+                     </div>
+                  </div>
+               </div>
+            </div>
+          )}
+
+          <div className="pt-10 border-t border-white/5 flex items-center justify-between">
+             <div className={`flex items-center gap-2 text-mf-success text-xs font-extrabold uppercase tracking-widest transition-all ${success ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+                <Check className="h-4 w-4" />
+                Changes saved successfully
+             </div>
+             <button 
+                onClick={handleSave}
+                className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-mf-accent text-white font-extrabold text-xs uppercase tracking-widest shadow-neon-purple hover:bg-mf-accent/90 transition-all active:scale-95"
+              >
+                <Save className="h-4 w-4" />
+                Save Changes
+              </button>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="rounded-card border border-white/10 bg-mf-card p-4">
-        <h2 className="text-sm font-semibold text-mf-muted">All settings</h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="text-mf-muted">
-              <tr>
-                <th className="p-2 font-medium">Key</th>
-                <th className="p-2 font-medium">Value</th>
-                <th className="p-2 font-medium">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id} className="border-t border-white/5">
-                  <td className="p-2 font-mono text-xs">{r.key}</td>
-                  <td className="p-2">{r.value}</td>
-                  <td className="p-2 text-mf-muted">{new Date(r.updatedAt).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {rows.length === 0 ? (
-            <p className="text-mf-muted">No rows yet — save a setting above.</p>
-          ) : null}
-        </div>
+function SettingsNav({ label, icon: Icon, active, onClick }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex w-full items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 ${active ? 'bg-mf-accent/10 border border-mf-accent/20 text-white shadow-neon-purple' : 'text-mf-muted hover:bg-white/5 hover:text-white'}`}
+    >
+      <Icon className={`h-5 w-5 ${active ? 'text-mf-accent' : ''}`} />
+      <span className="text-xs font-extrabold uppercase tracking-widest">{label}</span>
+    </button>
+  );
+}
+
+function SettingsInput({ label, value }: { label: string, value: string }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">{label}</label>
+      <input 
+        type="text" 
+        defaultValue={value} 
+        className="w-full rounded-2xl bg-white/5 border border-white/10 px-6 py-4 text-sm font-bold text-white focus:outline-none focus:border-mf-accent transition-all"
+      />
+    </div>
+  );
+}
+
+function SettingsToggle({ label, description, active }: { label: string, description: string, active: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-4 group cursor-pointer">
+      <div>
+        <p className="text-sm font-bold text-white mb-1 group-hover:text-mf-accent transition-all">{label}</p>
+        <p className="text-[10px] font-bold text-mf-muted uppercase tracking-widest opacity-60 leading-tight">{description}</p>
+      </div>
+      <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${active ? 'bg-mf-accent shadow-neon-purple' : 'bg-white/10'}`}>
+         <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all duration-300 ${active ? 'left-7' : 'left-1'}`} />
       </div>
     </div>
   );

@@ -27,4 +27,9 @@ export class RecurringController {
   ) {
     return this.recurring.setActive(req.user.userId, id, dto.active);
   }
+
+  @Post(':id/mark-paid')
+  markPaid(@Req() req: { user: { userId: string } }, @Param('id') id: string) {
+    return this.recurring.markPaid(req.user.userId, id);
+  }
 }

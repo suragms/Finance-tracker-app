@@ -29,7 +29,8 @@ WeeklyAnalyticsSnapshot _computeWeek(
 ) {
   final now = DateTime.now();
   final today = _dateOnly(now);
-  final monday = today.subtract(Duration(days: today.weekday - DateTime.monday));
+  final monday =
+      today.subtract(Duration(days: today.weekday - DateTime.monday));
   final expenseByDay = List<double>.filled(7, 0);
   final incomeByDay = List<double>.filled(7, 0);
 
@@ -62,19 +63,18 @@ WeeklyAnalyticsSnapshot _computeWeek(
 
 final weeklyAnalyticsProvider =
     Provider.autoDispose<AsyncValue<WeeklyAnalyticsSnapshot>>((ref) {
-      final ex = ref.watch(expensesProvider);
-      final inc = ref.watch(incomesProvider);
-      return ex.when(
-        loading: () => const AsyncValue.loading(),
-        error: (e, st) => AsyncValue.error(e, st),
-        data: (expenses) => inc.when(
-          loading: () => const AsyncValue.loading(),
-          error: (e, st) => AsyncValue.error(e, st),
-          data: (incomes) =>
-              AsyncValue.data(_computeWeek(expenses, incomes)),
-        ),
-      );
-    });
+  final ex = ref.watch(expensesProvider);
+  final inc = ref.watch(incomesProvider);
+  return ex.when(
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
+    data: (expenses) => inc.when(
+      loading: () => const AsyncValue.loading(),
+      error: (e, st) => AsyncValue.error(e, st),
+      data: (incomes) => AsyncValue.data(_computeWeek(expenses, incomes)),
+    ),
+  );
+});
 
 String _categoryIdFromExpense(Map<String, dynamic> e) {
   final cat = e['category'];
@@ -87,30 +87,30 @@ String _categoryIdFromExpense(Map<String, dynamic> e) {
 /// Expense totals by category for the **current calendar month** (local).
 final analyticsCategoryMonthProvider =
     Provider.autoDispose<AsyncValue<List<Map<String, dynamic>>>>((ref) {
-      final ex = ref.watch(expensesProvider);
-      return ex.when(
-        loading: () => const AsyncValue.loading(),
-        error: (e, st) => AsyncValue.error(e, st),
-        data: (expenses) {
-          final now = DateTime.now();
-          final byCat = <String, double>{};
-          for (final e in expenses) {
-            final parsed = DateTime.tryParse(e['date']?.toString() ?? '');
-            if (parsed == null) continue;
-            final d = parsed.toLocal();
-            if (d.year != now.year || d.month != now.month) continue;
-            final id = _categoryIdFromExpense(e);
-            byCat[id] = (byCat[id] ?? 0) + _parseAmount(e['amount']);
-          }
-          final rows = byCat.entries
-              .map(
-                (e) => <String, dynamic>{
-                  'categoryId': e.key,
-                  'total': e.value.toStringAsFixed(2),
-                },
-              )
-              .toList();
-          return AsyncValue.data(rows);
-        },
-      );
-    });
+  final ex = ref.watch(expensesProvider);
+  return ex.when(
+    loading: () => const AsyncValue.loading(),
+    error: (e, st) => AsyncValue.error(e, st),
+    data: (expenses) {
+      final now = DateTime.now();
+      final byCat = <String, double>{};
+      for (final e in expenses) {
+        final parsed = DateTime.tryParse(e['date']?.toString() ?? '');
+        if (parsed == null) continue;
+        final d = parsed.toLocal();
+        if (d.year != now.year || d.month != now.month) continue;
+        final id = _categoryIdFromExpense(e);
+        byCat[id] = (byCat[id] ?? 0) + _parseAmount(e['amount']);
+      }
+      final rows = byCat.entries
+          .map(
+            (e) => <String, dynamic>{
+              'categoryId': e.key,
+              'total': e.value.toStringAsFixed(2),
+            },
+          )
+          .toList();
+      return AsyncValue.data(rows);
+    },
+  );
+});

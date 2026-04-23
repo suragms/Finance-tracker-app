@@ -4,12 +4,39 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api_envelope.dart';
 import '../../../core/providers.dart';
 
+class MoneyFlowUser {
+  const MoneyFlowUser({
+    required this.id,
+    required this.name,
+    required this.email,
+  });
+
+  final String id;
+  final String name;
+  final String email;
+
+  factory MoneyFlowUser.fromJson(Map<String, dynamic> json) {
+    return MoneyFlowUser(
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+    );
+  }
+}
+
+typedef AuthResponse = ({
+  String access,
+  String refresh,
+  String? sessionId,
+  MoneyFlowUser? user,
+});
+
 class AuthApi {
   AuthApi(this._dio);
 
   final Dio _dio;
 
-  Future<({String access, String refresh, String? sessionId})> login(
+  Future<AuthResponse> login(
     String email,
     String password,
   ) async {
@@ -20,7 +47,7 @@ class AuthApi {
     return _tokensFrom(res.data);
   }
 
-  Future<({String access, String refresh, String? sessionId})> register({
+  Future<AuthResponse> register({
     required String name,
     required String email,
     required String password,
@@ -38,15 +65,26 @@ class AuthApi {
     return _tokensFrom(res.data);
   }
 
-  ({String access, String refresh, String? sessionId}) _tokensFrom(
-    Map<String, dynamic>? raw,
-  ) {
+  AuthResponse _tokensFrom(Map<String, dynamic>? raw) {
     final data = unwrapApiMap(raw) ?? raw ?? <String, dynamic>{};
     final access = data['access'] as String? ?? '';
     final refresh = data['refresh'] as String? ?? '';
     final sessionId = data['sessionId'] as String?;
+    
     if (access.isEmpty) throw StateError('No access token in response');
-    return (access: access, refresh: refresh, sessionId: sessionId);
+
+    MoneyFlowUser? user;
+    final userJson = data['user'];
+    if (userJson is Map<String, dynamic>) {
+      user = MoneyFlowUser.fromJson(userJson);
+    }
+
+    return (
+      access: access,
+      refresh: refresh,
+      sessionId: sessionId,
+      user: user,
+    );
   }
 }
 

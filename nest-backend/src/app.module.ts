@@ -28,6 +28,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { DimensionsModule } from './modules/dimensions/dimensions.module';
 import { QueueModule } from './queue/queue.module';
 import { TransformResponseInterceptor } from './common/interceptors/transform-response.interceptor';
+import { TransactionsModule } from './modules/transactions/transactions.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { TransformResponseInterceptor } from './common/interceptors/transform-re
     WhatsappModule,
     AdminModule,
     DimensionsModule,
+    TransactionsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

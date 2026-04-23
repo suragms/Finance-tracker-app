@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../core/format_amount.dart';
 import '../../../core/design_system/app_card.dart';
 import '../../../core/design_system/app_skeleton.dart';
 import '../../../core/dio_errors.dart';
@@ -266,9 +267,8 @@ class InvestmentsScreen extends ConsumerWidget {
                         kind: kind,
                         investedAmount: inv,
                         currentValue: cur,
-                        note: note.text.trim().isEmpty
-                            ? null
-                            : note.text.trim(),
+                        note:
+                            note.text.trim().isEmpty ? null : note.text.trim(),
                       );
                     } else {
                       await api.update(
@@ -390,9 +390,7 @@ class _InvestmentsLoadedBody extends StatelessWidget {
         : <String, dynamic>{};
     final holdingsRaw = data['holdings'];
     final holdings = holdingsRaw is List
-        ? holdingsRaw
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList()
+        ? holdingsRaw.map((e) => Map<String, dynamic>.from(e as Map)).toList()
         : <Map<String, dynamic>>[];
 
     final totalInv = InvestmentsScreen._toDouble(summary['totalInvested']);
@@ -503,7 +501,8 @@ class _InvestmentsLoadedBody extends StatelessWidget {
             SliverFillRemaining(
               hasScrollBody: false,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(MfSpace.xxl, 0, MfSpace.xxl, 100),
+                padding:
+                    const EdgeInsets.fromLTRB(MfSpace.xxl, 0, MfSpace.xxl, 100),
                 child: _InvestmentsEmptyState(onAddTap: onAddTap),
               ),
             ),
@@ -628,14 +627,14 @@ class _PortfolioSummaryGradientCard extends StatelessWidget {
                       Expanded(
                         child: _MetricBlock(
                           label: 'Total invested',
-                          value: MfCurrency.formatInr(totalInvested),
+                          value: formatAmount(totalInvested),
                           emphasized: false,
                         ),
                       ),
                       Expanded(
                         child: _MetricBlock(
                           label: 'Current value',
-                          value: MfCurrency.formatInr(currentValue),
+                          value: formatAmount(currentValue),
                           emphasized: true,
                         ),
                       ),
@@ -679,7 +678,9 @@ class _PortfolioSummaryGradientCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${profitLoss >= 0 ? '+' : ''}${MfCurrency.formatInr(profitLoss)}',
+                                profitLoss >= 0
+                                    ? '+${formatAmount(profitLoss)}'
+                                    : formatAmount(profitLoss),
                                 style: GoogleFonts.manrope(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w800,
@@ -782,7 +783,8 @@ class _PerformanceLineChartCard extends StatelessWidget {
     minY -= pad;
     maxY += pad;
 
-    final lineColor = linePositive ? MfPalette.incomeGreen : MfPalette.expenseRed;
+    final lineColor =
+        linePositive ? MfPalette.incomeGreen : MfPalette.expenseRed;
 
     return AppCard(
       glass: true,
@@ -870,14 +872,8 @@ class _PerformanceLineChartCard extends StatelessWidget {
                       showTitles: true,
                       reservedSize: 44,
                       getTitlesWidget: (v, _) {
-                        final abs = v.abs();
-                        final t = abs >= 100000
-                            ? '${(abs / 100000).toStringAsFixed(1)}L'
-                            : abs >= 1000
-                            ? '${(abs / 1000).toStringAsFixed(1)}k'
-                            : v.toInt().toString();
                         return Text(
-                          t,
+                          formatAmount(v),
                           style: GoogleFonts.inter(
                             fontSize: 9,
                             color: cs.onSurface.withValues(alpha: 0.42),
@@ -941,7 +937,7 @@ class _PerformanceLineChartCard extends StatelessWidget {
                     getTooltipItems: (touched) {
                       return touched.map((t) {
                         return LineTooltipItem(
-                          MfCurrency.formatInr(t.y),
+                          formatAmount(t.y),
                           GoogleFonts.manrope(
                             color: cs.onSurface,
                             fontWeight: FontWeight.w700,
@@ -990,115 +986,115 @@ class _HoldingRowCard extends StatelessWidget {
         vertical: MfSpace.md,
       ),
       child: Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(MfRadius.md),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: grads,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: grads.last.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  InvestmentsScreen._iconForKind(kind),
-                  color: Colors.white,
-                  size: 24,
-                ),
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(MfRadius.md),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: grads,
               ),
-              const SizedBox(width: MfSpace.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              boxShadow: [
+                BoxShadow(
+                  color: grads.last.withValues(alpha: 0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              InvestmentsScreen._iconForKind(kind),
+              color: Colors.white,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: MfSpace.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.manrope(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: cs.onSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Row(
                   children: [
-                    Text(
-                      name,
-                      style: GoogleFonts.manrope(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: cs.onSurface,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    Icon(
+                      Icons.label_outline_rounded,
+                      size: 14,
+                      color: cs.onSurface.withValues(alpha: 0.45),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.label_outline_rounded,
-                          size: 14,
-                          color: cs.onSurface.withValues(alpha: 0.45),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          InvestmentsScreen._kindLabel(kind),
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: cs.onSurface.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
+                    const SizedBox(width: 4),
+                    Text(
+                      InvestmentsScreen._kindLabel(kind),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
                     ),
                   ],
                 ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                formatAmount(cur),
+                style: GoogleFonts.manrope(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: cs.onSurface,
+                ),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    MfCurrency.formatInr(cur),
-                    style: GoogleFonts.manrope(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: cs.onSurface,
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: MfSpace.sm,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: pctColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      up
+                          ? Icons.arrow_outward_rounded
+                          : Icons.south_west_rounded,
+                      size: 14,
+                      color: pctColor,
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: MfSpace.sm,
-                      vertical: 4,
+                    const SizedBox(width: 4),
+                    Text(
+                      '${up ? '+' : ''}${pct.toStringAsFixed(1)}%',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: pctColor,
+                      ),
                     ),
-                    decoration: BoxDecoration(
-                      color: pctColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          up
-                              ? Icons.arrow_outward_rounded
-                              : Icons.south_west_rounded,
-                          size: 14,
-                          color: pctColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${up ? '+' : ''}${pct.toStringAsFixed(1)}%',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: pctColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
+        ],
+      ),
     );
   }
 }

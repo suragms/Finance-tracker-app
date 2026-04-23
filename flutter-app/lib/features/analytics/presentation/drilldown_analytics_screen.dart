@@ -2,8 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
-
+import '../../../core/format_amount.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../dashboard/application/dashboard_providers.dart';
 import '../domain/analytics_filter.dart';
@@ -28,8 +27,7 @@ class _DrilldownAnalyticsScreenState
   void initState() {
     super.initState();
     final n = DateTime.now();
-    _filter = widget.initial ??
-        AnalyticsFilter(year: n.year, month: n.month);
+    _filter = widget.initial ?? AnalyticsFilter(year: n.year, month: n.month);
   }
 
   Future<void> _pickMonth() async {
@@ -82,12 +80,14 @@ class _DrilldownAnalyticsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
     final async = ref.watch(analyticsDrilldownProvider(_filter));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B1220),
+      backgroundColor: isDark ? MfPalette.canvas : MfSurface.base,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1220),
+        backgroundColor: isDark ? MfPalette.canvas : MfSurface.base,
         title: Text(
           'Drill-down analytics',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
@@ -142,9 +142,12 @@ class _DrilldownAnalyticsScreenState
                 )
               : <String, dynamic>{};
 
-          final labels = (pie['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
+          final labels =
+              (pie['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
           final values = (pie['values'] as List?)
-                  ?.map((e) => (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
+                  ?.map((e) => (e is num)
+                      ? e.toDouble()
+                      : double.tryParse(e.toString()) ?? 0)
                   .toList() ??
               <double>[];
           final total = double.tryParse(data['total']?.toString() ?? '0') ?? 0;
@@ -155,30 +158,32 @@ class _DrilldownAnalyticsScreenState
               Text(
                 data['period']?.toString() ?? '',
                 style: GoogleFonts.inter(
-                  color: Colors.white70,
+                  color: cs.onSurface.withValues(alpha: 0.7),
                   fontSize: 13,
                 ),
               ),
               const SizedBox(height: MfSpace.sm),
               Text(
-                NumberFormat.currency(symbol: '₹', decimalDigits: 0)
-                    .format(total),
+                formatAmount(total),
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: cs.onSurface,
                 ),
               ),
               Text(
                 'Avg ${data['average']} · ${data['count']} buckets',
-                style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
+                style: GoogleFonts.inter(
+                  color: cs.onSurface.withValues(alpha: 0.54),
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(height: MfSpace.xl),
               Text(
                 'Composition (${pie['level']})',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: MfSpace.md),
@@ -198,7 +203,7 @@ class _DrilldownAnalyticsScreenState
                         titleStyle: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: cs.onPrimary,
                         ),
                         color: Color.lerp(
                           const Color(0xFF49D6FF),
@@ -226,7 +231,7 @@ class _DrilldownAnalyticsScreenState
                 'Monthly bars',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: MfSpace.md),
@@ -236,7 +241,7 @@ class _DrilldownAnalyticsScreenState
                 'Trend line',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: MfSpace.md),
@@ -246,7 +251,7 @@ class _DrilldownAnalyticsScreenState
                 'Stacked by category (month)',
                 style: GoogleFonts.inter(
                   fontWeight: FontWeight.w700,
-                  color: Colors.white,
+                  color: cs.onSurface,
                 ),
               ),
               const SizedBox(height: MfSpace.md),
@@ -256,7 +261,12 @@ class _DrilldownAnalyticsScreenState
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text('$e', style: const TextStyle(color: Colors.white70)),
+          child: Text(
+            '$e',
+            style: TextStyle(
+              color: cs.onSurface.withValues(alpha: 0.7),
+            ),
+          ),
         ),
       ),
     );
@@ -270,13 +280,21 @@ class _MiniBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels = (raw['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final labels =
+        (raw['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
     final values = (raw['values'] as List?)
-            ?.map((e) => (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
+            ?.map((e) =>
+                (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
             .toList() ??
         <double>[];
     if (labels.isEmpty) {
-      return const Text('No data', style: TextStyle(color: Colors.white54));
+      return Text(
+        'No data',
+        style: TextStyle(
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
+        ),
+      );
     }
     final maxV = values.isEmpty ? 1.0 : values.reduce((a, b) => a > b ? a : b);
     return SizedBox(
@@ -307,7 +325,13 @@ class _MiniBarChart extends StatelessWidget {
                   if (i < 0 || i >= labels.length) return const SizedBox();
                   return Text(
                     labels[i],
-                    style: GoogleFonts.inter(fontSize: 9, color: Colors.white54),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.54),
+                    ),
                   );
                 },
               ),
@@ -337,13 +361,21 @@ class _MiniLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final labels = (raw['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
+    final labels =
+        (raw['labels'] as List?)?.map((e) => e.toString()).toList() ?? [];
     final values = (raw['values'] as List?)
-            ?.map((e) => (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
+            ?.map((e) =>
+                (e is num) ? e.toDouble() : double.tryParse(e.toString()) ?? 0)
             .toList() ??
         <double>[];
     if (labels.isEmpty) {
-      return const Text('No data', style: TextStyle(color: Colors.white54));
+      return Text(
+        'No data',
+        style: TextStyle(
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
+        ),
+      );
     }
     return SizedBox(
       height: 160,
@@ -355,7 +387,7 @@ class _MiniLineChart extends StatelessWidget {
                 values.length,
                 (i) => FlSpot(i.toDouble(), values[i]),
               ),
-              color: const Color(0xFFE6FF4D),
+              color: const Color(0xFF10B981),
               barWidth: 3,
               dotData: const FlDotData(show: true),
             ),
@@ -364,7 +396,10 @@ class _MiniLineChart extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             getDrawingHorizontalLine: (_) => FlLine(
-              color: Colors.white.withValues(alpha: 0.06),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.08),
               strokeWidth: 1,
             ),
           ),
@@ -386,7 +421,11 @@ class _StackedPreview extends StatelessWidget {
     if (series.isEmpty) {
       return Text(
         'No stacked series (add more categories / months)',
-        style: GoogleFonts.inter(color: Colors.white54, fontSize: 12),
+        style: GoogleFonts.inter(
+          color:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
+          fontSize: 12,
+        ),
       );
     }
     return Column(
@@ -399,9 +438,12 @@ class _StackedPreview extends StatelessWidget {
             <double>[];
         final sum = vals.fold<double>(0, (a, b) => a + b);
         return ListTile(
-          title: Text(name, style: const TextStyle(color: Colors.white)),
+          title: Text(
+            name,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
           trailing: Text(
-            NumberFormat.compact().format(sum),
+            formatAmount(sum),
             style: const TextStyle(color: Color(0xFF49D6FF)),
           ),
         );

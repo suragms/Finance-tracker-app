@@ -40,16 +40,16 @@ class NotificationFiltersNotifier extends Notifier<NotificationListFilters> {
 
 final notificationFiltersProvider =
     NotifierProvider<NotificationFiltersNotifier, NotificationListFilters>(
-      NotificationFiltersNotifier.new,
-    );
+  NotificationFiltersNotifier.new,
+);
 
 final notificationsListProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      final api = ref.watch(notificationsApiProvider);
-      final f = ref.watch(notificationFiltersProvider);
-      return api.list(
-        category: f.category,
-        unreadOnly: f.unreadOnly ? true : null,
-        limit: 100,
-      );
-    });
+  final api = ref.watch(notificationsApiProvider);
+  final f = ref.watch(notificationFiltersProvider);
+  return api.list(
+    category: f.category,
+    unreadOnly: f.unreadOnly ? true : null,
+    limit: 100,
+  );
+});

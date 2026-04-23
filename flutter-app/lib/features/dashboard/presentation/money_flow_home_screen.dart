@@ -17,23 +17,27 @@ import '../../income/presentation/add_income_screen.dart';
 import '../../insights/presentation/insights_screen.dart';
 import '../../shell/presentation/quick_create_sheet.dart';
 import '../application/dashboard_providers.dart';
+import '../../accounts/application/account_providers.dart';
+import '../../accounts/presentation/account_setup_screen.dart';
+
+final dashboardSelectedAccountProvider = StateProvider.autoDispose<String?>((ref) => null);
 
 final userEmailProvider = Provider<String?>((ref) {
   return ref.read(tokenStorageProvider).userEmail;
 });
 
 abstract final class _DashboardColors {
-  static const Color background = Color(0xFF0B1220);
-  static const Color panel = Color(0xFF121A2B); // Subtle card colors
-  static const Color panelSoft = Color(0x88121A2B);
-  static const Color border = Color(0x1AFFFFFF); // Minimal overlap
-  static const Color textPrimary = Color(0xFFF7F8F3);
-  static const Color textSecondary = Color(0xFF8D93A1);
-  static const Color lime = Color(0xFFE6FF4D); // Accent color
-  static const Color limeSoft = Color(0xFFF3FD6F);
-  static const Color cyan = Color(0xFF4ACBFF);
-  static const Color positive = Color(0xFFE6FF4D);
-  static const Color negative = Color(0xFFFF6B7D);
+  static const Color background = Color(0xFF0B0F1A);
+  static const Color panel = Color(0xFF1F2937); // Subtle card colors
+  static const Color panelSoft = Color(0xFF1F2937);
+  static const Color border = Color(0xFF374151); // Minimal overlap
+  static const Color textPrimary = Colors.white;
+  static const Color textSecondary = Color(0xFF9CA3AF);
+  static const Color lime = Color(0xFF6366F1); // Accent color
+  static const Color limeSoft = Color(0xFF818CF8);
+  static const Color cyan = Color(0xFF3B82F6);
+  static const Color positive = Color(0xFF10B981);
+  static const Color negative = Color(0xFFEF4444);
 }
 
 double? _tryDouble(dynamic raw) {
@@ -381,11 +385,19 @@ class MoneyFlowHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final overview = ref.watch(dashboardOverviewProvider);
-    final expenses = ref.watch(expensesProvider);
-    final incomes = ref.watch(incomesProvider);
+    final expensesAsync = ref.watch(expensesProvider);
+    final incomesAsync = ref.watch(incomesProvider);
+    final accountsAsync = ref.watch(accountsProvider);
+    final selectedAccountId = ref.watch(dashboardSelectedAccountProvider);
     final name = _greetingFirstName(ref.watch(userEmailProvider));
     final bottomPadding = MediaQuery.of(context).padding.bottom + 108;
+
+    final accounts = accountsAsync.valueOrNull?.accounts ?? [];
+    
+    // Check global Empty State for NO ACCOUNTS
+    if (accountsAsync.hasValue && accounts.isEmpty && !kNoApiMode) {
+      return _buildNoAccountsEmptyState(context);
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -414,19 +426,64 @@ class MoneyFlowHomeScreen extends ConsumerWidget {
                         MfSpace.lg,
                         bottomPadding,
                       ),
-                      child: overview.when(
-                        data: (raw) {
-                          final summary = _HomeSummary.fromDashboard(raw);
-                          final activity = _buildActivityItems(
-                            expenses: expenses.maybeWhen(
-                              data: (value) => value,
-                              orElse: () => const <Map<String, dynamic>>[],
-                            ),
-                            incomes: incomes.maybeWhen(
-                              data: (value) => value,
-                              orElse: () => const <Map<String, dynamic>>[],
-                            ),
-                          );
+                    child: Builder(
+                      builder: (ctx) {
+                        final eList = expensesAsync.valueOrNull ?? [];
+                        final iList = incomesAsync.valueOrNull ?? [];
+                        
+                        var filteredExpenses = eList;
+                        var filteredIncomes = iList;
+                        String accountLabel = 'All Accounts';
+                        double accountBalance = 0;
+
+                        if (selectedAccountId == null) {
+                           for (final a in accounts) {
+                             accountBalance += _toDouble(a['balance']);
+                           }
+                        } else {
+                           final acc = accounts.firstWhere((a) => a['id']?.toString() == selectedAccountId, orElse: () => <String, dynamic>{});
+                           if (acc.isNotEmpty) {
+                              accountLabel = acc['name']?.toString() ?? 'Account';
+                              accountBalance = _toDouble(acc['balance']);
+                           }
+                           filteredExpenses = filteredExpenses.where((e) {
+                              final aid = e['account'] is Map ? (e['account'] as Map)['id']?.toString() : e['accountId']?.toString();
+                              return aid == selectedAccountId;
+                           }).toList();
+                           filteredIncomes = filteredIncomes.where((i) {
+                              final aid = i['account'] is Map ? (i['account'] as Map)['id']?.toString() : i['accountId']?.toString();
+                              return aid == selectedAccountId;
+                           }).toList();
+                        }
+
+                        // Local month aggregation
+                        final now = DateTime.now();
+                        final start = DateTime(now.year, now.month);
+                        final end = DateTime(now.year, now.month + 1);
+
+                        final mExp = filteredExpenses.where((e) {
+                          final d = _parseDate(e['date']);
+                          return d != null && !d.isBefore(start) && d.isBefore(end);
+                        });
+                        final mInc = filteredIncomes.where((e) {
+                          final d = _parseDate(e['date']);
+                          return d != null && !d.isBefore(start) && d.isBefore(end);
+                        });
+
+                        final monthExpTotal = mExp.fold<double>(0, (s, e) => s + _toDouble(e['amount']));
+                        final monthIncTotal = mInc.fold<double>(0, (s, e) => s + _toDouble(e['amount']));
+                        final cashFlow = monthIncTotal - monthExpTotal;
+
+                        final summary = _HomeSummary(
+                          balanceLabel: 'Available balance',
+                          balance: _formatCurrency(accountBalance),
+                          monthLabel: _formatMonthLabel(DateFormat('yyyy-MM').format(now)),
+                          income: monthIncTotal,
+                          expense: monthExpTotal,
+                          cashFlow: cashFlow,
+                        );
+
+                        final activity = _buildActivityItems(expenses: filteredExpenses, incomes: filteredIncomes);
 
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,9 +493,18 @@ class MoneyFlowHomeScreen extends ConsumerWidget {
                                 const SizedBox(height: MfSpace.lg),
                                 const _ModeChip(),
                               ],
-                              const SizedBox(height: MfSpace.xxl),
-                              _BalanceCard(summary: summary),
-                              const SizedBox(height: MfSpace.md),
+                              const SizedBox(height: MfSpace.xl),
+
+                              // Account Switcher / Header
+                              _DashboardAccountHeader(
+                                currentAccountName: accountLabel,
+                                currentBalance: accountBalance,
+                                accounts: accounts,
+                                selectedAccountId: selectedAccountId,
+                                onAccountSelected: (id) => ref.read(dashboardSelectedAccountProvider.notifier).state = id,
+                              ),
+                              const SizedBox(height: MfSpace.xl),
+
                               const _InsightsStrip(),
                               const SizedBox(height: MfSpace.md),
                               Row(
@@ -511,7 +577,7 @@ class MoneyFlowHomeScreen extends ConsumerWidget {
                               const SizedBox(height: MfSpace.md),
                               if (activity.isNotEmpty)
                                 _TransactionsCard(items: activity)
-                              else if (expenses.isLoading || incomes.isLoading)
+                              else if (expensesAsync.isLoading || incomesAsync.isLoading)
                                 const _TransactionsSkeleton()
                               else
                                 _EmptyTransactionsCard(
@@ -520,28 +586,8 @@ class MoneyFlowHomeScreen extends ConsumerWidget {
                                 ),
                             ],
                           );
-                        },
-                        loading: () => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            _ProfileHeader(name: 'there'),
-                            SizedBox(height: MfSpace.xxl),
-                            _BalanceCardSkeleton(),
-                            SizedBox(height: MfSpace.xl),
-                            _QuickActionsSkeleton(),
-                            SizedBox(height: 28),
-                            _TransactionsSkeleton(),
-                          ],
-                        ),
-                        error: (error, _) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _ProfileHeader(name: name),
-                            const SizedBox(height: MfSpace.xxl),
-                            _ErrorPanel(message: error.toString()),
-                          ],
-                        ),
-                      ),
+                      },
+                    ),
                     ),
                   ),
                 ),
@@ -1000,53 +1046,257 @@ class _EmptyTransactionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _GlassPanel(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+      decoration: BoxDecoration(
+        color: _DashboardColors.panelSoft,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _DashboardColors.border),
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const LedgerFintechEmptyIllustration(width: 168),
-          const SizedBox(height: MfSpace.lg),
           Container(
-            padding: const EdgeInsets.all(MfSpace.md),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: MfPalette.accentSoftPurple.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(MfRadius.md),
+              color: Colors.white.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.receipt_long_rounded,
-              color: _DashboardColors.limeSoft,
-              size: 26,
-            ),
+            child: const Icon(Icons.receipt_long_rounded, color: Colors.white38, size: 40),
           ),
-          const SizedBox(height: MfSpace.lg),
+          const SizedBox(height: 20),
           Text(
-            'No transactions yet',
-            style: GoogleFonts.manrope(
-              fontSize: 18,
+            "NO TRANSACTIONS YET",
+            style: GoogleFonts.inter(
+              fontSize: 12,
               fontWeight: FontWeight.w800,
-              color: _DashboardColors.textPrimary,
+              letterSpacing: 1.5,
+              color: Colors.white70,
             ),
           ),
-          const SizedBox(height: MfSpace.sm),
+          const SizedBox(height: 8),
           Text(
-            'Your latest payments and inflows will land here as soon as they are recorded.',
+            "Your financial insights will appear here once you record your first activity.",
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 13,
-              height: 1.45,
-              color: _DashboardColors.textSecondary,
+              color: Colors.white54,
+              height: 1.5,
             ),
           ),
-          const SizedBox(height: MfSpace.xl),
-          FilledButton.icon(
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
             onPressed: onRecordTap,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Record a transaction'),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: _DashboardColors.textSecondary),
+              foregroundColor: _DashboardColors.textPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: const Icon(Icons.add_rounded, size: 18),
+            label: Text("Add Transaction", style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 13)),
           ),
         ],
       ),
     );
   }
 }
+
+  Widget _buildNoAccountsEmptyState(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.account_balance_wallet_rounded, size: 60, color: Color(0xFF6366F1)),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                "Start by creating your first account",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.manrope(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 24,
+                  height: 1.3,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                "Track your cash, bank balances, and wallets accurately by establishing an account first.",
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  color: Colors.white54,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AccountSetupScreen(isInitialSetup: false)),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF6366F1),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: Text("Create Account", style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+class _DashboardAccountHeader extends StatelessWidget {
+  const _DashboardAccountHeader({
+    required this.currentAccountName,
+    required this.currentBalance,
+    required this.accounts,
+    required this.selectedAccountId,
+    required this.onAccountSelected,
+  });
+
+  final String currentAccountName;
+  final double currentBalance;
+  final List<dynamic> accounts;
+  final String? selectedAccountId;
+  final void Function(String?) onAccountSelected;
+
+  void _showAccountPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: _DashboardColors.background,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Switch Account', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.account_balance_wallet, color: MfPalette.primaryIndigo),
+              title: Text('All Accounts', style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600)),
+              trailing: selectedAccountId == null ? const Icon(Icons.check_circle, color: MfPalette.primaryIndigo) : null,
+              onTap: () {
+                onAccountSelected(null);
+                Navigator.pop(ctx);
+              },
+            ),
+            const Divider(color: Colors.white10, indent: 64),
+            ...accounts.map((a) {
+              final isSelected = selectedAccountId == a['id']?.toString();
+              return ListTile(
+                leading: Icon(
+                  Icons.account_balance_rounded,
+                  color: isSelected ? MfPalette.incomeGreen : Colors.white70,
+                ),
+                title: Text(a['name']?.toString() ?? '', style: GoogleFonts.inter(color: Colors.white, fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500)),
+                subtitle: Text(
+                  MfCurrency.formatInr(double.tryParse(a['balance']?.toString() ?? '0') ?? 0),
+                  style: GoogleFonts.inter(color: Colors.white38, fontSize: 12),
+                ),
+                trailing: isSelected ? const Icon(Icons.check_circle, color: MfPalette.incomeGreen) : null,
+                onTap: () {
+                  onAccountSelected(a['id']?.toString());
+                  Navigator.pop(ctx);
+                },
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _GlassPanel(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              GestureDetector(
+                onTap: () => _showAccountPicker(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: selectedAccountId == null ? MfPalette.primaryIndigo.withValues(alpha: 0.2) : MfPalette.incomeGreen.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          selectedAccountId == null ? Icons.account_balance_wallet_rounded : Icons.account_balance_rounded,
+                          color: selectedAccountId == null ? MfPalette.primaryIndigo : MfPalette.incomeGreen,
+                          size: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        currentAccountName,
+                        style: GoogleFonts.inter(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _formatCurrency(currentBalance),
+            style: GoogleFonts.manrope(
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+              letterSpacing: -1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Total Portfolio Balance',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: Colors.white54,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 class _ErrorPanel extends StatelessWidget {
   const _ErrorPanel({required this.message});

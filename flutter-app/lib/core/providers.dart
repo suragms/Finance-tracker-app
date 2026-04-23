@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'api_base_resolve.dart';
@@ -14,7 +15,8 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) {
 Future<bool>? _refreshAccessTokenInFlight;
 
 Future<bool> _refreshAccessToken(TokenStorage storage) {
-  _refreshAccessTokenInFlight ??= _doRefreshAccessToken(storage).whenComplete(() {
+  _refreshAccessTokenInFlight ??=
+      _doRefreshAccessToken(storage).whenComplete(() {
     _refreshAccessTokenInFlight = null;
   });
   return _refreshAccessTokenInFlight!;
@@ -69,6 +71,7 @@ final dioProvider = Provider<Dio>((ref) {
       headers: {'Content-Type': 'application/json'},
     ),
   );
+  dio.interceptors.add(PerformanceInterceptor());
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -117,3 +120,32 @@ final dioProvider = Provider<Dio>((ref) {
   );
   return dio;
 });
+class PerformanceInterceptor extends Interceptor {
+  final Map<String, Stopwatch> _watches = {};
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    _watches[options.uri.toString()] = Stopwatch()..start();
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    final sw = _watches.remove(response.requestOptions.uri.toString());
+    if (sw != null) {
+      sw.stop();
+      if (sw.elapsedMilliseconds > 500) {
+        debugPrint('⚠️ SLOW API [${response.requestOptions.method}] ${response.requestOptions.path}: ${sw.elapsedMilliseconds}ms');
+      } else {
+        debugPrint('✅ API [${response.requestOptions.method}] ${response.requestOptions.path}: ${sw.elapsedMilliseconds}ms');
+      }
+    }
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    _watches.remove(err.requestOptions.uri.toString());
+    handler.next(err);
+  }
+}

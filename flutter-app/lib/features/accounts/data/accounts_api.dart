@@ -33,9 +33,8 @@ class AccountsLedger {
     }
     if (resolved is List) {
       return AccountsLedger(
-        accounts: resolved
-            .map((e) => Map<String, dynamic>.from(e as Map))
-            .toList(),
+        accounts:
+            resolved.map((e) => Map<String, dynamic>.from(e as Map)).toList(),
         summary: const {},
       );
     }

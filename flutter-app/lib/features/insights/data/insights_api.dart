@@ -67,7 +67,8 @@ class InsightsApi {
         'message': message,
         'lang': lang,
         if (history != null && history.isNotEmpty) 'history': history,
-        if (actionConfirmation != null) 'actionConfirmation': actionConfirmation,
+        if (actionConfirmation != null)
+          'actionConfirmation': actionConfirmation,
       },
     );
     final data = unwrapApiMap(res.data) ?? <String, dynamic>{};

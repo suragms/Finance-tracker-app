@@ -11,7 +11,8 @@ class PremiumFintechBackdrop extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const DecoratedBox(decoration: BoxDecoration(gradient: mfPremiumCanvasGradient)),
+        const DecoratedBox(
+            decoration: BoxDecoration(gradient: mfPremiumCanvasGradient)),
         Positioned(
           top: -130,
           right: -50,

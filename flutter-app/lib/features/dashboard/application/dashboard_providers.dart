@@ -25,19 +25,19 @@ final monthlySummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>(
 
 final dashboardOverviewProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-      if (kNoApiMode) {
-        return buildOfflineDashboardOverview(ref.watch(ledgerDatabaseProvider));
-      }
-      return ref.watch(reportsApiProvider).dashboard();
-    });
+  if (kNoApiMode) {
+    return buildOfflineDashboardOverview(ref.watch(ledgerDatabaseProvider));
+  }
+  return ref.watch(reportsApiProvider).dashboard();
+});
 
 final categoryBreakdownProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      if (kNoApiMode) {
-        return buildOfflineCategoryBreakdown(ref.watch(ledgerDatabaseProvider));
-      }
-      return ref.watch(reportsApiProvider).categoryBreakdown();
-    });
+  if (kNoApiMode) {
+    return buildOfflineCategoryBreakdown(ref.watch(ledgerDatabaseProvider));
+  }
+  return ref.watch(reportsApiProvider).categoryBreakdown();
+});
 
 final taxSummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   ref,
@@ -50,39 +50,39 @@ final taxSummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
 
 final expenseMvpProvider = FutureProvider.autoDispose
     .family<Map<String, dynamic>, ExpenseMvpQuery>((ref, m) async {
-      if (kNoApiMode) {
-        return buildOfflineExpenseMvp(
-          ref.watch(ledgerDatabaseProvider),
-          m.year,
-          m.month,
-          fromYmd: m.fromYmd,
-          toYmd: m.toYmd,
-        );
-      }
-      return ref.watch(reportsApiProvider).expenseMvp(
-            year: m.year,
-            month: m.month,
-            fromYmd: m.fromYmd,
-            toYmd: m.toYmd,
-            trendMonths: 12,
-          );
-    });
+  if (kNoApiMode) {
+    return buildOfflineExpenseMvp(
+      ref.watch(ledgerDatabaseProvider),
+      m.year,
+      m.month,
+      fromYmd: m.fromYmd,
+      toYmd: m.toYmd,
+    );
+  }
+  return ref.watch(reportsApiProvider).expenseMvp(
+        year: m.year,
+        month: m.month,
+        fromYmd: m.fromYmd,
+        toYmd: m.toYmd,
+        trendMonths: 12,
+      );
+});
 
 final analyticsDrilldownProvider = FutureProvider.autoDispose
     .family<Map<String, dynamic>, AnalyticsFilter>((ref, f) async {
-      if (kNoApiMode) {
-        return buildOfflineAnalytics(
-          ref.watch(ledgerDatabaseProvider),
-          f,
-        );
-      }
-      return ref.watch(reportsApiProvider).analytics(f);
-    });
+  if (kNoApiMode) {
+    return buildOfflineAnalytics(
+      ref.watch(ledgerDatabaseProvider),
+      f,
+    );
+  }
+  return ref.watch(reportsApiProvider).analytics(f);
+});
 
 final insightsSnapshotProvider =
     FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
-      if (kNoApiMode) {
-        return buildOfflineInsights();
-      }
-      return ref.watch(reportsApiProvider).insightsSnapshot();
-    });
+  if (kNoApiMode) {
+    return buildOfflineInsights(ref.watch(ledgerDatabaseProvider));
+  }
+  return ref.watch(reportsApiProvider).insightsSnapshot();
+});

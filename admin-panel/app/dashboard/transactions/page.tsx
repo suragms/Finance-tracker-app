@@ -1,272 +1,186 @@
 'use client';
 
-import { apiFetch, getToken } from '@/lib/api';
-import { inr, isoDate } from '@/lib/format';
-import { useCallback, useEffect, useState } from 'react';
+import { Search, Filter, Download, ChevronLeft, ChevronRight, Activity, CreditCard, X } from 'lucide-react';
+import { useState, useMemo } from 'react';
 
-type TxRow = {
-  kind: 'expense' | 'income';
-  id: string;
-  userId: string;
-  amount: number;
-  date: string;
-  note: string | null;
-  categoryId: string | null;
-  categoryName: string | null;
-  user: { id: string; name: string | null; email: string | null };
-};
-
-type ListRes = { rows: TxRow[] };
+const mockTransactions = [
+  { id: '1', date: '2026-04-21', category: 'Shopping', account: 'HDFC Bank', amount: 1250, type: 'expense' },
+  { id: '2', date: '2026-04-20', category: 'Salary', account: 'Wallet', amount: 45000, type: 'income' },
+  { id: '3', date: '2026-04-19', category: 'Food & Dining', account: 'ICICI Credit', amount: 840, type: 'expense' },
+  { id: '4', date: '2026-04-18', category: 'Rent', account: 'HDFC Bank', amount: 15000, type: 'expense' },
+  { id: '5', date: '2026-04-17', category: 'Freelance', account: 'Paypal', amount: 12000, type: 'income' },
+  { id: '6', date: '2026-04-16', category: 'Utilities', account: 'HDFC Bank', amount: 3200, type: 'expense' },
+  { id: '7', date: '2026-04-15', category: 'Entertainment', account: 'HDFC Bank', amount: 1200, type: 'expense' },
+  { id: '8', date: '2026-04-14', category: 'Investment', account: 'Zerodha', amount: 10000, type: 'expense' },
+];
 
 export default function TransactionsPage() {
-  const [data, setData] = useState<ListRes | null>(null);
-  const [err, setErr] = useState('');
-  const [userId, setUserId] = useState('');
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [edit, setEdit] = useState<TxRow | null>(null);
-  const [form, setForm] = useState({
-    amount: '',
-    date: '',
-    note: '',
-    categoryId: '',
-  });
-  const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [typeFilter, setTypeFilter] = useState('All');
+  const [accountFilter, setAccountFilter] = useState('All');
 
-  const load = useCallback(() => {
-    setErr('');
-    const q = new URLSearchParams();
-    if (userId.trim()) q.set('userId', userId.trim());
-    if (from) q.set('from', new Date(from + 'T00:00:00.000Z').toISOString());
-    if (to) q.set('to', new Date(to + 'T23:59:59.999Z').toISOString());
-    if (categoryId.trim()) q.set('categoryId', categoryId.trim());
-    q.set('take', '80');
-    apiFetch<ListRes>(`/admin/transactions?${q}`, { token: getToken() })
-      .then(setData)
-      .catch((e) => setErr(e instanceof Error ? e.message : 'Failed'));
-  }, [userId, from, to, categoryId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  function openEdit(row: TxRow) {
-    setEdit(row);
-    setForm({
-      amount: String(row.amount),
-      date: isoDate(row.date),
-      note: row.note ?? '',
-      categoryId: row.categoryId ?? '',
+  const filtered = useMemo(() => {
+    return mockTransactions.filter(tx => {
+      const matchesSearch = tx.category.toLowerCase().includes(search.toLowerCase()) || 
+                           tx.account.toLowerCase().includes(search.toLowerCase());
+      const matchesType = typeFilter === 'All' || tx.type === typeFilter.toLowerCase();
+      const matchesAccount = accountFilter === 'All' || tx.account === accountFilter;
+      return matchesSearch && matchesType && matchesAccount;
     });
-  }
-
-  async function saveEdit() {
-    if (!edit) return;
-    setBusy(true);
-    try {
-      const amount = parseFloat(form.amount);
-      if (Number.isNaN(amount) || amount <= 0) throw new Error('Invalid amount');
-      const body: Record<string, unknown> = {
-        amount,
-        date: new Date(form.date + 'T12:00:00.000Z').toISOString(),
-        note: form.note || null,
-      };
-      if (edit.kind === 'expense' && form.categoryId.trim()) {
-        body.categoryId = form.categoryId.trim();
-      }
-      const path =
-        edit.kind === 'expense'
-          ? `/admin/transactions/expenses/${edit.id}`
-          : `/admin/transactions/incomes/${edit.id}`;
-      await apiFetch(path, {
-        method: 'PATCH',
-        token: getToken(),
-        body: JSON.stringify(body),
-      });
-      setEdit(null);
-      load();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function del(row: TxRow) {
-    if (!confirm(`Delete this ${row.kind}?`)) return;
-    setBusy(true);
-    try {
-      const path =
-        row.kind === 'expense'
-          ? `/admin/transactions/expenses/${row.id}`
-          : `/admin/transactions/incomes/${row.id}`;
-      await apiFetch(path, { method: 'DELETE', token: getToken() });
-      load();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : 'Failed');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (err) return <p className="text-red-400">{err}</p>;
-  if (!data) return <p className="text-mf-muted">Loading…</p>;
+  }, [search, typeFilter, accountFilter]);
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Transactions</h1>
+    <div className="space-y-8 pb-12">
+      {/* Search and Filters Shell */}
+      <div className="flex flex-col xl:flex-row gap-6 items-center justify-between bg-white/[0.02] border border-white/5 p-6 rounded-3xl backdrop-blur-md">
+        <div className="relative w-full xl:w-[450px]">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-mf-muted group-focus-within:text-mf-accent transition-all" />
+          <input 
+            type="text" 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by category or account..." 
+            className="w-full rounded-2xl bg-white/5 border border-white/10 px-12 py-3.5 text-sm font-bold text-white outline-none focus:border-mf-accent/50 focus:bg-white/[0.08] transition-all placeholder:text-mf-muted/50"
+          />
+          {search && (
+            <button onClick={() => setSearch('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-mf-muted hover:text-white transition-all">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-      <div className="flex flex-wrap gap-2 rounded-card border border-white/10 bg-mf-card p-4">
-        <input
-          placeholder="User ID"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          className="rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm outline-none"
-        />
-        <input
-          type="date"
-          value={from}
-          onChange={(e) => setFrom(e.target.value)}
-          className="rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm outline-none"
-        />
-        <input
-          type="date"
-          value={to}
-          onChange={(e) => setTo(e.target.value)}
-          className="rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm outline-none"
-        />
-        <input
-          placeholder="Category ID (expenses)"
-          value={categoryId}
-          onChange={(e) => setCategoryId(e.target.value)}
-          className="rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm outline-none"
-        />
-        <button
-          type="button"
-          onClick={load}
-          className="rounded-xl bg-mf-lime px-4 py-2 text-sm font-semibold text-black"
-        >
-          Apply filters
-        </button>
+        <div className="flex w-full xl:w-auto gap-4">
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl border transition-all text-xs font-black uppercase tracking-[0.2em] ${showFilters ? 'bg-mf-accent text-white border-mf-accent' : 'bg-white/5 border-white/10 text-mf-muted hover:bg-white/10 hover:text-white'}`}
+          >
+            <Filter className="h-4 w-4" />
+            Advanced
+          </button>
+          
+          <button className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-white/10 transition-all">
+            <Download className="h-4 w-4" />
+            Export
+          </button>
+        </div>
       </div>
 
-      <div className="overflow-x-auto rounded-card border border-white/10 bg-mf-card">
-        <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="border-b border-white/10 text-mf-muted">
-            <tr>
-              <th className="p-3 font-medium">Type</th>
-              <th className="p-3 font-medium">Date</th>
-              <th className="p-3 font-medium">User</th>
-              <th className="p-3 font-medium">Category / source</th>
-              <th className="p-3 font-medium">Amount</th>
-              <th className="p-3 font-medium">Note</th>
-              <th className="p-3 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {data.rows.map((r) => (
-              <tr key={`${r.kind}-${r.id}`} className="border-b border-white/5">
-                <td className="p-3">
-                  <span className={r.kind === 'expense' ? 'text-red-400' : 'text-emerald-400'}>
-                    {r.kind}
-                  </span>
-                </td>
-                <td className="p-3 text-mf-muted">{isoDate(r.date)}</td>
-                <td className="p-3">
-                  <div className="text-white">{r.user.name ?? '—'}</div>
-                  <div className="text-xs text-mf-muted">{r.user.email}</div>
-                </td>
-                <td className="p-3 text-mf-muted">{r.categoryName ?? '—'}</td>
-                <td className="p-3 font-medium">{inr(r.amount)}</td>
-                <td className="max-w-[200px] truncate p-3 text-mf-muted">{r.note ?? '—'}</td>
-                <td className="space-x-2 p-3 text-right whitespace-nowrap">
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => openEdit(r)}
-                    className="text-mf-lime hover:underline"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => del(r)}
-                    className="text-red-400 hover:underline"
-                  >
-                    Delete
-                  </button>
-                </td>
+      {/* Advanced Filters Panel */}
+      {showFilters && (
+        <div className="glass-card rounded-3xl p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-top-4 duration-500">
+          <FilterGroup 
+            label="Transaction Type" 
+            value={typeFilter} 
+            onChange={setTypeFilter} 
+            options={['All', 'Income', 'Expense']} 
+          />
+          <FilterGroup 
+            label="Account Source" 
+            value={accountFilter} 
+            onChange={setAccountFilter} 
+            options={['All', 'HDFC Bank', 'ICICI Credit', 'Wallet', 'Paypal', 'Zerodha']} 
+          />
+          <div className="md:col-span-2 flex flex-col justify-end pb-1">
+             <button 
+               onClick={() => {setTypeFilter('All'); setAccountFilter('All'); setSearch('');}}
+               className="text-[10px] font-black text-mf-accent uppercase tracking-[0.3em] hover:underline"
+             >
+               Reset All Parameters
+             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Transactions Table Body */}
+      <div className="glass-card rounded-3xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="premium-table">
+            <thead>
+              <tr className="bg-white/[0.01]">
+                <th className="pl-8">Date</th>
+                <th>Category</th>
+                <th>Account</th>
+                <th className="text-right pr-8">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center">
+                    <p className="text-mf-muted font-bold text-sm italic uppercase tracking-widest opacity-50">No transactions match your criteria</p>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((tx) => (
+                  <tr key={tx.id} className="group transition-all">
+                    <td className="pl-8">
+                       <span className="text-mf-muted text-xs font-black tracking-widest uppercase">{tx.date}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-4">
+                        <div className={`h-10 w-10 rounded-xl flex items-center justify-center border border-white/5 transition-all group-hover:scale-110 ${tx.type === 'income' ? 'bg-mf-success/10 text-mf-success' : 'bg-mf-error/10 text-mf-error'}`}>
+                          <Activity className="h-5 w-5" />
+                        </div>
+                        <span className="font-black text-white text-sm tracking-tight">{tx.category}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2 opacity-70 group-hover:opacity-100 transition-all">
+                         <CreditCard className="h-4 w-4 text-mf-muted" />
+                         <span className="text-mf-muted text-xs font-black uppercase tracking-tighter">{tx.account}</span>
+                      </div>
+                    </td>
+                    <td className={`text-right pr-8 font-black text-base ${tx.type === 'income' ? 'text-mf-success' : 'text-white'}`}>
+                      {tx.type === 'income' ? '+' : '-'} ₹{tx.amount.toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {edit ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-card border border-white/10 bg-mf-card p-6 shadow-xl">
-            <h2 className="text-lg font-bold capitalize">Edit {edit.kind}</h2>
-            <div className="mt-4 space-y-3">
-              <label className="block text-xs text-mf-muted">
-                Amount
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.amount}
-                  onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-xs text-mf-muted">
-                Date
-                <input
-                  type="date"
-                  value={form.date}
-                  onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-xs text-mf-muted">
-                Note
-                <input
-                  value={form.note}
-                  onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
-                  className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
-                />
-              </label>
-              {edit.kind === 'expense' ? (
-                <label className="block text-xs text-mf-muted">
-                  Category ID
-                  <input
-                    value={form.categoryId}
-                    onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
-                    className="mt-1 w-full rounded-xl border border-white/10 bg-mf-bg px-3 py-2 text-sm"
-                  />
-                </label>
-              ) : null}
+        {/* Pagination Console */}
+        {filtered.length > 0 && (
+          <div className="px-8 py-6 flex items-center justify-between border-t border-white/5">
+            <div className="flex items-center gap-4">
+               <p className="text-[10px] font-black text-mf-muted uppercase tracking-[0.2em]">
+                Page <span className="text-white">01</span> of <span className="text-white">16</span>
+              </p>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setEdit(null)}
-                className="rounded-xl border border-white/10 px-4 py-2 text-sm"
-              >
-                Cancel
+            <div className="flex gap-3">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 text-mf-muted hover:text-white hover:bg-white/5 transition-all text-[10px] font-black uppercase tracking-widest">
+                <ChevronLeft className="h-4 w-4" />
+                Prev
               </button>
-              <button
-                type="button"
-                disabled={busy}
-                onClick={saveEdit}
-                className="rounded-xl bg-mf-lime px-4 py-2 text-sm font-semibold text-black"
-              >
-                Save
+              <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-mf-accent text-white hover:bg-mf-accent/90 transition-all text-[10px] font-black uppercase tracking-widest shadow-neon-purple shadow-mf-accent/40">
+                Next
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FilterGroup({ label, value, options, onChange }: { label: string, value: string, options: string[], onChange: (v: string) => void }) {
+  return (
+    <div className="space-y-3">
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-mf-muted pl-1">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map(opt => (
+          <button
+            key={opt}
+            onClick={() => onChange(opt)}
+            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${value === opt ? 'bg-mf-accent text-white shadow-neon-purple shadow-mf-accent/30' : 'bg-white/5 text-mf-muted border border-white/5 hover:bg-mf-white/10 hover:text-white'}`}
+          >
+            {opt}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

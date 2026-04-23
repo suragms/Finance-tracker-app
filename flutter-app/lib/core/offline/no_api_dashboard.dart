@@ -19,12 +19,11 @@ bool _expenseInMonth(Map<String, dynamic> e, int year, int month) {
 Future<List<Map<String, dynamic>>> _loadExpensePayloads(
   LedgerDatabase db,
 ) async {
-  final rows =
-      await (db.select(db.cachedExpenses)..where(
-            (t) =>
-                t.syncStatus.isNotValue(LedgerSyncStatus.pendingDelete.index),
-          ))
-          .get();
+  final rows = await (db.select(db.cachedExpenses)
+        ..where(
+          (t) => t.syncStatus.isNotValue(LedgerSyncStatus.pendingDelete.index),
+        ))
+      .get();
   return rows
       .map((r) => Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map))
       .toList();
@@ -104,8 +103,7 @@ Future<List<Map<String, dynamic>>> buildOfflineCategoryBreakdown(
   for (final e in expenses) {
     if (!_expenseInMonth(e, now.year, now.month)) continue;
     final cat = e['category'];
-    final cid =
-        e['categoryId']?.toString() ??
+    final cid = e['categoryId']?.toString() ??
         (cat is Map ? cat['id']?.toString() : null) ??
         'unknown';
     byCat[cid] = (byCat[cid] ?? 0) + _parseAmount(e['amount']);
@@ -116,13 +114,13 @@ Future<List<Map<String, dynamic>>> buildOfflineCategoryBreakdown(
 }
 
 Map<String, dynamic> offlineTaxSummaryPlaceholder() => {
-  'period': 'Offline demo',
-  'totals': {
-    'taxableExpenseCount': 0,
-    'totalTaxableExpenseAmount': '0',
-    'totalTaxAmount': '0',
-  },
-};
+      'period': 'Offline demo',
+      'totals': {
+        'taxableExpenseCount': 0,
+        'totalTaxableExpenseAmount': '0',
+        'totalTaxAmount': '0',
+      },
+    };
 
 /// Rough offline mirror of `/reports/expense-mvp` for charts when API is disabled.
 Future<Map<String, dynamic>> buildOfflineExpenseMvp(
@@ -283,10 +281,9 @@ Future<Map<String, dynamic>> buildOfflineAnalytics(
   final bar = mvp['chart'] is Map
       ? (mvp['chart'] as Map)['monthlyExpenses'] as Map?
       : null;
-  final barLabels = (bar?['labels'] as List?)
-          ?.map((e) => e.toString())
-          .toList() ??
-      <String>[];
+  final barLabels =
+      (bar?['labels'] as List?)?.map((e) => e.toString()).toList() ??
+          <String>[];
   final barVals = (bar?['values'] as List?)
           ?.map(
             (e) =>
@@ -298,9 +295,8 @@ Future<Map<String, dynamic>> buildOfflineAnalytics(
     'period': mvp['period'],
     'total': total.toStringAsFixed(2),
     'count': breakdown.length,
-    'average': breakdown.isEmpty
-        ? '0'
-        : (total / breakdown.length).toStringAsFixed(2),
+    'average':
+        breakdown.isEmpty ? '0' : (total / breakdown.length).toStringAsFixed(2),
     'pie': pie,
     'chart': {
       'monthlyBar': {'labels': barLabels, 'values': barVals},
@@ -321,13 +317,77 @@ Future<Map<String, dynamic>> buildOfflineAnalytics(
   };
 }
 
-Map<String, dynamic> buildOfflineInsights() => {
-      'thisMonthTotal': '0',
-      'lastMonthTotal': '0',
-      'monthOverMonthPct': null,
-      'topCategoryThisMonth': null,
-      'alerts': <Map<String, dynamic>>[],
-    };
+Future<Map<String, dynamic>> buildOfflineInsights(LedgerDatabase db) async {
+  final now = DateTime.now();
+  // Current month
+  final currentMvp = await buildOfflineExpenseMvp(db, now.year, now.month);
+  // Last month
+  final lastMonthDate = DateTime(now.year, now.month - 1, 1);
+  final lastMvp = await buildOfflineExpenseMvp(db, lastMonthDate.year, lastMonthDate.month);
+
+  final currentTotal = double.tryParse(currentMvp['thisMonthExpenses']?.toString() ?? '0') ?? 0;
+  final lastTotal = double.tryParse(lastMvp['thisMonthExpenses']?.toString() ?? '0') ?? 0;
+
+  double? pct;
+  if (lastTotal > 0) {
+    pct = ((currentTotal - lastTotal) / lastTotal) * 100;
+  } else if (currentTotal > 0) {
+    pct = 100.0;
+  }
+
+  final breakdowns = currentMvp['categoryBreakdownMonth'] as List<dynamic>? ?? [];
+  Map<String, dynamic>? topCat;
+  if (breakdowns.isNotEmpty) {
+    final sorted = List.from(breakdowns)
+      ..sort((a, b) {
+        final vA = double.tryParse((a as Map)['total']?.toString() ?? '0') ?? 0;
+        final vB = double.tryParse((b as Map)['total']?.toString() ?? '0') ?? 0;
+        return vB.compareTo(vA);
+      });
+    topCat = Map<String, dynamic>.from(sorted.first as Map);
+  }
+
+  final alerts = <Map<String, dynamic>>[];
+  if (pct != null && pct > 20) {
+    alerts.add({
+      'type': 'warning',
+      'title': 'Spending increased',
+      'message': 'You have spent ${pct.toStringAsFixed(1)}% more than last month. Consider reviewing your top categories.',
+    });
+  } else if (pct != null && pct < -10) {
+    alerts.add({
+      'type': 'success',
+      'title': 'Great job saving!',
+      'message': 'You have spent ${(pct * -1).toStringAsFixed(1)}% less than last month.',
+    });
+  }
+
+  // Budget warning
+  final budgets = await (db.select(db.cachedBudgets)..where((t) => t.monthKey.equals('${now.year}-${now.month.toString().padLeft(2, '0')}'))).get();
+  
+  if (budgets.isNotEmpty) {
+     for(final r in budgets) {
+        final bMap = Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map);
+        final limit = double.tryParse(bMap['amount']?.toString() ?? '0') ?? 0;
+        if (limit > 0 && currentTotal > limit * 0.9) {
+          alerts.add({
+             'type': currentTotal > limit ? 'error' : 'warning',
+             'title': 'Budget warning',
+             'message': 'You are ${currentTotal > limit ? 'over' : 'nearing'} your overall budget for the month.',
+          });
+          break;
+        }
+     }
+  }
+
+  return {
+    'thisMonthTotal': currentTotal.toStringAsFixed(2),
+    'lastMonthTotal': lastTotal.toStringAsFixed(2),
+    'monthOverMonthPct': pct,
+    'topCategoryThisMonth': topCat,
+    'alerts': alerts,
+  };
+}
 
 class OfflineModeBanner extends StatelessWidget {
   const OfflineModeBanner({super.key});

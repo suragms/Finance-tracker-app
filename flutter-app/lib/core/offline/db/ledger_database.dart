@@ -21,6 +21,18 @@ enum LedgerSyncStatus {
   conflict,
 }
 
+class CachedIncomes extends Table {
+  TextColumn get id => text()();
+  TextColumn get payloadJson => text()();
+  IntColumn get syncStatus => integer()();
+  DateTimeColumn get clientRevisionAt => dateTime()();
+  DateTimeColumn get lastKnownServerAt => dateTime().nullable()();
+  DateTimeColumn get incomeSortDate => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 class CachedExpenses extends Table {
   TextColumn get id => text()();
   TextColumn get payloadJson => text()();
@@ -51,6 +63,19 @@ class CachedBudgets extends Table {
   IntColumn get syncStatus => integer()();
   DateTimeColumn get clientRevisionAt => dateTime()();
   DateTimeColumn get lastKnownServerAt => dateTime().nullable()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+class CachedRecurringExpenses extends Table {
+  TextColumn get id => text()();
+  TextColumn get payloadJson => text()();
+  IntColumn get syncStatus => integer()();
+  DateTimeColumn get clientRevisionAt => dateTime()();
+  DateTimeColumn get lastKnownServerAt => dateTime().nullable()();
+  DateTimeColumn get nextDate => dateTime()();
+  BoolColumn get active => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column<Object>> get primaryKey => {id};
@@ -89,24 +114,56 @@ QueryExecutor _defaultLedgerExecutor() {
 }
 
 @DriftDatabase(
-  tables: [CachedExpenses, CachedAccounts, CachedBudgets, SyncOutbox, LedgerKv],
+  tables: [
+    CachedExpenses,
+    CachedAccounts,
+    CachedBudgets,
+    SyncOutbox,
+    LedgerKv,
+    CachedIncomes,
+    CachedRecurringExpenses,
+  ],
 )
 class LedgerDatabase extends _$LedgerDatabase {
   LedgerDatabase([QueryExecutor? executor])
-    : super(executor ?? _defaultLedgerExecutor());
+      : super(executor ?? _defaultLedgerExecutor());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onCreate: (m) async => m.createAll(),
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.createTable(ledgerKv);
-      }
-    },
-  );
+        onCreate: (m) async => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(ledgerKv);
+          }
+          if (from < 3) {
+            await m.createTable(cachedIncomes);
+          }
+          if (from < 4) {
+            await m.createTable(cachedRecurringExpenses);
+          }
+        },
+      );
+
+  Stream<List<Map<String, dynamic>>> watchIncomesForList() {
+    return (select(cachedIncomes)
+          ..where(
+            (t) =>
+                t.syncStatus.isNotValue(LedgerSyncStatus.pendingDelete.index),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.incomeSortDate)]))
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (r) =>
+                    Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map),
+              )
+              .toList(),
+        );
+  }
 
   Stream<List<Map<String, dynamic>>> watchExpensesForList() {
     return (select(cachedExpenses)
@@ -129,19 +186,40 @@ class LedgerDatabase extends _$LedgerDatabase {
   Stream<List<Map<String, dynamic>>> watchAccountsPayloads() {
     return (select(
       cachedAccounts,
-    )..orderBy([(t) => OrderingTerm.asc(t.id)])).watch().map(
-      (rows) => rows
-          .map(
-            (r) => Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map),
-          )
-          .toList(),
-    );
+    )..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (r) =>
+                    Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map),
+              )
+              .toList(),
+        );
   }
 
   Stream<List<Map<String, dynamic>>> watchBudgetsForMonth(String monthKey) {
     return (select(cachedBudgets)
           ..where((t) => t.monthKey.equals(monthKey))
           ..orderBy([(t) => OrderingTerm.asc(t.id)]))
+        .watch()
+        .map(
+          (rows) => rows
+              .map(
+                (r) =>
+                    Map<String, dynamic>.from(jsonDecode(r.payloadJson) as Map),
+              )
+              .toList(),
+        );
+  }
+
+  Stream<List<Map<String, dynamic>>> watchRecurringExpenses() {
+    return (select(cachedRecurringExpenses)
+          ..where(
+            (t) =>
+                t.syncStatus.isNotValue(LedgerSyncStatus.pendingDelete.index),
+          )
+          ..orderBy([(t) => OrderingTerm.asc(t.nextDate)]))
         .watch()
         .map(
           (rows) => rows
@@ -173,14 +251,38 @@ class LedgerDatabase extends _$LedgerDatabase {
     );
   }
 
-  Future<bool> shouldSkipExpensePull(String id) async {
-    final q = select(cachedExpenses)..where((t) => t.id.equals(id));
-    final row = await q.getSingleOrNull();
-    if (row == null) return false;
-    final s = LedgerSyncStatus.values[row.syncStatus];
-    return s == LedgerSyncStatus.pendingPush ||
-        s == LedgerSyncStatus.pendingDelete ||
-        s == LedgerSyncStatus.conflict;
+  void batchUpsertExpense(Batch batch, Map<String, dynamic> row) {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    final sort = _expenseSortDate(row);
+    batch.insert(
+      cachedExpenses,
+      CachedExpensesCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(LedgerSyncStatus.synced.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+        expenseSortDate: Value(sort),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<Set<String>> getExpenseIdsToSkip(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final q = select(cachedExpenses)..where((t) => t.id.isIn(ids));
+    final rows = await q.get();
+    return rows
+        .where((r) {
+          final s = LedgerSyncStatus.values[r.syncStatus];
+          return s == LedgerSyncStatus.pendingPush ||
+              s == LedgerSyncStatus.pendingDelete ||
+              s == LedgerSyncStatus.conflict;
+        })
+        .map((r) => r.id)
+        .toSet();
   }
 
   Future<void> replaceExpenseId(
@@ -201,7 +303,8 @@ class LedgerDatabase extends _$LedgerDatabase {
   ) async {
     final existing = await (select(
       cachedExpenses,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
+    )..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
     if (existing == null) return;
     final local = Map<String, dynamic>.from(
       jsonDecode(existing.payloadJson) as Map,
@@ -237,7 +340,8 @@ class LedgerDatabase extends _$LedgerDatabase {
   Future<List<SyncOutboxData>> pendingOutbox() {
     return (select(
       syncOutbox,
-    )..orderBy([(t) => OrderingTerm.asc(t.localId)])).get();
+    )..orderBy([(t) => OrderingTerm.asc(t.localId)]))
+        .get();
   }
 
   Future<void> removeOutbox(int localId) {
@@ -265,6 +369,38 @@ class LedgerDatabase extends _$LedgerDatabase {
     );
   }
 
+  void batchUpsertAccount(Batch batch, Map<String, dynamic> row) {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    batch.insert(
+      cachedAccounts,
+      CachedAccountsCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(LedgerSyncStatus.synced.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<Set<String>> getAccountIdsToSkip(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final q = select(cachedAccounts)..where((t) => t.id.isIn(ids));
+    final rows = await q.get();
+    return rows
+        .where((r) {
+          final s = LedgerSyncStatus.values[r.syncStatus];
+          return s == LedgerSyncStatus.pendingPush ||
+              s == LedgerSyncStatus.pendingDelete ||
+              s == LedgerSyncStatus.conflict;
+        })
+        .map((r) => r.id)
+        .toSet();
+  }
+
   Future<void> upsertBudgetFromServer(
     Map<String, dynamic> row,
     String monthKey,
@@ -284,26 +420,37 @@ class LedgerDatabase extends _$LedgerDatabase {
     );
   }
 
-  Future<bool> shouldSkipAccountPull(String id) async {
-    final row = await (select(
-      cachedAccounts,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
-    if (row == null) return false;
-    final s = LedgerSyncStatus.values[row.syncStatus];
-    return s == LedgerSyncStatus.pendingPush ||
-        s == LedgerSyncStatus.pendingDelete ||
-        s == LedgerSyncStatus.conflict;
+  void batchUpsertBudget(Batch batch, Map<String, dynamic> row, String monthKey) {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = DateTime.now().toUtc();
+    batch.insert(
+      cachedBudgets,
+      CachedBudgetsCompanion(
+        id: Value(id),
+        monthKey: Value(monthKey),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(LedgerSyncStatus.synced.index),
+        clientRevisionAt: Value(serverAt),
+        lastKnownServerAt: Value(serverAt),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
-  Future<bool> shouldSkipBudgetPull(String id) async {
-    final row = await (select(
-      cachedBudgets,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
-    if (row == null) return false;
-    final s = LedgerSyncStatus.values[row.syncStatus];
-    return s == LedgerSyncStatus.pendingPush ||
-        s == LedgerSyncStatus.pendingDelete ||
-        s == LedgerSyncStatus.conflict;
+  Future<Set<String>> getBudgetIdsToSkip(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final q = select(cachedBudgets)..where((t) => t.id.isIn(ids));
+    final rows = await q.get();
+    return rows
+        .where((r) {
+          final s = LedgerSyncStatus.values[r.syncStatus];
+          return s == LedgerSyncStatus.pendingPush ||
+              s == LedgerSyncStatus.pendingDelete ||
+              s == LedgerSyncStatus.conflict;
+        })
+        .map((r) => r.id)
+        .toSet();
   }
 
   Future<void> upsertKv(String key, String value) async {
@@ -315,7 +462,8 @@ class LedgerDatabase extends _$LedgerDatabase {
   Future<String?> readKv(String key) async {
     final row = await (select(
       ledgerKv,
-    )..where((t) => t.k.equals(key))).getSingleOrNull();
+    )..where((t) => t.k.equals(key)))
+        .getSingleOrNull();
     return row?.v;
   }
 
@@ -359,6 +507,184 @@ class LedgerDatabase extends _$LedgerDatabase {
     if (d is String) {
       return DateTime.tryParse(d)?.toUtc() ??
           DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    }
+    return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  }
+
+  Future<void> upsertIncomeFromServer(
+    Map<String, dynamic> row, {
+    LedgerSyncStatus status = LedgerSyncStatus.synced,
+  }) async {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    final sort = _incomeSortDate(row);
+    await into(cachedIncomes).insertOnConflictUpdate(
+      CachedIncomesCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(status.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+        incomeSortDate: Value(sort),
+      ),
+    );
+  }
+
+  void batchUpsertIncome(Batch batch, Map<String, dynamic> row) {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    final sort = _incomeSortDate(row);
+    batch.insert(
+      cachedIncomes,
+      CachedIncomesCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(LedgerSyncStatus.synced.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+        incomeSortDate: Value(sort),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<Set<String>> getIncomeIdsToSkip(List<String> ids) async {
+    if (ids.isEmpty) return {};
+    final q = select(cachedIncomes)..where((t) => t.id.isIn(ids));
+    final rows = await q.get();
+    return rows
+        .where((r) {
+          final s = LedgerSyncStatus.values[r.syncStatus];
+          return s == LedgerSyncStatus.pendingPush ||
+              s == LedgerSyncStatus.pendingDelete ||
+              s == LedgerSyncStatus.conflict;
+        })
+        .map((r) => r.id)
+        .toSet();
+  }
+
+  Future<void> replaceIncomeId(String oldId, Map<String, dynamic> serverRow) async {
+    final newId = serverRow['id']?.toString() ?? '';
+    if (newId.isEmpty) return;
+    await transaction(() async {
+      await (delete(cachedIncomes)..where((t) => t.id.equals(oldId))).go();
+      await upsertIncomeFromServer(serverRow, status: LedgerSyncStatus.synced);
+    });
+  }
+
+  Future<void> markIncomeConflict(String id, Map<String, dynamic> serverRow) async {
+    final existing = await (select(cachedIncomes)..where((t) => t.id.equals(id))).getSingleOrNull();
+    if (existing == null) return;
+    final local = Map<String, dynamic>.from(jsonDecode(existing.payloadJson) as Map);
+    local['_syncConflict'] = true;
+    local['_serverSnapshot'] = serverRow;
+    await (update(cachedIncomes)..where((t) => t.id.equals(id))).write(
+      CachedIncomesCompanion(
+        payloadJson: Value(jsonEncode(local)),
+        syncStatus: Value(LedgerSyncStatus.conflict.index),
+        lastKnownServerAt: Value(_parseIso(serverRow['updatedAt'] as String?)),
+      ),
+    );
+  }
+
+  Future<void> insertPendingIncome({required String id, required Map<String, dynamic> payload}) async {
+    final now = DateTime.now().toUtc();
+    await into(cachedIncomes).insert(
+      CachedIncomesCompanion.insert(
+        id: id,
+        payloadJson: jsonEncode(payload),
+        syncStatus: LedgerSyncStatus.pendingPush.index,
+        clientRevisionAt: now,
+        incomeSortDate: LedgerDatabase._incomeSortDate(payload),
+      ),
+    );
+  }
+
+  Future<void> markIncomePendingDelete(String id) async {
+    await (update(cachedIncomes)..where((t) => t.id.equals(id))).write(
+      CachedIncomesCompanion(
+        syncStatus: Value(LedgerSyncStatus.pendingDelete.index),
+        clientRevisionAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  Future<void> upsertRecurringFromServer(
+    Map<String, dynamic> row, {
+    LedgerSyncStatus status = LedgerSyncStatus.synced,
+  }) async {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    final nextDate = _parseIso(row['nextDate'] as String?) ?? DateTime.now();
+    await into(cachedRecurringExpenses).insertOnConflictUpdate(
+      CachedRecurringExpensesCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(status.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+        nextDate: Value(nextDate),
+        active: Value(row['active'] == true),
+      ),
+    );
+  }
+
+  void batchUpsertRecurring(Batch batch, Map<String, dynamic> row) {
+    final id = row['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    final serverAt = _parseIso(row['updatedAt'] as String?);
+    final nextDate = _parseIso(row['nextDate'] as String?) ?? DateTime.now();
+    batch.insert(
+      cachedRecurringExpenses,
+      CachedRecurringExpensesCompanion(
+        id: Value(id),
+        payloadJson: Value(jsonEncode(row)),
+        syncStatus: Value(LedgerSyncStatus.synced.index),
+        clientRevisionAt: Value(serverAt ?? DateTime.now().toUtc()),
+        lastKnownServerAt: Value(serverAt),
+        nextDate: Value(nextDate),
+        active: Value(row['active'] == true),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> insertPendingRecurring({
+    required String id,
+    required Map<String, dynamic> payload,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final next = _parseIso(payload['nextDate'] as String?) ?? now;
+    await into(cachedRecurringExpenses).insert(
+      CachedRecurringExpensesCompanion.insert(
+        id: id,
+        payloadJson: jsonEncode(payload),
+        syncStatus: LedgerSyncStatus.pendingPush.index,
+        clientRevisionAt: now,
+        nextDate: next,
+        active: Value(payload['active'] == true),
+      ),
+    );
+  }
+
+  Future<void> markRecurringPendingDelete(String id) async {
+    await (update(cachedRecurringExpenses)..where((t) => t.id.equals(id))).write(
+      CachedRecurringExpensesCompanion(
+        syncStatus: Value(LedgerSyncStatus.pendingDelete.index),
+        clientRevisionAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
+  static DateTime incomeSortDateFromPayload(Map<String, dynamic> row) => _incomeSortDate(row);
+
+  static DateTime _incomeSortDate(Map<String, dynamic> row) {
+    final d = row['date'];
+    if (d is String) {
+      return DateTime.tryParse(d)?.toUtc() ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
     }
     return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
   }

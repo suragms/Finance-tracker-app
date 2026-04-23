@@ -67,13 +67,13 @@ class DashboardHeaderSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     Widget bar(double h, {double w = double.infinity}) => Container(
-      width: w,
-      height: h,
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(MfRadius.sm),
-      ),
-    );
+          width: w,
+          height: h,
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(MfRadius.sm),
+          ),
+        );
 
     return AppSkeleton(
       child: Column(

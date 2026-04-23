@@ -3,77 +3,40 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'money_flow_tokens.dart';
 
-ColorScheme _lightScheme() {
-  return const ColorScheme(
-    brightness: Brightness.light,
-    primary: Color(0xFF000B60),
-    onPrimary: Colors.white,
-    primaryContainer: Color(0xFF142283),
-    onPrimaryContainer: Color(0xFFF2F4FF),
-    secondary: Color(0xFF2C6BFF),
-    onSecondary: Colors.white,
-    secondaryContainer: Color(0xFFDCE7FF),
-    onSecondaryContainer: Color(0xFF07133B),
-    tertiary: MfPalette.warningAmber,
-    onTertiary: Color(0xFF41270B),
-    tertiaryContainer: Color(0xFFFBE7C2),
-    onTertiaryContainer: Color(0xFF5D3A0F),
-    error: MfPalette.expenseRed,
-    onError: Colors.white,
-    surface: Color(0xFFF8F9FA),
-    onSurface: Color(0xFF191C1D),
-    surfaceContainerLowest: Color(0xFFFFFFFF),
-    surfaceContainerLow: Color(0xFFF1F4F8),
-    surfaceContainer: Color(0xFFE8EDF5),
-    surfaceContainerHigh: Color(0xFFDDE4EE),
-    surfaceContainerHighest: Color(0xFFD0D8E4),
-    outline: Color(0xFFB6BFCD),
-    outlineVariant: Color(0xFFC8D0DD),
-    shadow: Color(0xFF0D1323),
-    scrim: Color(0x66000000),
-    inverseSurface: Color(0xFF2E3132),
-    onInverseSurface: Color(0xFFF7F8FB),
-    inversePrimary: Color(0xFF90A5FF),
-    surfaceTint: Color(0xFF000B60),
-    surfaceDim: Color(0xFFE2E7EF),
-    surfaceBright: Color(0xFFFFFFFF),
-  );
-}
-
 ColorScheme _darkScheme() {
   return const ColorScheme(
     brightness: Brightness.dark,
-    primary: Color(0xFF8B9CFF),
-    onPrimary: Color(0xFF0B1220),
-    primaryContainer: Color(0xFF1E2A4A),
-    onPrimaryContainer: Color(0xFFE6EAFF),
-    secondary: Color(0xFFE6FF4D),
-    onSecondary: Color(0xFF0D0D0D),
-    secondaryContainer: Color(0xFF2A3318),
-    onSecondaryContainer: Color(0xFFF3FD6F),
-    tertiary: Color(0xFF4ACBFF),
-    onTertiary: Color(0xFF031A24),
-    tertiaryContainer: Color(0xFF103A4A),
-    onTertiaryContainer: Color(0xFFB8EEFF),
-    error: Color(0xFFF3A091),
-    onError: Color(0xFF43100B),
-    surface: Color(0xFF0B1220),
-    onSurface: Color(0xFFF1F4FB),
-    surfaceContainerLowest: Color(0xFF0E1A2B),
-    surfaceContainerLow: Color(0xFF121E30),
-    surfaceContainer: Color(0xFF162436),
-    surfaceContainerHigh: Color(0xFF1C2C42),
-    surfaceContainerHighest: Color(0xFF22344E),
-    outline: Color(0xFF5A6B89),
-    outlineVariant: Color(0xFF384560),
+    primary: Color(0xFF6366F1), // Indigo
+    onPrimary: Colors.white,
+    primaryContainer: Color(0xFF1F2937),
+    onPrimaryContainer: Colors.white,
+    secondary: Color(0xFF10B981), // Green
+    onSecondary: Colors.white,
+    secondaryContainer: Color(0xFF064E3B),
+    onSecondaryContainer: Color(0xFFA7F3D0),
+    tertiary: Color(0xFF3B82F6), // Blue
+    onTertiary: Colors.white,
+    tertiaryContainer: Color(0xFF1E3A8A),
+    onTertiaryContainer: Color(0xFFDBEAFE),
+    error: Color(0xFFEF4444), // Red
+    onError: Colors.white,
+    surface: Color(0xFF0B0F1A), // Background
+    onSurface: Colors.white,
+    surfaceContainerLowest: Color(0xFF0B0F1A),
+    surfaceContainerLow: Color(0xFF111827), // Surface
+    surfaceContainer: Color(0xFF111827),
+    surfaceContainerHigh: Color(0xFF1F2937), // Card
+    surfaceContainerHighest: Color(0xFF374151),
+    outline: Color(0xFF6B7280),
+    outlineVariant: Color(0xFF4B5563),
     shadow: Colors.black,
     scrim: Color(0xCC000000),
-    inverseSurface: Color(0xFFF4F6FB),
-    onInverseSurface: Color(0xFF111625),
-    inversePrimary: Color(0xFF000B60),
-    surfaceTint: Color(0xFF8B9CFF),
-    surfaceDim: Color(0xFF080F1A),
-    surfaceBright: Color(0xFF152238),
+    inverseSurface: Colors.white,
+    onInverseSurface: Color(0xFF111827),
+    inversePrimary: Color(0xFFA5B4FC),
+    surfaceTint: Color(0xFF6366F1),
+    surfaceDim: Color(0xFF0B0F1A),
+    surfaceBright: Color(0xFF1F2937),
   );
 }
 
@@ -127,6 +90,7 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
     titleMedium: GoogleFonts.inter(
       textStyle: inter.titleMedium,
       fontWeight: FontWeight.w600,
+      fontSize: 16,
       color: cs.onSurface,
     ),
     titleSmall: GoogleFonts.inter(
@@ -146,7 +110,7 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
     ),
     bodySmall: GoogleFonts.inter(
       textStyle: inter.bodySmall,
-      color: cs.onSurface.withValues(alpha: 0.55),
+      color: const Color(0xFF9CA3AF), // Secondary Gray
       height: 1.4,
     ),
     labelLarge: GoogleFonts.inter(
@@ -157,12 +121,12 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
     labelMedium: GoogleFonts.inter(
       textStyle: inter.labelMedium,
       fontWeight: FontWeight.w600,
-      color: cs.onSurface.withValues(alpha: 0.78),
+      color: const Color(0xFF9CA3AF),
     ),
     labelSmall: GoogleFonts.inter(
       textStyle: inter.labelSmall,
       fontWeight: FontWeight.w500,
-      color: cs.onSurface.withValues(alpha: 0.6),
+      color: const Color(0xFF9CA3AF),
     ),
   );
 }
@@ -228,7 +192,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      color: colorScheme.surfaceContainerLowest,
+      color: colorScheme.surfaceContainerHigh, // Card: #1F2937
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(MfRadius.lg),
@@ -353,21 +317,24 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
   );
 }
 
-ThemeData buildAppTheme() =>
-    _buildTheme(_lightScheme(), MoneyFlowThemeExtension.light);
+ThemeData _premiumDarkTheme() => _buildTheme(
+      _darkScheme(),
+      MoneyFlowThemeExtension.dark,
+    );
 
-ThemeData buildAppDarkTheme() =>
-    _buildTheme(_darkScheme(), MoneyFlowThemeExtension.dark);
+ThemeData buildAppTheme() => _premiumDarkTheme();
+
+ThemeData buildAppDarkTheme() => _premiumDarkTheme();
 
 List<BoxShadow> ledgerAmbientFabShadows(ColorScheme cs) => [
-  BoxShadow(
-    offset: const Offset(0, 14),
-    blurRadius: 36,
-    color: cs.shadow.withValues(alpha: 0.14),
-  ),
-  BoxShadow(
-    offset: const Offset(0, 4),
-    blurRadius: 12,
-    color: cs.shadow.withValues(alpha: 0.08),
-  ),
-];
+      BoxShadow(
+        offset: const Offset(0, 14),
+        blurRadius: 36,
+        color: cs.shadow.withValues(alpha: 0.14),
+      ),
+      BoxShadow(
+        offset: const Offset(0, 4),
+        blurRadius: 12,
+        color: cs.shadow.withValues(alpha: 0.08),
+      ),
+    ];

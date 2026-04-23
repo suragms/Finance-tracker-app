@@ -8,7 +8,10 @@ export class CategoriesRepository {
 
   findManyByUser(userId: string) {
     return this.prisma.category.findMany({
-      where: { userId },
+      where: {
+        userId,
+        NOT: { nameKey: { startsWith: '__deleted__' } },
+      },
       include: {
         subCategoryRows: { orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] },
       },
@@ -36,6 +39,35 @@ export class CategoriesRepository {
   }
 
   findCategoryForUser(userId: string, categoryId: string) {
-    return this.prisma.category.findFirst({ where: { id: categoryId, userId } });
+    return this.prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        userId,
+        NOT: { nameKey: { startsWith: '__deleted__' } },
+      },
+    });
+  }
+
+  findCategoryForUserWithSubs(userId: string, categoryId: string) {
+    return this.prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        userId,
+        NOT: { nameKey: { startsWith: '__deleted__' } },
+      },
+      include: {
+        subCategoryRows: { orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }] },
+      },
+    });
+  }
+
+  softDeleteCustomCategory(categoryId: string) {
+    return this.prisma.category.update({
+      where: { id: categoryId },
+      data: {
+        name: 'Deleted category',
+        nameKey: `__deleted__${categoryId}`,
+      },
+    });
   }
 }

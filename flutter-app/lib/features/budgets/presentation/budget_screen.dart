@@ -4,66 +4,91 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/design_system/premium_fab.dart';
 import '../../../core/dio_errors.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/widgets/ledger_async_states.dart';
-import '../../../core/widgets/ledger_ui.dart';
 import '../../expenses/application/expense_providers.dart';
 import '../application/budget_providers.dart';
 import '../data/budgets_api.dart';
 
-String _prettyMonthLabel(String monthKey) {
-  final parts = monthKey.split('-');
-  if (parts.length < 2) return monthKey;
-  final y = int.tryParse(parts[0]);
-  final m = int.tryParse(parts[1]);
-  if (y == null || m == null) return monthKey;
-  return DateFormat.yMMMM().format(DateTime(y, m));
+double _money(dynamic raw) => double.tryParse(raw?.toString() ?? '0') ?? 0;
+
+class _Overview {
+  const _Overview(this.spent, this.budget);
+  final double spent;
+  final double budget;
+  double get ratio => budget > 0 ? (spent / budget).clamp(0.0, 1.0) : 0;
+  double get remaining => budget - spent;
 }
 
-double _parseMoney(dynamic raw) =>
-    double.tryParse(raw?.toString() ?? '0') ?? 0;
-
-class _MonthOverview {
-  const _MonthOverview({
-    required this.totalLimit,
-    required this.totalSpent,
-    required this.totalRemaining,
-  });
-
-  final double totalLimit;
-  final double totalSpent;
-  final double totalRemaining;
-}
-
-_MonthOverview _computeOverview(List<Map<String, dynamic>> rows) {
-  var lim = 0.0;
-  var sp = 0.0;
+_Overview _buildOverview(List<Map<String, dynamic>> rows) {
+  var spent = 0.0;
+  var budget = 0.0;
   for (final r in rows) {
-    lim += _parseMoney(r['limit']);
-    sp += _parseMoney(r['spent']);
+    spent += _money(r['spent']);
+    budget += _money(r['limit']);
   }
-  return _MonthOverview(
-    totalLimit: lim,
-    totalSpent: sp,
-    totalRemaining: lim - sp,
-  );
+  return _Overview(spent, budget);
 }
 
-Color _barGradientStart(double spent, double limit, bool exceeded) {
-  if (exceeded || (limit > 0 && spent >= limit)) {
-    return MfPalette.expenseRed;
-  }
-  final ratio = limit > 0 ? spent / limit : 0.0;
-  if (ratio >= 0.9) return MfPalette.warningAmber;
-  if (ratio >= 0.65) return const Color(0xFFF59E0B);
-  return MfPalette.incomeGreen;
+DateTime _parseMonth(String monthKey) {
+  final parts = monthKey.split('-');
+  final y =
+      int.tryParse(parts.isNotEmpty ? parts[0] : '') ?? DateTime.now().year;
+  final m =
+      int.tryParse(parts.length > 1 ? parts[1] : '') ?? DateTime.now().month;
+  return DateTime(y, m);
 }
 
-Color _barGradientEnd(Color start) {
-  return start.withValues(alpha: 0.38);
+String _categoryKey(String name) {
+  final n = name.toLowerCase();
+  if (n.contains('food')) return 'food';
+  if (n.contains('house')) return 'household';
+  if (n.contains('car') || n.contains('vehicle')) return 'vehicle';
+  if (n.contains('insur')) return 'insurance';
+  if (n.contains('donat')) return 'donations';
+  if (n.contains('business')) return 'business';
+  if (n.contains('shop')) return 'shopping';
+  if (n.contains('entertain')) return 'entertainment';
+  if (n.contains('health')) return 'health';
+  if (n.contains('fuel')) return 'fuel';
+  if (n.contains('transport')) return 'transport';
+  if (n.contains('finance') || n.contains('bank')) return 'financial';
+  return 'daily_expenses';
+}
+
+IconData _categoryIcon(String key) {
+  switch (key) {
+    case 'daily_expenses':
+      return Icons.shopping_bag_outlined;
+    case 'household':
+      return Icons.home_outlined;
+    case 'vehicle':
+      return Icons.directions_car_outlined;
+    case 'insurance':
+      return Icons.shield_outlined;
+    case 'financial':
+      return Icons.account_balance_outlined;
+    case 'donations':
+      return Icons.favorite_outline;
+    case 'business':
+      return Icons.business_center_outlined;
+    case 'food':
+      return Icons.restaurant_outlined;
+    case 'transport':
+      return Icons.directions_bus_outlined;
+    case 'shopping':
+      return Icons.local_mall_outlined;
+    case 'entertainment':
+      return Icons.movie_outlined;
+    case 'health':
+      return Icons.health_and_safety_outlined;
+    case 'fuel':
+      return Icons.local_gas_station_outlined;
+    default:
+      return Icons.attach_money_rounded;
+  }
 }
 
 class BudgetScreen extends ConsumerStatefulWidget {
@@ -85,406 +110,418 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     });
   }
 
-  void _shiftMonth(int delta) {
-    final parts = _monthKey.split('-');
-    var y = int.tryParse(parts[0]) ?? DateTime.now().year;
-    var m =
-        int.tryParse(parts.length > 1 ? parts[1] : '${DateTime.now().month}') ??
-            DateTime.now().month;
-    m += delta;
-    while (m < 1) {
-      m += 12;
-      y -= 1;
-    }
-    while (m > 12) {
-      m -= 12;
-      y += 1;
-    }
-    setState(() => _monthKey = '$y-$m');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(ledgerSyncServiceProvider).pullBudgetsForMonth(_monthKey);
-    });
-  }
-
   Future<void> _pull() async {
     await ref.read(ledgerSyncServiceProvider).pullBudgetsForMonth(_monthKey);
   }
 
-  Future<void> _openAdd() async {
-    final cats = ref.read(categoriesProvider);
-    await cats.when(
+  Future<void> _openAddBudgetSheet() async {
+    final categoriesAsync = ref.read(categoriesProvider);
+    await categoriesAsync.when(
       data: (list) async {
-        final expenseCats = list
-            .where((c) => c['type']?.toString() == 'expense')
-            .toList();
-        if (expenseCats.isEmpty) {
+        final expenseCategories =
+            list.where((c) => c['type']?.toString() == 'expense').toList();
+        if (expenseCategories.isEmpty) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Create an expense category first.'),
-                behavior: SnackBarBehavior.floating,
-              ),
+                  content: Text('Create an expense category first.')),
             );
           }
           return;
         }
-        String? catId = expenseCats.first['id']?.toString();
-        final limitCtrl = TextEditingController(text: '200');
-        final saved = await showModalBottomSheet<bool>(
+
+        String? selectedCategoryId = expenseCategories.first['id']?.toString();
+        final amountCtrl = TextEditingController();
+        DateTime selectedMonth = _parseMonth(_monthKey);
+        bool saved = false;
+
+        await showModalBottomSheet<void>(
           context: context,
           isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          backgroundColor: MfSurface.card,
           builder: (ctx) {
             return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.viewInsetsOf(ctx).bottom,
+              padding: EdgeInsets.fromLTRB(
+                MfSpace.lg,
+                MfSpace.md,
+                MfSpace.lg,
+                MediaQuery.viewInsetsOf(ctx).bottom + MfSpace.lg,
               ),
               child: StatefulBuilder(
-                builder: (context, setSt) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'New budget',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 16),
-                        DropdownButtonFormField<String>(
-                          key: ValueKey(catId),
-                          decoration: const InputDecoration(
-                            labelText: 'Category',
+                builder: (_, setModal) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(99),
                           ),
-                          initialValue: catId,
-                          items: expenseCats
-                              .map(
-                                (c) => DropdownMenuItem<String>(
-                                  value: c['id']?.toString(),
-                                  child: Text(c['name']?.toString() ?? ''),
+                        ),
+                      ),
+                      const SizedBox(height: MfSpace.lg),
+                      Center(
+                        child: Text(
+                          'Set Budget',
+                          style: GoogleFonts.manrope(
+                              fontSize: 20, fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      const SizedBox(height: MfSpace.lg),
+                      Text(
+                        'Category',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                      ),
+                      const SizedBox(height: MfSpace.sm),
+                      SizedBox(
+                        height: 78,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: expenseCategories.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 10),
+                          itemBuilder: (_, i) {
+                            final c = expenseCategories[i];
+                            final id = c['id']?.toString();
+                            final name = c['name']?.toString() ?? 'Category';
+                            final key = _categoryKey(name);
+                            final color = MfCategoryColors.forSystemKey(key);
+                            final selected = id == selectedCategoryId;
+                            return InkWell(
+                              onTap: () =>
+                                  setModal(() => selectedCategoryId = id),
+                              borderRadius: BorderRadius.circular(30),
+                              child: SizedBox(
+                                width: 62,
+                                child: Column(
+                                  children: [
+                                    AnimatedContainer(
+                                      duration: MfMotion.fast,
+                                      width: 52,
+                                      height: 52,
+                                      decoration: BoxDecoration(
+                                        color: selected
+                                            ? color
+                                            : color.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                        border: selected
+                                            ? Border.all(color: color, width: 3)
+                                            : null,
+                                        boxShadow:
+                                            selected ? MfShadow.card : null,
+                                      ),
+                                      child: Icon(
+                                        _categoryIcon(key),
+                                        color: selected ? Colors.white : color,
+                                        size: 24,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      name,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                      style: GoogleFonts.inter(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ],
                                 ),
-                              )
-                              .toList(),
-                          onChanged: (v) => setSt(() => catId = v),
+                              ),
+                            );
+                          },
                         ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: limitCtrl,
-                          decoration: const InputDecoration(
-                            labelText: 'Monthly limit',
+                      ),
+                      const SizedBox(height: MfSpace.lg),
+                      TextField(
+                        controller: amountCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        style: GoogleFonts.manrope(
+                            fontSize: 26, fontWeight: FontWeight.w700),
+                        decoration: InputDecoration(
+                          hintText: 'Monthly amount',
+                          filled: true,
+                          fillColor: MfSurface.inputFill,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(MfRadius.md),
+                            borderSide: BorderSide.none,
                           ),
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
+                          prefixText: '${MfCurrency.symbol} ',
+                        ),
+                      ),
+                      const SizedBox(height: MfSpace.md),
+                      InkWell(
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedMonth,
+                            firstDate: DateTime(DateTime.now().year - 2, 1),
+                            lastDate: DateTime(DateTime.now().year + 2, 12),
+                          );
+                          if (picked != null) {
+                            setModal(() => selectedMonth =
+                                DateTime(picked.year, picked.month));
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(MfRadius.md),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(MfSpace.md),
+                          decoration: BoxDecoration(
+                            color: MfSurface.inputFill,
+                            borderRadius: BorderRadius.circular(MfRadius.md),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_month_rounded,
+                                  size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                DateFormat('MMMM yyyy').format(selectedMonth),
+                                style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Month: ${_prettyMonthLabel(_monthKey)}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 20),
-                        LedgerPrimaryGradientButton(
+                      ),
+                      const SizedBox(height: MfSpace.xl),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
                           onPressed: () {
-                            final lim =
-                                double.tryParse(limitCtrl.text.trim()) ?? 0;
-                            if (catId == null || lim <= 0) {
+                            final limit =
+                                double.tryParse(amountCtrl.text.trim()) ?? 0;
+                            if (selectedCategoryId == null || limit <= 0) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text(
-                                    'Pick a category and enter a positive limit.',
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
+                                    content:
+                                        Text('Pick category and valid amount')),
                               );
                               return;
                             }
-                            Navigator.pop(context, true);
+                            _monthKey =
+                                '${selectedMonth.year}-${selectedMonth.month}';
+                            saved = true;
+                            Navigator.of(ctx).pop();
                           },
-                          child: const Text('Save'),
+                          child: Text(
+                            'Save Budget',
+                            style:
+                                GoogleFonts.inter(fontWeight: FontWeight.w700),
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   );
                 },
               ),
             );
           },
         );
-        if (saved != true || catId == null) return;
-        final lim = double.tryParse(limitCtrl.text.trim());
-        if (lim == null || lim <= 0) return;
+
+        final limit = double.tryParse(amountCtrl.text.trim()) ?? 0;
+        amountCtrl.dispose();
+        if (!saved || selectedCategoryId == null || limit <= 0) return;
+
         try {
           await ref.read(budgetsApiProvider).create(
-                categoryId: catId!,
-                limit: lim,
+                categoryId: selectedCategoryId!,
+                limit: limit,
                 month: _monthKey,
               );
           await _pull();
         } on DioException catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(dioErrorMessage(e)),
-                behavior: SnackBarBehavior.floating,
-              ),
+              SnackBar(content: Text(dioErrorMessage(e))),
             );
           }
         }
       },
       loading: () async {},
-      error: (Object? e, StackTrace st) async {},
+      error: (_, __) async {},
     );
   }
 
-  Future<void> _openEdit(Map<String, dynamic> r) async {
-    final id = r['id']?.toString() ?? '';
+  Future<void> _openEditBudgetSheet(Map<String, dynamic> row) async {
+    final id = row['id']?.toString() ?? '';
     if (id.isEmpty) return;
-    final name = r['categoryName']?.toString() ?? 'Category';
-    final currentLimit = _parseMoney(r['limit']);
-    final limitCtrl = TextEditingController(
-      text: currentLimit == currentLimit.roundToDouble()
-          ? currentLimit.toStringAsFixed(0)
-          : currentLimit.toString(),
-    );
+    final limitCtrl =
+        TextEditingController(text: _money(row['limit']).toStringAsFixed(0));
 
-    final action = await showModalBottomSheet<_BudgetSheetAction>(
+    final action = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
-      builder: (ctx) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(ctx).bottom,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Edit budget',
-                  style: Theme.of(context).textTheme.titleLarge,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      backgroundColor: MfSurface.card,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          MfSpace.lg,
+          MfSpace.md,
+          MfSpace.lg,
+          MediaQuery.viewInsetsOf(ctx).bottom + MfSpace.lg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade400,
+                  borderRadius: BorderRadius.circular(99),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  name,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: limitCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Monthly limit',
-                  ),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Month: ${_prettyMonthLabel(_monthKey)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 20),
-                LedgerPrimaryGradientButton(
-                  onPressed: () {
-                    final lim = double.tryParse(limitCtrl.text.trim()) ?? 0;
-                    if (lim <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Enter a positive limit.'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                      return;
-                    }
-                    Navigator.pop(context, _BudgetSheetAction.save(lim));
-                  },
-                  child: const Text('Save changes'),
-                ),
-                const SizedBox(height: 8),
-                TextButton.icon(
-                  onPressed: () => Navigator.pop(context, _BudgetSheetAction.delete()),
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                  label: Text(
-                    'Delete budget',
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (!mounted) return;
-    if (action == null) return;
-
-    if (action is _DeleteBudgetAction) {
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Delete budget?'),
-          content: Text('Remove the budget for “$name” in ${_prettyMonthLabel(_monthKey)}?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(
-                'Delete',
-                style: TextStyle(color: Theme.of(ctx).colorScheme.error),
               ),
+            ),
+            const SizedBox(height: MfSpace.lg),
+            Text(
+              'Edit Budget',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.manrope(
+                  fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: MfSpace.lg),
+            TextField(
+              controller: limitCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'Monthly amount',
+                filled: true,
+                fillColor: MfSurface.inputFill,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(MfRadius.md),
+                  borderSide: BorderSide.none,
+                ),
+                prefixText: '${MfCurrency.symbol} ',
+              ),
+            ),
+            const SizedBox(height: MfSpace.lg),
+            FilledButton(
+                onPressed: () => Navigator.of(ctx).pop('save'),
+                child: const Text('Save')),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop('delete'),
+              child: Text('Delete',
+                  style: TextStyle(color: Theme.of(ctx).colorScheme.error)),
             ),
           ],
         ),
-      );
-      if (confirm != true || !mounted) return;
-      try {
-        await ref.read(budgetsApiProvider).delete(id);
-        await _pull();
-      } on DioException catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dioErrorMessage(e)),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-      return;
-    }
+      ),
+    );
 
-    if (action is _SaveBudgetAction) {
-      try {
-        await ref.read(budgetsApiProvider).update(
-              id: id,
-              limit: action.limit,
-            );
-        await _pull();
-      } on DioException catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dioErrorMessage(e)),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+    final limit = double.tryParse(limitCtrl.text.trim()) ?? 0;
+    limitCtrl.dispose();
+    if (action == null) return;
+
+    try {
+      if (action == 'save' && limit > 0) {
+        await ref.read(budgetsApiProvider).update(id: id, limit: limit);
+      } else if (action == 'delete') {
+        await ref.read(budgetsApiProvider).delete(id);
+      }
+      await _pull();
+    } on DioException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(dioErrorMessage(e))),
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final async = ref.watch(budgetsForMonthProvider(_monthKey));
+    final month = _parseMonth(_monthKey);
 
     return Scaffold(
-      extendBody: true,
-      backgroundColor: const Color(0xFF0B1220),
+      backgroundColor: MfSurface.base,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1220),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        titleSpacing: MfSpace.xxl,
         title: Text(
           'Budgets',
-          style: GoogleFonts.inter(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            letterSpacing: 0.3,
-            color: Colors.white.withValues(alpha: 0.9),
-          ),
+          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 22),
         ),
         actions: [
-          _MonthSelector(
-            monthLabel: _prettyMonthLabel(_monthKey),
-            onPrevious: () => _shiftMonth(-1),
-            onNext: () => _shiftMonth(1),
-          ),
-          const SizedBox(width: MfSpace.lg),
+          IconButton(
+              onPressed: _openAddBudgetSheet,
+              icon: const Icon(Icons.add_rounded))
         ],
+        elevation: 0,
+        backgroundColor: MfSurface.base,
+        scrolledUnderElevation: 0,
       ),
       body: RefreshIndicator(
-        color: MfPalette.neonGreen,
-        backgroundColor: const Color(0xFF121A2B),
         onRefresh: _pull,
         child: async.when(
           data: (rows) {
-            if (rows.isEmpty) {
-              return CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _BudgetEmptyBody(onAdd: _openAdd),
-                  ),
-                ],
-              );
-            }
-            final overview = _computeOverview(rows);
-            final overallPct = overview.totalLimit > 0
-                ? (overview.totalSpent / overview.totalLimit).clamp(0.0, 1.0)
-                : 0.0;
-
+            final overview = _buildOverview(rows);
             return CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    MfSpace.xxl,
-                    MfSpace.md,
-                    MfSpace.xxl,
-                    MediaQuery.paddingOf(context).bottom + 100,
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _MonthlyOverviewCard(
-                        overview: overview,
-                        overallProgress: overallPct,
-                        exceeded:
-                            overview.totalSpent > overview.totalLimit &&
-                            overview.totalLimit > 0,
-                      ),
-                      const SizedBox(height: MfSpace.xl),
-                      Text(
-                        'By category',
-                        style: GoogleFonts.manrope(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
-                          color: cs.onSurface.withValues(alpha: 0.78),
-                        ),
-                      ),
-                      const SizedBox(height: MfSpace.md),
-                      ...rows.map(
-                        (r) => Padding(
-                          padding: const EdgeInsets.only(bottom: MfSpace.md),
-                          child: _CategoryBudgetCard(
-                            row: r,
-                            onTap: () => _openEdit(r),
+                SliverToBoxAdapter(
+                    child: _SummaryHero(month: month, overview: overview)),
+                if (rows.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(MfSpace.lg),
+                        child: Text(
+                          'No budgets yet. Tap + to set your first budget.',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    ]),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _BuddyBudgetCard(
+                        row: rows[index],
+                        month: month,
+                        onTap: () => _openEditBudgetSheet(rows[index]),
+                      ),
+                      childCount: rows.length,
+                    ),
                   ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                      height: MediaQuery.paddingOf(context).bottom + 88),
                 ),
               ],
             );
           },
-          loading: () => const _BudgetLoadingBody(),
+          loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.all(MfSpace.xxl),
+            padding: const EdgeInsets.all(MfSpace.lg),
             child: LedgerErrorState(
               title: 'Could not load budgets',
               message: e is DioException ? dioErrorMessage(e) : e.toString(),
@@ -493,119 +530,103 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
           ),
         ),
       ),
-      floatingActionButton: MoneyFlowPremiumExtendedFab(
-        heroTag: 'budget_add_fab',
-        tooltip: 'Add budget',
-        icon: Icons.add_rounded,
-        label: 'Add budget',
-        onPressed: _openAdd,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
 
-sealed class _BudgetSheetAction {
-  const _BudgetSheetAction();
-  factory _BudgetSheetAction.save(double limit) = _SaveBudgetAction;
-  factory _BudgetSheetAction.delete() = _DeleteBudgetAction;
-}
-
-class _SaveBudgetAction extends _BudgetSheetAction {
-  const _SaveBudgetAction(this.limit);
-  final double limit;
-}
-
-class _DeleteBudgetAction extends _BudgetSheetAction {
-  const _DeleteBudgetAction();
-}
-
-class _MonthlyOverviewCard extends StatelessWidget {
-  const _MonthlyOverviewCard({
+class _SummaryHero extends StatelessWidget {
+  const _SummaryHero({
+    required this.month,
     required this.overview,
-    required this.overallProgress,
-    required this.exceeded,
   });
 
-  final _MonthOverview overview;
-  final double overallProgress;
-  final bool exceeded;
+  final DateTime month;
+  final _Overview overview;
 
   @override
   Widget build(BuildContext context) {
-    final start = _barGradientStart(
-      overview.totalSpent,
-      overview.totalLimit,
-      exceeded,
-    );
-    final end = _barGradientEnd(start);
-
+    final overBudget = overview.spent > overview.budget && overview.budget > 0;
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(MfSpace.xl),
+      margin: const EdgeInsets.all(MfSpace.lg),
+      padding: const EdgeInsets.all(MfSpace.lg),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(MfRadius.lg),
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1E2A63),
-            const Color(0xFF2A43B8),
-          ],
         ),
+        borderRadius: BorderRadius.circular(MfRadius.xl),
+        boxShadow: MfShadow.hero,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'MONTHLY OVERVIEW',
+            '${DateFormat('MMMM').format(month)} Budget',
             style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.9,
-              color: Colors.white.withValues(alpha: 0.62),
-            ),
+                color: Colors.white, fontWeight: FontWeight.w500, fontSize: 13),
           ),
-          const SizedBox(height: MfSpace.md),
+          const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: _OverviewStat(
-                  label: 'Budgeted',
-                  value: MfCurrency.formatInr(overview.totalLimit),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Spent',
+                    style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12),
+                  ),
+                  Text(
+                    MfCurrency.formatInr(overview.spent),
+                    style: GoogleFonts.manrope(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 28),
+                  ),
+                ],
               ),
-              Expanded(
-                child: _OverviewStat(
-                  label: 'Spent',
-                  value: MfCurrency.formatInr(overview.totalSpent),
-                  emphasize: true,
-                ),
-              ),
-              Expanded(
-                child: _OverviewStat(
-                  label: 'Left',
-                  value: MfCurrency.formatInr(overview.totalRemaining),
-                  negative: overview.totalRemaining < 0,
-                ),
+              const Spacer(),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'Budget',
+                    style: GoogleFonts.inter(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 12),
+                  ),
+                  Text(
+                    MfCurrency.formatInr(overview.budget),
+                    style: GoogleFonts.manrope(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 28),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: MfSpace.lg),
-          Text(
-            'Overall usage',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.55),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: overview.ratio,
+              minHeight: 10,
+              backgroundColor: Colors.white.withValues(alpha: 0.25),
+              valueColor: AlwaysStoppedAnimation(
+                  overBudget ? MfPalette.expenseRed : const Color(0xFF10B981)),
             ),
           ),
-          const SizedBox(height: MfSpace.sm),
-          _GradientProgressBar(
-            value: overallProgress,
-            startColor: start,
-            endColor: end,
-            trackColor: Colors.white.withValues(alpha: 0.12),
+          const SizedBox(height: 8),
+          Text(
+            '${MfCurrency.formatInr(overview.remaining)} remaining',
+            style: GoogleFonts.inter(
+              color: Colors.white.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w500,
+              fontSize: 12,
+            ),
           ),
         ],
       ),
@@ -613,473 +634,157 @@ class _MonthlyOverviewCard extends StatelessWidget {
   }
 }
 
-class _OverviewStat extends StatelessWidget {
-  const _OverviewStat({
-    required this.label,
-    required this.value,
-    this.emphasize = false,
-    this.negative = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasize;
-  final bool negative;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.4,
-            color: Colors.white.withValues(alpha: 0.52),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: GoogleFonts.manrope(
-            fontWeight: emphasize ? FontWeight.w800 : FontWeight.w700,
-            fontSize: emphasize ? 17 : 14,
-            color: negative
-                ? MfPalette.expenseRed.withValues(alpha: 0.95)
-                : Colors.white.withValues(alpha: 0.98),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
-    );
-  }
-}
-
-class _GradientProgressBar extends StatelessWidget {
-  const _GradientProgressBar({
-    required this.value,
-    required this.startColor,
-    required this.endColor,
-    required this.trackColor,
-  });
-
-  final double value;
-  final Color startColor;
-  final Color endColor;
-  final Color trackColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final v = value.clamp(0.0, 1.0);
-    return SizedBox(
-      height: 8,
-      width: double.infinity,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(99),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            ColoredBox(color: trackColor),
-            FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: v,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [startColor, endColor],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryBudgetCard extends StatelessWidget {
-  const _CategoryBudgetCard({
+class _BuddyBudgetCard extends StatelessWidget {
+  const _BuddyBudgetCard({
     required this.row,
+    required this.month,
     required this.onTap,
   });
 
   final Map<String, dynamic> row;
+  final DateTime month;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final name = row['categoryName']?.toString() ?? '';
-    final limit = _parseMoney(row['limit']);
-    final spent = _parseMoney(row['spent']);
-    final exceeded = row['exceeded'] == true;
-    final pctRaw = _parseMoney(row['percentUsed']);
-    final ratio = limit > 0 ? spent / limit : 0.0;
-    final barValue = ratio.clamp(0.0, 1.0);
-    final start = _barGradientStart(spent, limit, exceeded);
-    final end = _barGradientEnd(start);
+    final categoryName = row['categoryName']?.toString() ?? 'Category';
+    final key = _categoryKey(categoryName);
+    final catColor = MfCategoryColors.forSystemKey(key);
+    final spent = _money(row['spent']);
+    final limit = _money(row['limit']);
+    final fraction = limit > 0 ? spent / limit : 0.0;
+    final over = spent > limit && limit > 0;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(MfRadius.lg),
-        child: Container(
-          padding: const EdgeInsets.all(MfSpace.lg),
-          decoration: BoxDecoration(
-            color: const Color(0xFF121A2B),
-            borderRadius: BorderRadius.circular(MfRadius.lg),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  name,
-                  style: GoogleFonts.manrope(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                    color: cs.onSurface,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (exceeded)
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(MfRadius.lg),
+      child: Container(
+        margin:
+            const EdgeInsets.fromLTRB(MfSpace.lg, 0, MfSpace.lg, MfSpace.lg),
+        padding: const EdgeInsets.all(MfSpace.lg),
+        decoration: BoxDecoration(
+          color: MfSurface.card,
+          borderRadius: BorderRadius.circular(MfRadius.lg),
+          boxShadow: MfShadow.card,
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
                 Container(
-                  margin: const EdgeInsets.only(left: MfSpace.sm),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: MfSpace.sm,
-                    vertical: 4,
-                  ),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: MfPalette.expenseRed.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: MfPalette.expenseRed.withValues(alpha: 0.35),
-                    ),
+                    color: catColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    'Over',
-                    style: GoogleFonts.inter(
-                      fontSize: 11,
+                  child: Icon(_categoryIcon(key), color: catColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(categoryName,
+                        style: GoogleFonts.inter(
+                            fontSize: 14, fontWeight: FontWeight.w600)),
+                    Text(
+                      DateFormat('MMMM yyyy').format(month),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      MfCurrency.formatInr(spent),
+                      style: GoogleFonts.manrope(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: MfPalette.expenseRed,
+                      ),
+                    ),
+                    Text(
+                      'of ${MfCurrency.formatInr(limit)}',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _BuddyProgressBar(fraction: fraction, color: catColor),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Text(
+                  over
+                      ? 'Over by ${MfCurrency.formatInr(spent - limit)}'
+                      : '${MfCurrency.formatInr(limit - spent)} left',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: over
+                        ? MfPalette.expenseRed
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.55),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${(fraction * 100).toStringAsFixed(0)}%',
+                  style: GoogleFonts.manrope(
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: MfPalette.expenseRed,
-                    ),
-                  ),
+                      color: catColor),
                 ),
-              Icon(
-                Icons.edit_rounded,
-                size: 20,
-                color: cs.onSurface.withValues(alpha: 0.35),
-              ),
-            ],
-          ),
-          const SizedBox(height: MfSpace.md),
-          _GradientProgressBar(
-            value: barValue,
-            startColor: start,
-            endColor: end,
-            trackColor: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-          ),
-          const SizedBox(height: MfSpace.md),
-          Row(
-            children: [
-              Expanded(
-                child: _MoneyLine(
-                  label: 'Used',
-                  amount: MfCurrency.formatInr(spent),
-                  color: cs.onSurface.withValues(alpha: 0.88),
-                ),
-              ),
-              Expanded(
-                child: _MoneyLine(
-                  label: 'Limit',
-                  amount: MfCurrency.formatInr(limit),
-                  color: cs.onSurface.withValues(alpha: 0.88),
-                  alignEnd: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: MfSpace.xs),
-          Text(
-            exceeded
-                ? '${pctRaw.toStringAsFixed(0)}% of budget — over limit'
-                : '${pctRaw.toStringAsFixed(0)}% used',
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: exceeded
-                  ? MfPalette.expenseRed
-                  : cs.onSurface.withValues(alpha: 0.45),
+              ],
             ),
-          ),
-        ],
-      ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MonthSelector extends StatelessWidget {
-  const _MonthSelector({
-    required this.monthLabel,
-    required this.onPrevious,
-    required this.onNext,
-  });
-
-  final String monthLabel;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: MfSpace.sm, bottom: MfSpace.sm),
-      padding: const EdgeInsets.symmetric(horizontal: MfSpace.xs),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121A2B),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_left_rounded, size: 18),
-            color: Colors.white.withValues(alpha: 0.82),
-            onPressed: onPrevious,
-            tooltip: 'Previous month',
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 104, maxWidth: 140),
-            child: Text(
-              monthLabel,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-          ),
-          IconButton(
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.chevron_right_rounded, size: 18),
-            color: Colors.white.withValues(alpha: 0.82),
-            onPressed: onNext,
-            tooltip: 'Next month',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MoneyLine extends StatelessWidget {
-  const _MoneyLine({
-    required this.label,
-    required this.amount,
-    required this.color,
-    this.alignEnd = false,
-  });
-
-  final String label;
-  final String amount;
-  final Color color;
-  final bool alignEnd;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment:
-          alignEnd ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: color.withValues(alpha: 0.55),
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          amount,
-          style: GoogleFonts.manrope(
-            fontWeight: FontWeight.w800,
-            fontSize: 15,
-            color: color,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _BudgetEmptyBody extends StatelessWidget {
-  const _BudgetEmptyBody({required this.onAdd});
-
-  final VoidCallback onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        MfSpace.xxl,
-        MfSpace.xxxl,
-        MfSpace.xxl,
-        MediaQuery.paddingOf(context).bottom + 100,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const LedgerBudgetEmptyIllustration(width: 200),
-          const SizedBox(height: MfSpace.xl),
-          Text(
-            'No budgets set',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.manrope(
-              fontWeight: FontWeight.w800,
-              fontSize: 22,
-              color: cs.onSurface,
-            ),
-          ),
-          const SizedBox(height: MfSpace.md),
-          Text(
-            'Set a monthly cap per category. We will track spending and warn you before you go over.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              fontSize: 14,
-              height: 1.45,
-              color: cs.onSurface.withValues(alpha: 0.55),
-            ),
-          ),
-          const SizedBox(height: MfSpace.xl),
-          FilledButton.icon(
-            onPressed: onAdd,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('Add budget'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BudgetLoadingBody extends StatelessWidget {
-  const _BudgetLoadingBody();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ListView(
-      padding: EdgeInsets.fromLTRB(
-        MfSpace.xxl,
-        MfSpace.md,
-        MfSpace.xxl,
-        MediaQuery.paddingOf(context).bottom + 88,
-      ),
-      children: [
-        Container(
-          height: 168,
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh.withValues(alpha: 0.45),
-            borderRadius: BorderRadius.circular(MfRadius.xl),
-          ),
-        ),
-        const SizedBox(height: MfSpace.xl),
-        ...List.generate(
-          4,
-          (i) => Padding(
-            padding: const EdgeInsets.only(bottom: MfSpace.md),
-            child: Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHigh.withValues(alpha: 0.35),
-                borderRadius: BorderRadius.circular(MfRadius.lg),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Empty budgets: target rings + bar hint.
-class LedgerBudgetEmptyIllustration extends StatelessWidget {
-  const LedgerBudgetEmptyIllustration({super.key, this.width = 168});
-
-  final double width;
-
-  @override
-  Widget build(BuildContext context) {
-    final h = width * 0.58;
-    return SizedBox(
-      width: width,
-      height: h,
-      child: CustomPaint(painter: _BudgetEmptyPainter()),
-    );
-  }
-}
-
-class _BudgetEmptyPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final c = Offset(w * 0.5, h * 0.48);
-    final r0 = w * 0.28;
-    for (var i = 0; i < 3; i++) {
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.8 - i * 0.6
-        ..color = [
-          MfPalette.accentSoftPurple.withValues(alpha: 0.55 - i * 0.12),
-          MfPalette.neonGreen.withValues(alpha: 0.45 - i * 0.1),
-          MfPalette.incomeGreen.withValues(alpha: 0.35 - i * 0.08),
-        ][i];
-      canvas.drawCircle(c, r0 - i * (w * 0.055), paint);
-    }
-
-    final bar = RRect.fromRectAndRadius(
-      Rect.fromLTWH(w * 0.18, h * 0.78, w * 0.64, h * 0.1),
-      const Radius.circular(99),
-    );
-    canvas.drawRRect(
-      bar,
-      Paint()..color = Colors.white.withValues(alpha: 0.1),
-    );
-    final fill = RRect.fromRectAndRadius(
-      Rect.fromLTWH(w * 0.18, h * 0.78, w * 0.38, h * 0.1),
-      const Radius.circular(99),
-    );
-    canvas.drawRRect(
-      fill,
-      Paint()
-        ..shader = LinearGradient(
-          colors: [
-            MfPalette.incomeGreen,
-            MfPalette.incomeGreen.withValues(alpha: 0.4),
           ],
-        ).createShader(fill.outerRect),
+        ),
+      ),
     );
   }
+}
+
+class _BuddyProgressBar extends StatelessWidget {
+  const _BuddyProgressBar({
+    required this.fraction,
+    required this.color,
+  });
+
+  final double fraction;
+  final Color color;
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) {
+    final v = fraction.clamp(0.0, 1.0);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(99),
+      child: LinearProgressIndicator(
+        value: v,
+        minHeight: 8,
+        backgroundColor: color.withValues(alpha: 0.15),
+        valueColor:
+            AlwaysStoppedAnimation(v > 0.9 ? MfPalette.expenseRed : color),
+      ),
+    );
+  }
 }

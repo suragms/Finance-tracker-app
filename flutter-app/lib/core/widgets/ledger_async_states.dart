@@ -52,7 +52,8 @@ class _LedgerEmptyIllustrationPainter extends CustomPainter {
     final coinPaint = Paint();
     for (var i = 0; i < 3; i++) {
       coinPaint.color = MfPalette.neonGreen.withValues(alpha: 0.55 - i * 0.12);
-      canvas.drawCircle(Offset(w * (0.26 + i * 0.2), h * 0.78), w * 0.065, coinPaint);
+      canvas.drawCircle(
+          Offset(w * (0.26 + i * 0.2), h * 0.78), w * 0.065, coinPaint);
     }
     canvas.drawCircle(
       Offset(w * 0.72, h * 0.32),

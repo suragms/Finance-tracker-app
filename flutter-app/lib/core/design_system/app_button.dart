@@ -82,9 +82,8 @@ class _AppButtonState extends State<AppButton>
                   ),
                 )
               : Row(
-                  mainAxisSize: widget.expand
-                      ? MainAxisSize.max
-                      : MainAxisSize.min,
+                  mainAxisSize:
+                      widget.expand ? MainAxisSize.max : MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     if (widget.icon != null) ...[
@@ -142,29 +141,29 @@ class _ButtonFrame extends StatelessWidget {
 
     final decoration = switch (variant) {
       AppButtonVariant.primary => BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [MfPalette.heroStart, MfPalette.heroMid, MfPalette.heroEnd],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: cs.primary.withValues(alpha: 0.24),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
+          borderRadius: BorderRadius.circular(20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [MfPalette.heroStart, MfPalette.heroMid, MfPalette.heroEnd],
           ),
-        ],
-      ),
+          boxShadow: [
+            BoxShadow(
+              color: cs.primary.withValues(alpha: 0.2),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
       AppButtonVariant.secondary => BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: cs.surfaceContainerLowest.withValues(alpha: 0.76),
-        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.18)),
-      ),
+          borderRadius: BorderRadius.circular(20),
+          color: cs.surfaceContainerLowest.withValues(alpha: 0.76),
+          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.18)),
+        ),
       AppButtonVariant.ghost => BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: cs.surfaceContainerLow.withValues(alpha: 0.62),
-      ),
+          borderRadius: BorderRadius.circular(20),
+          color: cs.surfaceContainerLow.withValues(alpha: 0.62),
+        ),
     };
 
     return SizedBox(
@@ -176,7 +175,7 @@ class _ButtonFrame extends StatelessWidget {
           onTapDown: (_) => onTapDown(),
           onTapUp: (_) => onTapEnd(),
           onTapCancel: onTapEnd,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           child: Ink(
             decoration: decoration,
             child: Container(

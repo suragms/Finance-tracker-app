@@ -36,7 +36,7 @@
       var h = window.location.hostname;
       var isLocal = h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
       window.MONEYFLOW_API_BASE = isLocal
-        ? 'http://127.0.0.1:4000/api'
+        ? 'http://localhost:4000/api'
         : 'https://hexpenses-api.onrender.com/api';
     })();
   </script>
