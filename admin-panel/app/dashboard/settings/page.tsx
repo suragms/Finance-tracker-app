@@ -1,6 +1,6 @@
 'use client';
 
-import { User, Bell, Shield, Wallet, Globe, Moon, Save, Camera, Check } from 'lucide-react';
+import { User, Bell, Shield, Wallet, Globe, Moon, Save, Camera, Check, Settings, LogOut, ChevronRight, Lock } from 'lucide-react';
 import { useState } from 'react';
 
 export default function SettingsPage() {
@@ -13,17 +13,17 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-8 pb-12 max-w-5xl">
+    <div className="space-y-8 pb-12 max-w-6xl">
       <div>
-        <h3 className="text-xl font-extrabold text-white">Application Settings</h3>
-        <p className="text-xs font-bold text-mf-muted uppercase tracking-wider">Configure your profile and preferences</p>
+        <h1 className="text-2xl font-bold text-mf-dark tracking-tight">Settings</h1>
+        <p className="text-mf-muted text-sm mt-1">Manage your account preferences and application configuration.</p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr,2fr]">
-        {/* Left Column: Navigation Section */}
+      <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
+        {/* Navigation Sidebar */}
         <div className="space-y-6">
-          <div className="glass-card rounded-[32px] overflow-hidden p-4">
-            <div className="space-y-2">
+          <div className="bg-white border border-mf-border rounded-2xl overflow-hidden shadow-sm p-4">
+            <div className="space-y-1">
               <SettingsNav 
                 label="Profile" 
                 icon={User} 
@@ -31,16 +31,16 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab('profile')} 
               />
               <SettingsNav 
-                label="Preferences" 
-                icon={Moon} 
-                active={activeTab === 'preferences'} 
-                onClick={() => setActiveTab('preferences')} 
-              />
-              <SettingsNav 
                 label="Security" 
-                icon={Shield} 
+                icon={Lock} 
                 active={activeTab === 'security'} 
                 onClick={() => setActiveTab('security')} 
+              />
+              <SettingsNav 
+                label="Workspaces" 
+                icon={Wallet} 
+                active={activeTab === 'workspaces'} 
+                onClick={() => setActiveTab('workspaces')} 
               />
               <SettingsNav 
                 label="Notifications" 
@@ -51,39 +51,39 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <div className="glass-card rounded-[32px] p-6 text-center">
-             <div className="h-16 w-16 mx-auto mb-4 bg-mf-accent/10 rounded-2xl flex items-center justify-center text-mf-accent">
-               <Wallet className="h-8 w-8" />
+          <div className="bg-primary/5 border border-primary/10 rounded-2xl p-6">
+             <div className="h-10 w-10 mb-4 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+               <Shield className="h-5 w-5" />
              </div>
-             <p className="text-xs font-extrabold text-white uppercase tracking-widest mb-1">Backup Data</p>
-             <p className="text-[10px] text-mf-muted font-bold uppercase mb-4 opacity-60">Last sync: 2 hours ago</p>
-             <button className="w-full py-3 rounded-xl border border-white/10 text-[10px] font-extrabold uppercase tracking-widest text-white hover:bg-white/5 transition-all">
-               Run Manual Sync
+             <p className="text-sm font-bold text-mf-dark">Pro Plan Active</p>
+             <p className="text-xs text-mf-muted mt-1 leading-relaxed">Your account is safe and synchronized across devices.</p>
+             <button className="w-full mt-4 py-2 bg-white border border-primary/20 rounded-xl text-xs font-bold text-primary hover:bg-primary hover:text-white transition-all">
+               Billing Details
              </button>
           </div>
         </div>
 
-        {/* Right Column: Dynamic Form Section */}
-        <div className="glass-card rounded-[32px] p-10 space-y-10">
+        {/* Form Content */}
+        <div className="bg-white border border-mf-border rounded-2xl p-8 shadow-sm">
           {activeTab === 'profile' && (
-            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
                <div>
-                  <h4 className="text-lg font-extrabold text-white mb-6">Personal Profile</h4>
-                  <div className="flex items-center gap-8 mb-10">
+                  <h3 className="text-lg font-bold text-mf-dark mb-6">Personal Profile</h3>
+                  <div className="flex items-center gap-8 mb-8 pb-8 border-b border-mf-border">
                     <div className="relative group">
-                      <div className="h-24 w-24 rounded-[32px] bg-gradient-to-br from-mf-accent to-mf-purple flex items-center justify-center text-3xl font-bold shadow-neon-purple border-2 border-white/10">
-                        S
+                      <div className="h-24 w-24 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary border border-primary/20">
+                        SM
                       </div>
-                      <button className="absolute -bottom-2 -right-2 h-10 w-10 rounded-2xl bg-mf-bg border border-white/10 flex items-center justify-center text-mf-muted hover:text-white transition-all shadow-xl opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100">
-                        <Camera className="h-5 w-5" />
+                      <button className="absolute -bottom-2 -right-2 h-9 w-9 rounded-xl bg-white border border-mf-border flex items-center justify-center text-mf-muted hover:text-mf-dark transition-all shadow-md">
+                        <Camera className="h-4 w-4" />
                       </button>
                     </div>
                     <div>
-                       <p className="text-sm font-bold text-white uppercase tracking-widest mb-1">Surag Ms</p>
-                       <p className="text-xs font-bold text-mf-muted">suragms@example.com</p>
-                       <div className="mt-4 flex gap-2">
-                         <span className="px-3 py-1 rounded-full bg-mf-accent/10 border border-mf-accent/20 text-[10px] font-extrabold text-mf-accent tracking-widest uppercase">Admin</span>
-                         <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-extrabold text-mf-muted tracking-widest uppercase">Wealth Pro</span>
+                       <p className="text-base font-bold text-mf-dark">Surag Ms</p>
+                       <p className="text-sm font-medium text-mf-muted">suragms@example.com</p>
+                       <div className="mt-3 flex gap-2">
+                         <span className="px-2.5 py-1 rounded-md bg-primary/5 border border-primary/10 text-[10px] font-bold text-primary tracking-wider uppercase">Owner</span>
+                         <span className="px-2.5 py-1 rounded-md bg-success/5 border border-success/10 text-[10px] font-bold text-success tracking-wider uppercase">Verified</span>
                        </div>
                     </div>
                   </div>
@@ -91,56 +91,40 @@ export default function SettingsPage() {
                   <div className="grid gap-6 sm:grid-cols-2">
                     <SettingsInput label="Full Name" value="Surag Ms" />
                     <SettingsInput label="Email Address" value="suragms@example.com" />
-                    <SettingsInput label="Display Name" value="Surag" />
-                    <SettingsInput label="Location" value="Kerala, India" />
+                    <SettingsInput label="Phone Number" value="+91 98765 43210" />
+                    <div className="space-y-2">
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-mf-muted">Timezone</label>
+                        <select className="w-full bg-gray-50 border border-mf-border rounded-xl px-4 py-2.5 text-sm font-medium text-mf-dark focus:border-primary transition-all">
+                           <option>(GMT+05:30) Chennai, Kolkata, Mumbai</option>
+                           <option>(GMT+00:00) UTC</option>
+                        </select>
+                     </div>
                   </div>
                </div>
             </div>
           )}
 
-          {activeTab === 'preferences' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-               <h4 className="text-lg font-extrabold text-white">App Preferences</h4>
+          {activeTab === 'security' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+               <h3 className="text-lg font-bold text-mf-dark">Security Settings</h3>
                <div className="space-y-4">
-                  <SettingsToggle label="Dark Theme" description="Enable night mode for better visibility" active={true} />
-                  <SettingsToggle label="Auto Sync" description="Keep your data synchronized in background" active={true} />
-                  <SettingsToggle label="Wealth Insights" description="Receive AI-powered financial recommendations" active={false} />
-                  <SettingsToggle label="Compact View" description="Show more data in tables with less padding" active={false} />
-               </div>
-               
-               <div className="pt-6 border-t border-white/5">
-                  <div className="grid gap-6 sm:grid-cols-2">
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">Primary Currency</label>
-                        <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white appearance-none focus:outline-none focus:border-mf-accent">
-                           <option>INR (₹)</option>
-                           <option>USD ($)</option>
-                           <option>EUR (€)</option>
-                        </select>
-                     </div>
-                     <div className="space-y-2">
-                        <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">Regional Language</label>
-                        <select className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-sm font-bold text-white appearance-none focus:outline-none focus:border-mf-accent">
-                           <option>English (US)</option>
-                           <option>English (UK)</option>
-                           <option>Hindi</option>
-                        </select>
-                     </div>
-                  </div>
+                  <SettingsToggle label="Two-Factor Authentication" description="Add an extra layer of security to your account" active={true} />
+                  <SettingsToggle label="Login Notifications" description="Get notified on every new login attempt" active={true} />
+                  <SettingsToggle label="API Access" description="Enable access to public API for third-party integrations" active={false} />
                </div>
             </div>
           )}
 
-          <div className="pt-10 border-t border-white/5 flex items-center justify-between">
-             <div className={`flex items-center gap-2 text-mf-success text-xs font-extrabold uppercase tracking-widest transition-all ${success ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
+          <div className="mt-10 pt-8 border-t border-mf-border flex items-center justify-between">
+             <div className={`flex items-center gap-2 text-success text-xs font-bold uppercase tracking-wider transition-all ${success ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
                 <Check className="h-4 w-4" />
-                Changes saved successfully
+                Settings updated
              </div>
              <button 
                 onClick={handleSave}
-                className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-mf-accent text-white font-extrabold text-xs uppercase tracking-widest shadow-neon-purple hover:bg-mf-accent/90 transition-all active:scale-95"
+                className="btn-primary h-12 px-8 shadow-md"
               >
-                <Save className="h-4 w-4" />
+                <Save className="h-5 w-5" />
                 Save Changes
               </button>
           </div>
@@ -154,10 +138,11 @@ function SettingsNav({ label, icon: Icon, active, onClick }: any) {
   return (
     <button 
       onClick={onClick}
-      className={`flex w-full items-center gap-4 px-6 py-4 rounded-2xl transition-all duration-300 ${active ? 'bg-mf-accent/10 border border-mf-accent/20 text-white shadow-neon-purple' : 'text-mf-muted hover:bg-white/5 hover:text-white'}`}
+      className={`flex w-full items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${active ? 'bg-primary text-white shadow-sm' : 'text-mf-muted hover:bg-gray-50 hover:text-mf-dark'}`}
     >
-      <Icon className={`h-5 w-5 ${active ? 'text-mf-accent' : ''}`} />
-      <span className="text-xs font-extrabold uppercase tracking-widest">{label}</span>
+      <Icon className="h-4 w-4" />
+      <span className="text-sm font-semibold">{label}</span>
+      {active && <ChevronRight className="ml-auto h-3 w-3 opacity-60" />}
     </button>
   );
 }
@@ -165,11 +150,11 @@ function SettingsNav({ label, icon: Icon, active, onClick }: any) {
 function SettingsInput({ label, value }: { label: string, value: string }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] font-extrabold uppercase tracking-widest text-mf-muted pl-1">{label}</label>
+      <label className="text-[11px] font-bold uppercase tracking-wider text-mf-muted">{label}</label>
       <input 
         type="text" 
         defaultValue={value} 
-        className="w-full rounded-2xl bg-white/5 border border-white/10 px-6 py-4 text-sm font-bold text-white focus:outline-none focus:border-mf-accent transition-all"
+        className="w-full rounded-xl bg-gray-50 border border-mf-border px-4 py-2.5 text-sm font-medium text-mf-dark focus:border-primary focus:bg-white transition-all"
       />
     </div>
   );
@@ -177,14 +162,15 @@ function SettingsInput({ label, value }: { label: string, value: string }) {
 
 function SettingsToggle({ label, description, active }: { label: string, description: string, active: boolean }) {
   return (
-    <div className="flex items-center justify-between py-4 group cursor-pointer">
+    <div className="flex items-center justify-between py-4 group cursor-pointer border-b border-mf-border last:border-0">
       <div>
-        <p className="text-sm font-bold text-white mb-1 group-hover:text-mf-accent transition-all">{label}</p>
-        <p className="text-[10px] font-bold text-mf-muted uppercase tracking-widest opacity-60 leading-tight">{description}</p>
+        <p className="text-sm font-bold text-mf-dark mb-0.5">{label}</p>
+        <p className="text-xs text-mf-muted leading-tight">{description}</p>
       </div>
-      <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${active ? 'bg-mf-accent shadow-neon-purple' : 'bg-white/10'}`}>
-         <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all duration-300 ${active ? 'left-7' : 'left-1'}`} />
+      <div className={`w-11 h-6 rounded-full relative transition-all duration-300 ${active ? 'bg-primary' : 'bg-gray-200'}`}>
+         <div className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all duration-300 ${active ? 'left-6' : 'left-1'}`} />
       </div>
     </div>
   );
 }
+

@@ -178,19 +178,12 @@ class DashboardQuickAccess extends StatelessWidget {
           children: [
             Text(
               'Quick access',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: cs.onSurface,
-              ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: MfSpace.xs),
             Text(
               'Jump to accounts, planning, and tools',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                color: cs.onSurface.withValues(alpha: 0.5),
-              ),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -244,7 +237,12 @@ class _QuickTile extends StatelessWidget {
         onTap: link.onTap,
         borderRadius: BorderRadius.circular(MfRadius.lg),
         child: Container(
-          decoration: glassCard(borderRadius: MfRadius.lg),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(MfRadius.md),
+            boxShadow: MfShadow.card,
+            border: Border.all(color: cs.outlineVariant),
+          ),
           padding: const EdgeInsets.symmetric(
             horizontal: MfSpace.sm,
             vertical: MfSpace.md,
@@ -265,11 +263,7 @@ class _QuickTile extends StatelessWidget {
               const SizedBox(height: MfSpace.sm),
               Text(
                 link.title,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface.withValues(alpha: 0.88),
-                ),
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

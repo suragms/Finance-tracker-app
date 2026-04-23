@@ -3,40 +3,57 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'money_flow_tokens.dart';
 
+ColorScheme _lightScheme() {
+  return const ColorScheme(
+    brightness: Brightness.light,
+    primary: Color(0xFF4F46E5), // Indigo-600
+    onPrimary: Colors.white,
+    primaryContainer: Color(0xFFEEF2FF),
+    onPrimaryContainer: Color(0xFF4338CA),
+    secondary: Color(0xFF22C55E), // Green-500
+    onSecondary: Colors.white,
+    secondaryContainer: Color(0xFFDCFCE7),
+    onSecondaryContainer: Color(0xFF166534),
+    tertiary: Color(0xFFF59E0B), // Amber-500 (Expense)
+    onTertiary: Colors.white,
+    tertiaryContainer: Color(0xFFFEF3C7),
+    onTertiaryContainer: Color(0xFF92400E),
+    error: Color(0xFFEF4444),
+    onError: Colors.white,
+    surface: Color(0xFFF9FAFB), // Gray-50
+    onSurface: Color(0xFF111827), // Gray-900
+    surfaceContainerLowest: Colors.white,
+    surfaceContainerLow: Color(0xFFF3F4F6),
+    surfaceContainer: Color(0xFFF3F4F6),
+    surfaceContainerHigh: Colors.white, // Cards are white on Gray-50
+    surfaceContainerHighest: Color(0xFFE5E7EB),
+    outline: Color(0xFF9CA3AF),
+    outlineVariant: Color(0xFFE5E7EB),
+    shadow: Colors.black,
+    scrim: Color(0xCC000000),
+  );
+}
+
 ColorScheme _darkScheme() {
   return const ColorScheme(
     brightness: Brightness.dark,
-    primary: Color(0xFF6366F1), // Indigo
+    primary: Color(0xFF6366F1),
     onPrimary: Colors.white,
-    primaryContainer: Color(0xFF1F2937),
-    onPrimaryContainer: Colors.white,
-    secondary: Color(0xFF10B981), // Green
+    primaryContainer: Color(0xFF3730A3),
+    onPrimaryContainer: Color(0xFFE0E7FF),
+    secondary: Color(0xFF22C55E),
     onSecondary: Colors.white,
-    secondaryContainer: Color(0xFF064E3B),
-    onSecondaryContainer: Color(0xFFA7F3D0),
-    tertiary: Color(0xFF3B82F6), // Blue
+    tertiary: Color(0xFFF59E0B),
     onTertiary: Colors.white,
-    tertiaryContainer: Color(0xFF1E3A8A),
-    onTertiaryContainer: Color(0xFFDBEAFE),
-    error: Color(0xFFEF4444), // Red
+    error: Color(0xFFEF4444),
     onError: Colors.white,
-    surface: Color(0xFF0B0F1A), // Background
+    surface: Color(0xFF0F172A),
     onSurface: Colors.white,
-    surfaceContainerLowest: Color(0xFF0B0F1A),
-    surfaceContainerLow: Color(0xFF111827), // Surface
-    surfaceContainer: Color(0xFF111827),
-    surfaceContainerHigh: Color(0xFF1F2937), // Card
-    surfaceContainerHighest: Color(0xFF374151),
-    outline: Color(0xFF6B7280),
-    outlineVariant: Color(0xFF4B5563),
-    shadow: Colors.black,
-    scrim: Color(0xCC000000),
-    inverseSurface: Colors.white,
-    onInverseSurface: Color(0xFF111827),
-    inversePrimary: Color(0xFFA5B4FC),
-    surfaceTint: Color(0xFF6366F1),
-    surfaceDim: Color(0xFF0B0F1A),
-    surfaceBright: Color(0xFF1F2937),
+    surfaceContainerLow: Color(0xFF1E293B),
+    surfaceContainer: Color(0xFF1E293B),
+    surfaceContainerHigh: Color(0xFF334155),
+    outline: Color(0xFF64748B),
+    outlineVariant: Color(0xFF475569),
   );
 }
 
@@ -45,46 +62,45 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
   final inter = GoogleFonts.interTextTheme(base);
 
   return inter.copyWith(
-    displayLarge: GoogleFonts.manrope(
+    displayLarge: GoogleFonts.inter(
       textStyle: inter.displayLarge,
       fontWeight: FontWeight.w800,
-      letterSpacing: -1.3,
+      letterSpacing: -1.0,
       color: cs.onSurface,
     ),
-    displayMedium: GoogleFonts.manrope(
+    displayMedium: GoogleFonts.inter(
       textStyle: inter.displayMedium,
-      fontWeight: FontWeight.w800,
-      letterSpacing: -1.1,
-      color: cs.onSurface,
-    ),
-    displaySmall: GoogleFonts.manrope(
-      textStyle: inter.displaySmall,
-      fontWeight: FontWeight.w800,
-      letterSpacing: -0.9,
-      color: cs.onSurface,
-    ),
-    headlineLarge: GoogleFonts.manrope(
-      textStyle: inter.headlineLarge,
       fontWeight: FontWeight.w800,
       letterSpacing: -0.8,
       color: cs.onSurface,
     ),
-    headlineMedium: GoogleFonts.manrope(
-      textStyle: inter.headlineMedium,
-      fontWeight: FontWeight.w700,
+    displaySmall: GoogleFonts.inter(
+      textStyle: inter.displaySmall,
+      fontWeight: FontWeight.w800,
       letterSpacing: -0.6,
       color: cs.onSurface,
     ),
-    headlineSmall: GoogleFonts.manrope(
-      textStyle: inter.headlineSmall,
+    headlineLarge: GoogleFonts.inter(
+      textStyle: inter.headlineLarge,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -0.5,
+      color: cs.onSurface,
+    ),
+    headlineMedium: GoogleFonts.inter(
+      textStyle: inter.headlineMedium,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.4,
       color: cs.onSurface,
     ),
-    titleLarge: GoogleFonts.manrope(
-      textStyle: inter.titleLarge,
+    headlineSmall: GoogleFonts.inter(
+      textStyle: inter.headlineSmall,
       fontWeight: FontWeight.w700,
       letterSpacing: -0.2,
+      color: cs.onSurface,
+    ),
+    titleLarge: GoogleFonts.inter(
+      textStyle: inter.titleLarge,
+      fontWeight: FontWeight.w700,
       color: cs.onSurface,
     ),
     titleMedium: GoogleFonts.inter(
@@ -101,32 +117,17 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
     bodyLarge: GoogleFonts.inter(
       textStyle: inter.bodyLarge,
       color: cs.onSurface,
-      height: 1.45,
+      height: 1.5,
     ),
     bodyMedium: GoogleFonts.inter(
       textStyle: inter.bodyMedium,
       color: cs.onSurface,
-      height: 1.45,
+      height: 1.5,
     ),
     bodySmall: GoogleFonts.inter(
       textStyle: inter.bodySmall,
-      color: const Color(0xFF9CA3AF), // Secondary Gray
+      color: cs.onSurface.withValues(alpha: 0.6),
       height: 1.4,
-    ),
-    labelLarge: GoogleFonts.inter(
-      textStyle: inter.labelLarge,
-      fontWeight: FontWeight.w600,
-      color: cs.onSurface,
-    ),
-    labelMedium: GoogleFonts.inter(
-      textStyle: inter.labelMedium,
-      fontWeight: FontWeight.w600,
-      color: const Color(0xFF9CA3AF),
-    ),
-    labelSmall: GoogleFonts.inter(
-      textStyle: inter.labelSmall,
-      fontWeight: FontWeight.w500,
-      color: const Color(0xFF9CA3AF),
     ),
   );
 }
@@ -134,7 +135,7 @@ TextTheme _textTheme(ColorScheme cs, Brightness brightness) {
 InputDecorationTheme _inputTheme(ColorScheme cs) {
   OutlineInputBorder border(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(MfRadius.sm),
         borderSide: BorderSide(color: color, width: width),
       );
 
@@ -184,7 +185,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       backgroundColor: Colors.transparent,
       foregroundColor: colorScheme.onSurface,
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: GoogleFonts.manrope(
+      titleTextStyle: GoogleFonts.inter(
         fontSize: 20,
         fontWeight: FontWeight.w800,
         color: colorScheme.onSurface,
@@ -192,10 +193,10 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
     ),
     cardTheme: CardThemeData(
       elevation: 0,
-      color: colorScheme.surfaceContainerHigh, // Card: #1F2937
+      color: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(MfRadius.lg),
+        borderRadius: BorderRadius.circular(MfRadius.md), // rounded-2xl = 16px
       ),
       margin: EdgeInsets.zero,
     ),
@@ -230,7 +231,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
           vertical: MfSpace.md + 4,
           horizontal: MfSpace.xl,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm)),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         textStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 15),
@@ -243,7 +244,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
           vertical: MfSpace.md + 4,
           horizontal: MfSpace.xl,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm)),
         side: BorderSide(
           color: colorScheme.outlineVariant.withValues(alpha: 0.36),
         ),
@@ -264,7 +265,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
       highlightElevation: 0,
       backgroundColor: colorScheme.primary,
       foregroundColor: colorScheme.onPrimary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm)),
     ),
     navigationBarTheme: NavigationBarThemeData(
       elevation: 0,
@@ -302,7 +303,7 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
         color: colorScheme.onInverseSurface,
         fontWeight: FontWeight.w500,
       ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.sm)),
     ),
     dividerTheme: DividerThemeData(
       color: colorScheme.outlineVariant.withValues(alpha: 0.16),
@@ -317,14 +318,19 @@ ThemeData _buildTheme(ColorScheme colorScheme, MoneyFlowThemeExtension mf) {
   );
 }
 
+ThemeData buildAppTheme() => _premiumLightTheme();
+
+ThemeData buildAppDarkTheme() => _premiumDarkTheme();
+
+ThemeData _premiumLightTheme() => _buildTheme(
+      _lightScheme(),
+      MoneyFlowThemeExtension.light,
+    );
+
 ThemeData _premiumDarkTheme() => _buildTheme(
       _darkScheme(),
       MoneyFlowThemeExtension.dark,
     );
-
-ThemeData buildAppTheme() => _premiumDarkTheme();
-
-ThemeData buildAppDarkTheme() => _premiumDarkTheme();
 
 List<BoxShadow> ledgerAmbientFabShadows(ColorScheme cs) => [
       BoxShadow(

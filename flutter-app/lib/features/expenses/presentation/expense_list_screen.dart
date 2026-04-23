@@ -32,9 +32,11 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
 
     return Container(
       decoration: const BoxDecoration(gradient: mfPremiumCanvasGradient),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: CustomScrollView(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             // TOP: Filter Tabs (Sticky Header)
@@ -49,11 +51,11 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                 preferredSize: const Size.fromHeight(80),
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                  child: Container(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 16),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Row(
                         children: [
                           _FilterTab(label: 'All Activity', selected: _filter == _ListFilter.all, onTap: () => setState(() => _filter = _ListFilter.all)),
@@ -104,7 +106,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                 final sortedDays = groups.keys.toList()..sort((a, b) => b.compareTo(a));
 
                 return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
@@ -132,7 +134,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                                   final systemKey = e['category']?['systemKey']?.toString() ?? 'custom';
 
                                   return _TransactionItem(
-                                    id: e['id']?.toString() ?? 'txn-$index-$i',
+                                    id: e['id']?.toString() ?? 'txn-${e.hashCode}',
                                     title: e['category']?['name']?.toString() ?? 'Transaction',
                                     subtitle: e['note']?.toString() ?? '',
                                     amount: amt,
@@ -165,7 +167,8 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -232,7 +235,7 @@ class _TransactionItem extends StatelessWidget {
       background: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 24),
-        decoration: BoxDecoration(color: const Color(0xFFEF4444).withValues(alpha: 0.2)),
+                        decoration: BoxDecoration(color: MfPalette.expenseAmber.withValues(alpha: 0.2)),
         child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 28),
       ),
       onDismissed: (_) => onDelete(),

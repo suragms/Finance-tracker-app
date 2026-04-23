@@ -189,17 +189,11 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen>
       appBar: AppBar(
         title: Text(
           'AI & insights',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         bottom: TabBar(
           controller: _tabController,
-          labelStyle: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-          ),
+          labelStyle: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           unselectedLabelStyle: GoogleFonts.inter(
             fontWeight: FontWeight.w500,
             fontSize: 14,
@@ -282,10 +276,7 @@ class _InsightsTab extends StatelessWidget {
                         children: [
                           Text(
                             'Ask the assistant',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
+                            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: MfSpace.xs),
                           Text(
@@ -388,11 +379,7 @@ class _InsightsTab extends StatelessWidget {
   Widget _sectionTitle(BuildContext context, String title) {
     return Text(
       title,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        color: Theme.of(context).colorScheme.onSurface,
-      ),
+      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 
@@ -604,10 +591,7 @@ class _ChatTab extends StatelessWidget {
         children: [
           Text(
             'Pending action: $type',
-            style: GoogleFonts.plusJakartaSans(
-              fontWeight: FontWeight.w700,
-              fontSize: 14,
-            ),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: MfSpace.xs),
           Text(

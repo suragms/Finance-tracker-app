@@ -138,15 +138,29 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
 
       if (mounted) {
         HapticFeedback.mediumImpact();
-        Navigator.of(context).pop();
+        // Show snackbar BEFORE popping
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('₹$amount expense recorded'),
-            backgroundColor: MfPalette.expenseRed,
+            backgroundColor: MfPalette.expenseAmber,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
           ),
         );
+        // Reset form state
+        setState(() {
+          _amountStr = '0';
+          _selectedCategory = null;
+          _selectedSubcategory = null;
+          _manuallySetCategory = false;
+          _isAutoSuggested = false;
+          _saving = false;
+        });
+        _noteController.clear();
+        // Pop after short delay so user sees the updated form
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) Navigator.of(context).pop();
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -164,7 +178,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     final accountsAsync = ref.watch(accountsProvider);
     final accounts = accountsAsync.valueOrNull?.accounts ?? [];
 
-    return Scaffold(
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 400),
+      child: Scaffold(
       backgroundColor: MfPalette.canvas,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -176,11 +192,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
         ),
         title: Text(
           'Add Expense',
-          style: GoogleFonts.manrope(
-            color: MfPalette.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 20,
-          ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
       ),
       body: Column(
@@ -207,11 +219,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     child: FittedBox(
                       child: Text(
                         '₹$_amountStr',
-                        style: GoogleFonts.manrope(
-                          color: MfPalette.textPrimary,
-                          fontSize: 80,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 80,
+                            ),
                       ),
                     ),
                   ),
@@ -237,11 +248,11 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: MfPalette.surface,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: const BorderRadius.vertical(top: Radius.circular(MfRadius.xl)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 30,
                   offset: const Offset(0, -10),
                 ),
@@ -299,31 +310,32 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
           Container(
             width: double.infinity,
             padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 16),
-            color: MfPalette.surface,
+            color: Theme.of(context).colorScheme.surface,
             child: ElevatedButton(
               onPressed: _saving ? null : _save,
               style: ElevatedButton.styleFrom(
-                backgroundColor: MfPalette.expenseRed,
+                backgroundColor: MfPalette.expenseAmber,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 18),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
                 elevation: 4,
-                shadowColor: MfPalette.expenseRed.withValues(alpha: 0.4),
+        shadowColor: MfPalette.expenseAmber.withValues(alpha: 0.4),
               ),
               child: _saving
                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : Text(
                     'Save Expense',
-                    style: GoogleFonts.manrope(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
             ),
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildCategoryRow(List<Map<String, dynamic>> categories) {
@@ -362,11 +374,13 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             physics: const BouncingScrollPhysics(),
             itemBuilder: (context, index) {
               final cat = categories[index];
-              final isSelected = _selectedCategory?['id'] == cat['id'];
+              final catId = cat['id']?.toString() ?? 'cat-$index';
+              final isSelected = _selectedCategory?['id']?.toString() == catId;
               final systemKey = cat['systemKey']?.toString() ?? 'custom';
               final color = isSelected ? MfCategoryColors.forSystemKey(systemKey) : MfPalette.textMuted;
               
               return GestureDetector(
+                key: ValueKey(catId),
                 onTap: () {
                   setState(() {
                     _selectedCategory = cat;
@@ -404,11 +418,10 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                         cat['name']?.toString() ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(
-                          color: isSelected ? Colors.white : MfPalette.textMuted,
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            ),
                       ),
                     ],
                   ),
@@ -428,15 +441,16 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     required VoidCallback onTap,
     required Color color,
   }) {
+    final cs = Theme.of(context).colorScheme;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(MfRadius.lg),
+      borderRadius: BorderRadius.circular(MfRadius.md),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(MfRadius.lg),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          color: cs.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(MfRadius.md),
+          border: Border.all(color: cs.outlineVariant),
         ),
         child: Row(
           children: [
@@ -466,11 +480,7 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
                     value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.manrope(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
@@ -556,11 +566,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
             ? Icon(icon, color: MfPalette.textMuted, size: 22)
             : Text(
                 label,
-                style: GoogleFonts.manrope(
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
         ),
       ),
@@ -584,9 +592,9 @@ class _AddExpenseScreenState extends ConsumerState<AddExpenseScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: MfPalette.surface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
-        title: Text('Expense Note', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.md)),
+        title: Text('Expense Note', style: Theme.of(context).textTheme.titleLarge),
         content: TextField(
           controller: _noteController,
           autofocus: true,

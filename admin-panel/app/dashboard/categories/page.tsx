@@ -1,126 +1,138 @@
 'use client';
 
-import { Plus, Edit2, Trash2, Utensils, ShoppingBag, Home, Car, Shield, Activity, Film, PlusCircle, Laptop, Heart } from 'lucide-react';
-import { useState } from 'react';
+import { apiFetch, getToken } from '@/lib/api';
+import { Plus, Edit2, Trash2, Utensils, ShoppingBag, Home, Car, Shield, Activity, Film, PlusCircle, Laptop, Heart, Package, Tag } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-const mockCategories = [
-  { id: '1', name: 'Food & Dining', icon: Utensils, color: '#22C697' },
-  { id: '2', name: 'Shopping', icon: ShoppingBag, color: '#8B7DFF' },
-  { id: '3', name: 'Household', icon: Home, color: '#FFD166' },
-  { id: '4', name: 'Transport', icon: Car, color: '#667EEA' },
-  { id: '5', name: 'Health', icon: Activity, color: '#F07070' },
-  { id: '6', name: 'Entertainment', icon: Film, color: '#8B7DFF' },
-  { id: '7', name: 'Software', icon: Laptop, color: '#4FC3F7' },
-  { id: '8', name: 'Personal Care', icon: Heart, color: '#F48FB1' },
-];
+type Category = {
+  id: string;
+  name: string;
+  type: string;
+  icon?: string;
+  color?: string;
+  _count?: {
+    expenses: number;
+    subCategories: number;
+  }
+};
 
 export default function CategoriesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      try {
+        const data = await apiFetch<Category[]>('/categories', { token: getToken() });
+        setCategories(data);
+      } catch (err) {
+        console.error('Failed to fetch categories', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCats();
+  }, []);
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h3 className="text-3xl font-black text-white tracking-widest uppercase mb-1">Taxonomy</h3>
-          <p className="text-[10px] font-black text-mf-muted uppercase tracking-[0.3em]">Spending Classification Protocol</p>
+          <h1 className="text-2xl font-bold text-mf-dark tracking-tight">Categories</h1>
+          <p className="text-mf-muted text-sm mt-1">Organize your transactions with logical classifications.</p>
         </div>
         <button 
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-mf-accent text-white hover:scale-[1.02] shadow-neon-purple shadow-mf-accent/30 transition-all text-[10px] font-black uppercase tracking-[0.2em]"
+          className="btn-primary h-12 px-6"
         >
-          <Plus className="h-4 w-4" />
-          Assign New
+          <Plus className="h-5 w-5" />
+          Add Category
         </button>
       </div>
 
-      {/* GRID: High-Density Category Shell */}
-      <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {mockCategories.map((cat) => (
-          <div key={cat.id} className="relative group overflow-hidden glass-card rounded-[32px] p-8 transition-all duration-500 hover:bg-white/[0.06] hover:scale-[1.02] cursor-pointer">
-            {/* AMBIENT GLOW */}
-            <div 
-              className="absolute -right-8 -top-8 h-24 w-24 rounded-full blur-[40px] opacity-20 transition-all group-hover:scale-150 duration-700" 
-              style={{ backgroundColor: cat.color }}
-            />
-
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <div 
-                className="h-20 w-20 rounded-[24px] flex items-center justify-center border transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] mb-6 shadow-xl"
-                style={{ 
-                  backgroundColor: `${cat.color}11`, 
-                  borderColor: `${cat.color}33`,
-                  color: cat.color 
-                }}
-              >
-                <cat.icon className="h-10 w-10" />
-              </div>
-              <h4 className="text-sm font-black text-white uppercase tracking-[0.15em]">{cat.name}</h4>
-              <p className="text-[9px] font-black text-mf-muted uppercase tracking-widest mt-2 opacity-50">Active Classification</p>
-            </div>
-
-            {/* FEATURE: Edit on Hover Overlay */}
-            <div className="absolute inset-0 bg-mf-bg/80 backdrop-blur-md flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-full group-hover:translate-y-0">
-               <button className="h-12 w-12 rounded-2xl bg-mf-accent text-white flex items-center justify-center hover:scale-110 shadow-neon-purple transition-all">
-                  <Edit2 className="h-5 w-5" />
-               </button>
-               <button className="h-12 w-12 rounded-2xl bg-mf-error/20 border border-mf-error/30 text-mf-error flex items-center justify-center hover:scale-110 transition-all">
-                  <Trash2 className="h-5 w-5" />
-               </button>
-            </div>
-          </div>
-        ))}
-        
-        {/* NEW CATEGORY TRIGGER */}
-        <div 
-          onClick={() => setShowAddModal(true)}
-          className="rounded-[32px] border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-4 p-8 text-mf-muted hover:border-mf-accent/50 hover:text-white hover:bg-white/[0.02] transition-all duration-500 cursor-pointer group"
-        >
-          <div className="h-16 w-16 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center group-hover:border-mf-accent group-hover:bg-mf-accent/10 transition-all duration-500 rotate-0 group-hover:rotate-90">
-            <PlusCircle className="h-8 w-8" />
-          </div>
-          <span className="font-black text-[10px] uppercase tracking-[0.3em]">Append Vector</span>
+      {loading ? (
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="h-48 bg-gray-100 animate-pulse rounded-2xl border border-mf-border" />
+          ))}
         </div>
-      </div>
+      ) : (
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {categories.map((cat) => (
+            <div key={cat.id} className="group relative bg-white border border-mf-border rounded-2xl p-6 shadow-sm hover:shadow-md transition-all cursor-pointer overflow-hidden">
+              <div className="flex flex-col items-center text-center">
+                <div 
+                  className="h-14 w-14 rounded-xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110"
+                  style={{ 
+                    backgroundColor: `${cat.color || '#4F46E5'}15`, 
+                    color: cat.color || '#4F46E5' 
+                  }}
+                >
+                  <Tag className="h-7 w-7" />
+                </div>
+                <h4 className="text-sm font-bold text-mf-dark uppercase tracking-tight">{cat.name}</h4>
+                <div className="mt-2 flex items-center gap-2">
+                   <span className="text-[10px] font-bold text-mf-muted uppercase tracking-widest bg-gray-50 px-2 py-0.5 rounded border border-mf-border">
+                     {cat.type}
+                   </span>
+                </div>
+                <p className="text-[11px] font-medium text-mf-muted mt-3">
+                  {cat._count?.expenses || 0} Transactions
+                </p>
+              </div>
 
-      {/* MODAL: Creation Shell */}
+              {/* Actions on Hover */}
+              <div className="absolute inset-x-0 bottom-0 p-4 bg-white/95 backdrop-blur-sm border-t border-mf-border flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
+                 <button className="p-2 rounded-lg hover:bg-gray-100 text-mf-dark transition-colors">
+                    <Edit2 className="h-4 w-4" />
+                 </button>
+                 <button className="p-2 rounded-lg hover:bg-error/5 text-error transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                 </button>
+              </div>
+            </div>
+          ))}
+          
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="rounded-2xl border-2 border-dashed border-mf-border flex flex-col items-center justify-center gap-3 p-6 text-mf-muted hover:border-primary hover:text-primary hover:bg-primary/5 transition-all group"
+          >
+            <div className="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 transition-all">
+              <PlusCircle className="h-6 w-6 text-mf-muted group-hover:text-primary" />
+            </div>
+            <span className="font-bold text-xs uppercase tracking-wider">New Category</span>
+          </button>
+        </div>
+      )}
+
+      {/* Basic Modal Placeholder */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mf-bg/90 backdrop-blur-xl animate-in fade-in duration-500">
-          <div className="glass-card w-full max-w-lg rounded-[40px] p-10 shadow-2xl animate-in scale-in-90 duration-500 border border-white/5">
-            <h3 className="text-3xl font-black text-white tracking-widest uppercase mb-10 text-center">New Taxonomy</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mf-dark/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl p-8 shadow-xl animate-in zoom-in-95 duration-200 border border-mf-border">
+            <h3 className="text-xl font-bold text-mf-dark tracking-tight mb-6">Add New Category</h3>
             
-            <div className="space-y-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-mf-muted ml-2">Category Identity</label>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-mf-muted">Category Name</label>
                 <input 
                   type="text" 
-                  autoFocus
-                  placeholder="e.g. SUBSCRIPTIONS" 
-                  className="w-full rounded-[24px] bg-white/[0.03] border border-white/10 px-8 py-5 text-sm font-black text-white placeholder:text-white/10 outline-none focus:border-mf-accent/50 focus:bg-white/[0.08] transition-all uppercase tracking-widest"
+                  placeholder="e.g. Subscriptions" 
+                  className="w-full rounded-xl bg-gray-50 border border-mf-border px-4 py-3 text-sm font-medium text-mf-dark outline-none focus:border-primary focus:bg-white transition-all"
                 />
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-mf-muted ml-2">Visual Mapping</label>
-                <div className="grid grid-cols-5 gap-4">
-                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
-                     <div key={i} className={`h-12 w-12 rounded-[18px] border-[1.5px] flex items-center justify-center cursor-pointer transition-all duration-300 ${i === 1 ? 'bg-mf-accent text-white border-mf-accent shadow-neon-purple shadow-mf-accent/30' : 'bg-white/5 border-white/10 text-mf-muted hover:bg-white/10 hover:text-white'}`}>
-                       <Plus className="h-5 w-5" />
-                     </div>
-                   ))}
-                </div>
-              </div>
-
-              <div className="flex gap-4 pt-6">
+              <div className="flex gap-3">
                 <button 
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-5 rounded-[24px] border border-white/10 text-[10px] font-black text-mf-muted hover:bg-white/5 transition-all uppercase tracking-[0.3em]"
+                  className="flex-1 btn-secondary h-11"
                 >
-                  Terminate
+                  Cancel
                 </button>
                 <button 
-                  className="flex-1 py-5 rounded-[24px] bg-mf-accent text-white font-black text-[10px] uppercase tracking-[0.3em] shadow-neon-purple shadow-mf-accent/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                  className="flex-1 btn-primary h-11"
                 >
-                  Initialize
+                  Create
                 </button>
               </div>
             </div>
@@ -130,3 +142,4 @@ export default function CategoriesPage() {
     </div>
   );
 }
+

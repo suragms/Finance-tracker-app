@@ -5,31 +5,41 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        primary: '#4F46E5', // Indigo
+        success: '#10B981', // Emerald
+        error: '#F59E0B',   // Orange (Expense)
+        background: '#F9FAFB',
+        'mf-dark': '#111827',
+        'mf-muted': '#6B7280',
         mf: {
-          bg: '#0D0F1A',
-          card: 'rgba(255, 255, 255, 0.04)',
-          border: 'rgba(255, 255, 255, 0.1)',
-          accent: '#8B7DFF',
-          success: '#22C697',
-          error: '#F07070',
-          muted: '#8181A5',
+          bg: '#F9FAFB',
+          card: '#FFFFFF',
+          border: '#E5E7EB',
+          accent: '#4F46E5',
+          success: '#10B981',
+          error: '#F59E0B',
+          muted: '#6B7280',
+          purple: '#8B5CF6',
         },
       },
-      borderRadius: {
-        '3xl': '24px',
-        card: '24px',
+      fontFamily: {
+        inter: ['var(--font-inter)', 'sans-serif'],
       },
-      backgroundImage: {
-        'premium-gradient': 'linear-gradient(135deg, #0D0F1A 0%, #171B2D 100%)',
-        'glass-gradient': 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)',
+      borderRadius: {
+        '2xl': '16px',
+        '3xl': '24px',
+        card: '16px',
       },
       boxShadow: {
-        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-        'neon-purple': '0 0 20px rgba(139, 125, 255, 0.3)',
+        'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.08)',
+        'neon-purple': '0 0 20px rgba(79, 70, 229, 0.2)',
       }
     },
   },
-  plugins: [],
+  plugins: [
+    require('tailwind-scrollbar-hide')
+  ],
 };
 
 export default config;

@@ -46,11 +46,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       appBar: AppBar(
         title: Text(
           'Financial Analytics',
-          style: GoogleFonts.plusJakartaSans(
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-            color: Colors.white,
-          ),
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -154,9 +150,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         children: [
           const Icon(Icons.cloud_off_rounded, color: MfPalette.textMuted, size: 64),
           const SizedBox(height: 16),
-          Text('Analytics temporarily unavailable', style: GoogleFonts.manrope(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(
+            'Analytics temporarily unavailable',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(error.toString(), textAlign: TextAlign.center, style: GoogleFonts.inter(color: MfPalette.textMuted)),
+          Text(
+            error.toString(),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     ),
@@ -172,12 +175,13 @@ class _MonthPager extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       decoration: BoxDecoration(
-        color: MfPalette.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(MfRadius.xl),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -188,12 +192,9 @@ class _MonthPager extends StatelessWidget {
           ),
           Text(
             DateFormat('MMMM yyyy').format(focusedDate).toUpperCase(),
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w900,
-              fontSize: 13,
-              color: Colors.white,
-              letterSpacing: 1.2,
-            ),
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  letterSpacing: 1.2,
+                ),
           ),
           IconButton(
             onPressed: onNext,
@@ -214,8 +215,14 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: glassCard(borderRadius: MfRadius.xl),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        boxShadow: MfShadow.card,
+        border: Border.all(color: cs.outlineVariant),
+      ),
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
@@ -223,17 +230,17 @@ class _SummaryCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _MiniStat(label: 'Net Flow', amount: net, color: net >= 0 ? MfPalette.incomeGreen : MfPalette.expenseRed, isLarge: true),
-              Icon(Icons.insights_rounded, color: Colors.white.withValues(alpha: 0.2), size: 32),
+              Icon(Icons.insights_rounded, color: cs.onSurface.withValues(alpha: 0.2), size: 32),
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: Colors.white10),
+          const Divider(),
           const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(child: _MiniStat(label: 'Income', amount: income, color: MfPalette.primaryLight)),
-              Container(width: 1, height: 40, color: Colors.white10),
-              Expanded(child: _MiniStat(label: 'Expense', amount: expense, color: MfPalette.textMuted)),
+              Expanded(child: _MiniStat(label: 'Income', amount: income, color: cs.primary)),
+              Container(width: 1, height: 40, color: cs.outlineVariant),
+              Expanded(child: _MiniStat(label: 'Expense', amount: expense, color: cs.error)),
             ],
           ),
         ],
@@ -262,11 +269,10 @@ class _MiniStat extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           MfCurrency.formatInr(amount),
-          style: GoogleFonts.manrope(
-            color: isLarge ? color : Colors.white,
-            fontSize: isLarge ? 28 : 16,
-            fontWeight: FontWeight.w800,
-          ),
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: isLarge ? color : null,
+                fontWeight: FontWeight.w800,
+              ),
         ),
       ],
     );
@@ -281,8 +287,14 @@ class _CategoryBreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
-      decoration: glassCard(borderRadius: MfRadius.xl),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        boxShadow: MfShadow.card,
+        border: Border.all(color: cs.outlineVariant),
+      ),
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -326,17 +338,17 @@ class _CategoryBreakdownCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       cat.key,
-                      style: GoogleFonts.inter(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   Text(
                     '${pct}%',
-                    style: GoogleFonts.inter(color: MfPalette.textMuted, fontSize: 13, fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const SizedBox(width: 16),
                   Text(
                     MfCurrency.formatCompact(cat.value),
-                    style: GoogleFonts.manrope(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w800),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ],
               ),
@@ -456,9 +468,15 @@ class _EmptyReportState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 32),
-      decoration: glassCard(borderRadius: MfRadius.xl),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        boxShadow: MfShadow.card,
+        border: Border.all(color: cs.outlineVariant),
+      ),
       child: Column(
         children: [
           Container(
@@ -469,7 +487,7 @@ class _EmptyReportState extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             'No Data Found',
-            style: GoogleFonts.manrope(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(

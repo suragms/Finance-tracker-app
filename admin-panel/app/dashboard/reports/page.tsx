@@ -7,7 +7,9 @@ import {
   Calendar,
   ArrowRight,
   BarChart as BarChartIcon,
-  ChevronDown
+  ChevronDown,
+  Download,
+  Filter
 } from 'lucide-react';
 import {
   Bar,
@@ -25,11 +27,11 @@ import {
 import { useState } from 'react';
 
 const categoryData = [
-  { name: 'Household', value: 45000, color: '#8B7DFF' },
-  { name: 'Food', value: 12000, color: '#22C697' },
-  { name: 'Transport', value: 8000, color: '#FFD166' },
-  { name: 'Shopping', value: 15000, color: '#F07070' },
-  { name: 'Others', value: 5000, color: '#667EEA' },
+  { name: 'Household', value: 45000, color: '#4F46E5' },
+  { name: 'Food', value: 12000, color: '#10B981' },
+  { name: 'Transport', value: 8000, color: '#F59E0B' },
+  { name: 'Shopping', value: 15000, color: '#6366F1' },
+  { name: 'Others', value: 5000, color: '#D1D5DB' },
 ];
 
 const monthlyData = [
@@ -43,169 +45,158 @@ export default function ReportsPage() {
   const [dateRange, setDateRange] = useState('Last 90 Days');
 
   return (
-    <div className="space-y-12 pb-12">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h3 className="text-3xl font-black text-white tracking-widest uppercase mb-1">Analytics</h3>
-          <p className="text-[10px] font-black text-mf-muted uppercase tracking-[0.3em]">Quantitative Intelligence Hub</p>
+          <h1 className="text-2xl font-bold text-mf-dark tracking-tight">Financial Intelligence</h1>
+          <p className="text-mf-muted text-sm mt-1">Deep dive into your business spending patterns and revenue flows.</p>
         </div>
         
-        {/* Date Range Filter */}
-        <div className="relative group">
-           <button className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/10 text-white hover:bg-white/[0.06] transition-all">
-              <Calendar className="h-4 w-4 text-mf-accent" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em]">{dateRange}</span>
-              <ChevronDown className="h-4 w-4 text-mf-muted group-hover:text-white transition-all" />
-           </button>
-           <div className="absolute top-full right-0 mt-2 w-56 glass-card rounded-2xl p-2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all z-20">
-              {['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'This Year', 'All Time'].map(range => (
-                <button 
-                  key={range}
-                  onClick={() => setDateRange(range)}
-                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 text-[10px] font-black text-mf-muted hover:text-white uppercase tracking-widest transition-all"
-                >
-                  {range}
-                </button>
-              ))}
-           </div>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-mf-border bg-white text-mf-dark hover:bg-gray-50 transition-all font-semibold text-sm">
+            <Calendar className="h-4 w-4 text-primary" />
+            {dateRange}
+            <ChevronDown className="h-4 w-4 text-mf-muted" />
+          </button>
+          <button className="p-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-all">
+            <Download className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <SummaryCard 
-          label="Savings Rate" 
+          label="Avg. Savings Rate" 
           value="34.2%" 
-          note="+2.1% Alpha" 
+          note="+2.1% from last month" 
           icon={TrendingUp} 
-          color="#22C697" 
+          trend="up"
         />
         <SummaryCard 
-          label="Burn Velocity" 
-          value="₹58.7k" 
-          note="-7.4% Momentum" 
+          label="Monthly Burn" 
+          value="₹58,700" 
+          note="-7.4% decrease" 
           icon={TrendingDown} 
-          color="#8B7DFF" 
+          trend="down"
         />
         <SummaryCard 
-          label="Dominant Vector" 
-          value="Shelter" 
-          note="₹45k Magnitude" 
+          label="Top Category" 
+          value="Household" 
+          note="₹45,000 magnitude" 
           icon={PieChartIcon} 
-          color="#FFD166" 
+          trend="neutral"
         />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        {/* Spending by Category (Pie) */}
-        <div className="glass-card rounded-[40px] p-10 relative overflow-hidden group">
-           <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-mf-accent/5 blur-[80px] group-hover:scale-125 transition-all duration-1000" />
-           
-           <div className="relative z-10 mb-10">
-              <h3 className="text-xl font-black text-white uppercase tracking-[0.15em] flex items-center gap-3">
-                <PieChartIcon className="h-5 w-5 text-mf-accent animate-pulse" />
-                Distribution
+        {/* Spending Distribution */}
+        <div className="bg-white border border-mf-border rounded-2xl p-8 shadow-sm">
+           <div className="mb-8">
+              <h3 className="text-lg font-bold text-mf-dark flex items-center gap-2">
+                <PieChartIcon className="h-5 w-5 text-primary" />
+                Spending Distribution
               </h3>
-              <p className="text-[9px] font-black text-mf-muted uppercase tracking-[0.3em] mt-2">Spending Density Analysis</p>
+              <p className="text-sm text-mf-muted mt-1">Allocation across primary categories</p>
            </div>
            
-           <div className="h-[380px] relative z-10">
+           <div className="h-[350px]">
              <ResponsiveContainer width="100%" height="100%">
                <PieChart>
                  <Pie
                    data={categoryData}
-                   innerRadius={90}
-                   outerRadius={135}
-                   paddingAngle={8}
+                   innerRadius={80}
+                   outerRadius={120}
+                   paddingAngle={5}
                    dataKey="value"
                    className="focus:outline-none"
                  >
                    {categoryData.map((entry, index) => (
-                     <Cell key={`cell-${index}`} fill={entry.color} stroke="none" className="hover:opacity-80 transition-all cursor-pointer" />
+                     <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={2} />
                    ))}
                  </Pie>
                  <Tooltip 
-                   contentStyle={{ background: '#0D0F1A', border: '1px solid #ffffff14', borderRadius: '16px', padding: '16px' }}
-                   itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                   contentStyle={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                   itemStyle={{ fontSize: '12px', fontWeight: 'bold' }}
                  />
                  <Legend 
                    verticalAlign="bottom" 
                    align="center"
                    iconType="circle"
-                   iconSize={8}
-                   formatter={(v: any) => <span className="text-[9px] font-black text-mf-muted uppercase tracking-widest pl-2 hover:text-white transition-all">{v}</span>} 
+                   iconSize={10}
+                   formatter={(v: any) => <span className="text-xs font-bold text-mf-muted px-2">{v}</span>} 
                  />
                </PieChart>
              </ResponsiveContainer>
            </div>
         </div>
 
-        {/* Cash Flow Performance (Bar) */}
-        <div className="glass-card rounded-[40px] p-10 relative overflow-hidden group">
-           <div className="absolute -left-20 -bottom-20 h-64 w-64 rounded-full bg-mf-success/5 blur-[80px] group-hover:scale-125 transition-all duration-1000" />
-
-           <div className="relative z-10 mb-10">
-              <h3 className="text-xl font-black text-white uppercase tracking-[0.15em] flex items-center gap-3">
-                <BarChartIcon className="h-5 w-5 text-mf-success" />
-                Velocity
+        {/* Cash Flow Performance */}
+        <div className="bg-white border border-mf-border rounded-2xl p-8 shadow-sm">
+           <div className="mb-8">
+              <h3 className="text-lg font-bold text-mf-dark flex items-center gap-2">
+                <BarChartIcon className="h-5 w-5 text-success" />
+                Cash Flow Velocity
               </h3>
-              <p className="text-[9px] font-black text-mf-muted uppercase tracking-[0.3em] mt-2">Revenue vs Burn Trajectory</p>
+              <p className="text-sm text-mf-muted mt-1">Income vs Expense trends</p>
            </div>
 
-           <div className="h-[380px] relative z-10">
+           <div className="h-[350px]">
              <ResponsiveContainer width="100%" height="100%">
-               <BarChart data={monthlyData} barGap={16}>
-                 <CartesianGrid strokeDasharray="6 6" stroke="#ffffff08" vertical={false} />
-                 <XAxis dataKey="month" stroke="#8D93A1" fontSize={9} axisLine={false} tickLine={false} tick={{dy: 15, fontWeight: 900}} />
-                 <YAxis stroke="#8D93A1" fontSize={9} axisLine={false} tickLine={false} tickFormatter={(v: any) => `₹${v/1000}k`} tick={{fontWeight: 900}} />
+               <BarChart data={monthlyData} barGap={8}>
+                 <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+                 <XAxis dataKey="month" stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} tick={{dy: 10, fontWeight: 600}} />
+                 <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} tickFormatter={(v: any) => `₹${v/1000}k`} tick={{fontWeight: 600}} />
                  <Tooltip
-                   cursor={{fill: 'rgba(255,255,255,0.03)'}}
-                   contentStyle={{ background: '#0D0F1A', border: '1px solid #ffffff14', borderRadius: '20px', padding: '16px' }}
+                   cursor={{fill: '#F9FAFB'}}
+                   contentStyle={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                  />
-                 <Bar dataKey="income" fill="#22C697" radius={[6, 6, 0, 0]} barSize={24} />
-                 <Bar dataKey="expense" fill="#8B7DFF" radius={[6, 6, 0, 0]} barSize={24} />
+                 <Bar dataKey="income" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20} />
+                 <Bar dataKey="expense" fill="#4F46E5" radius={[4, 4, 0, 0]} barSize={20} />
                </BarChart>
              </ResponsiveContainer>
            </div>
         </div>
       </div>
 
-      {/* FOOTER: Insight Panel */}
-      <div className="glass-card rounded-[32px] p-10 flex flex-col lg:flex-row items-center justify-between gap-8 border-l-4 border-l-mf-accent">
-        <div className="flex items-center gap-8 text-center lg:text-left">
-           <div className="h-16 w-16 rounded-[24px] bg-mf-accent/10 flex items-center justify-center text-mf-accent shadow-neon-purple shadow-mf-accent/20">
-             <TrendingUp className="h-8 w-8" />
+      {/* AI Insights Card */}
+      <div className="bg-primary/5 border border-primary/10 rounded-2xl p-8 flex flex-col lg:flex-row items-center justify-between gap-8 border-l-4 border-l-primary">
+        <div className="flex items-center gap-6">
+           <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+             <TrendingUp className="h-7 w-7" />
            </div>
            <div>
-             <h4 className="text-2xl font-black text-white tracking-widest uppercase mb-1">Financial Alpha</h4>
-             <p className="text-[11px] font-bold text-mf-muted uppercase tracking-widest leading-relaxed max-w-xl">
-                Current data patterns indicate a <span className="text-white underline">15% increase</span> in discretionary liquidity. 
-                Consider tactical allocation to recurring yield instruments.
+             <h4 className="text-lg font-bold text-mf-dark tracking-tight">AI Financial Recommendation</h4>
+             <p className="text-sm font-medium text-mf-muted mt-1 max-w-2xl leading-relaxed">
+                Your savings rate has improved by <span className="text-success font-bold">15%</span> this quarter. 
+                Based on your current cash flow, you can safely allocate ₹15,000 more towards long-term investments.
              </p>
            </div>
         </div>
-        <button className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-[10px] uppercase tracking-[0.2em] group hover:bg-mf-accent hover:text-white hover:border-mf-accent transition-all">
-          Execute Detailed Audit
-          <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-all" />
+        <button className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border border-primary/20 text-primary font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-white transition-all whitespace-nowrap shadow-sm">
+          Detailed Analysis
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
     </div>
   );
 }
 
-function SummaryCard({ label, value, note, icon: Icon, color }: any) {
+function SummaryCard({ label, value, note, icon: Icon, trend }: any) {
   return (
-    <div className="glass-card rounded-[32px] p-10 relative overflow-hidden group">
-      <div className="absolute -right-4 -top-4 p-8 opacity-10 transition-all group-hover:scale-125 duration-500">
-        <Icon className="h-20 w-20" style={{ color }} />
+    <div className="bg-white border border-mf-border rounded-2xl p-8 shadow-sm">
+      <div className="flex justify-between items-start mb-4">
+        <p className="text-[11px] font-bold text-mf-muted uppercase tracking-wider">{label}</p>
+        <div className={`p-2 rounded-lg ${trend === 'up' ? 'bg-success/10 text-success' : trend === 'down' ? 'bg-error/10 text-error' : 'bg-gray-100 text-mf-muted'}`}>
+          <Icon className="h-4 w-4" />
+        </div>
       </div>
-      <p className="text-[10px] font-black text-mf-muted uppercase tracking-[0.3em] mb-3">{label}</p>
-      <h4 className="text-3xl font-black text-white tracking-[0.1em] mb-3">{value}</h4>
-      <div className="flex items-center gap-2">
-         <div className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: color }} />
-         <p className="text-[10px] font-black uppercase tracking-widest" style={{ color }}>{note}</p>
-      </div>
+      <h4 className="text-2xl font-bold text-mf-dark tracking-tight mb-2">{value}</h4>
+      <p className={`text-xs font-semibold ${trend === 'up' ? 'text-success' : trend === 'down' ? 'text-error' : 'text-mf-muted'}`}>
+        {note}
+      </p>
     </div>
   );
 }
+
 
 

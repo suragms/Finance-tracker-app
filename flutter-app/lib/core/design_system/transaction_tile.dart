@@ -65,6 +65,7 @@ class BuddyTransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
       duration: Duration(milliseconds: 300 + animationIndex * 60),
@@ -98,7 +99,7 @@ class BuddyTransactionTile extends StatelessWidget {
                     Text(
                       title,
                       style: GoogleFonts.inter(
-                          fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
+                          fontSize: 14, fontWeight: FontWeight.w600, color: cs.onSurface),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 1,
                     ),
@@ -108,7 +109,7 @@ class BuddyTransactionTile extends StatelessWidget {
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
-                          color: Colors.white38,
+                          color: cs.onSurface.withValues(alpha: 0.6),
                         ),
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
@@ -121,7 +122,7 @@ class BuddyTransactionTile extends StatelessWidget {
                 children: [
                   Text(
                     '${isExpense ? '-' : '+'}${MfCurrency.formatInr(amount)}',
-                    style: GoogleFonts.manrope(
+                    style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: isExpense
@@ -134,7 +135,7 @@ class BuddyTransactionTile extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 11,
                       fontWeight: FontWeight.w400,
-                      color: Colors.white24,
+                      color: cs.onSurface.withValues(alpha: 0.4),
                     ),
                   ),
                 ],

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/api_config.dart';
-import '../../../core/design_system/mf_ui_system.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/providers.dart';
@@ -112,16 +111,16 @@ class _AppShellState extends ConsumerState<AppShell> {
             const SizedBox(width: 8),
           ],
         ),
-        body: AnimatedSwitcher(
-          duration: MfMotion.medium,
-          child: KeyedSubtree(
-            key: ValueKey(_mobileIndex),
-            child: _mobileScreens[_mobileIndex],
+        body: Padding(
+          // BOTTOM PADDING: ensures content never hides behind navbar (navbar ~68px + margins ~32px + safe area)
+          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom + 110),
+          child: AnimatedSwitcher(
+            duration: MfMotion.medium,
+            child: KeyedSubtree(
+              key: ValueKey(_mobileIndex),
+              child: _mobileScreens[_mobileIndex],
+            ),
           ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: _AnimatedFab(
-          onTap: () => showMoneyFlowQuickCreateSheet(context),
         ),
         bottomNavigationBar: _FloatingBottomNav(
           selectedIndex: _mobileIndex,
@@ -139,37 +138,39 @@ class _FloatingBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomSafe = MediaQuery.of(context).padding.bottom;
+    final bottomSafe = MediaQuery.of(context).viewPadding.bottom;
+
     return Container(
-      margin: EdgeInsets.fromLTRB(24, 0, 24, bottomSafe + 12),
-      height: 70,
+      // FIXED at bottom, full width, above all content
+      margin: EdgeInsets.fromLTRB(20, 0, 20, bottomSafe + 12),
+      height: 68,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(35),
+        borderRadius: BorderRadius.circular(34),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(35),
+        borderRadius: BorderRadius.circular(34),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF1F2937).withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(35),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+              color: const Color(0xFF1F2937).withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(34),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _NavTab(
                   label: 'Home',
-                  icon: Icons.grid_view_rounded,
+                  icon: Icons.grid_view_outlined,
                   activeIcon: Icons.grid_view_rounded,
                   isSelected: selectedIndex == 0,
                   onTap: () => onTap(0),

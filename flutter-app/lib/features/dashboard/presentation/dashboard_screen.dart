@@ -128,7 +128,7 @@ class DashboardScreen extends ConsumerWidget {
         onPressed: () {
           Navigator.of(context).push(LedgerPageRoutes.fadeSlide(const AddExpenseScreen()));
         },
-        backgroundColor: MfPalette.expenseRed,
+        backgroundColor: cs.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -148,29 +148,31 @@ class _MainHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return mfHeroGlassShell(
-      context: context,
+    final cs = Theme.of(context).colorScheme;
+    return Container(
       padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: cs.primary,
+        borderRadius: BorderRadius.circular(MfRadius.xl),
+        boxShadow: MfShadow.hero,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'TOTAL BALANCE',
-            style: GoogleFonts.inter(
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-            ),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  letterSpacing: 1.5,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             MfCurrency.formatInr(balance),
-            style: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.w800,
-            ),
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
           ),
           const SizedBox(height: 28),
           Row(
@@ -239,19 +241,16 @@ class _StatMiniCard extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: GoogleFonts.inter(
-                    color: Colors.white70,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white70,
+                      ),
                 ),
                 Text(
                   MfCurrency.formatCompact(double.tryParse(amount.toString()) ?? 0),
-                  style: GoogleFonts.manrope(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
               ],
             ),
@@ -277,12 +276,7 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Text(
             title.toUpperCase(),
-            style: GoogleFonts.inter(
-              color: Colors.white.withValues(alpha: 0.4),
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.5,
-            ),
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(letterSpacing: 1.5),
           ),
           GestureDetector(
             onTap: onSeeAll,
@@ -290,15 +284,10 @@ class _SectionHeader extends StatelessWidget {
               children: [
                 Text(
                   'SEE ALL',
-                  style: GoogleFonts.inter(
-                    color: MfPalette.primaryLight,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(width: 4),
-                Icon(Icons.arrow_forward_ios_rounded, size: 10, color: MfPalette.primaryLight),
+                Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Theme.of(context).colorScheme.primary),
               ],
             ),
           ),
@@ -320,9 +309,11 @@ class _MonthlyChart extends StatelessWidget {
     return Container(
       height: 220,
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-      decoration: glassCard(
-        color: MfPalette.surface,
-        borderRadius: MfRadius.lg,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        boxShadow: MfShadow.card,
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: BarChart(
         BarChartData(
@@ -461,13 +452,15 @@ class _TransactionTile extends StatelessWidget {
         ? (tx['category'] is Map ? tx['category']['name'] : (tx['categoryName'] ?? 'Expense'))
         : (tx['source'] ?? 'Income');
         
+    final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F2937).withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(MfRadius.md),
+        boxShadow: MfShadow.card,
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Row(
         children: [
@@ -490,20 +483,12 @@ class _TransactionTile extends StatelessWidget {
               children: [
                 Text(
                   category,
-                  style: GoogleFonts.manrope(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   DateFormat('dd MMM \u2022 hh:mm a').format(date),
-                  style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.3),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
               ],
             ),
@@ -513,12 +498,11 @@ class _TransactionTile extends StatelessWidget {
             children: [
               Text(
                 '${isExpense ? '-' : '+'}${MfCurrency.formatInr(amount)}',
-                style: GoogleFonts.manrope(
-                  color: isExpense ? Colors.white : MfPalette.incomeGreen,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.5,
-                ),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: isExpense ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.secondary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
               ),
               if (isExpense && tx['accountName'] != null)
                 Text(
@@ -552,11 +536,7 @@ class _EmptyTransactions extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No transactions yet',
-            style: GoogleFonts.manrope(
-              color: MfPalette.textMuted,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           Text(

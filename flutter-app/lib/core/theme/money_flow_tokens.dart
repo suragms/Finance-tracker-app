@@ -5,12 +5,10 @@ import 'package:intl/intl.dart';
 
 /// MoneyFlow AI - spacing, radii, motion.
 abstract final class MfRadius {
-  static const double sm = 12;
-  static const double md = 16;
-
-  /// Primary cards, tiles (premium fintech spec: 24px).
-  static const double lg = 24;
-  static const double xl = 32;
+  static const double sm = 12; // rounded-xl
+  static const double md = 16; // rounded-2xl
+  static const double lg = 16;
+  static const double xl = 24;
 }
 
 abstract final class MfSpace {
@@ -32,33 +30,25 @@ abstract final class MfMotion {
 
 /// Brand + semantic colors (use with [ColorScheme] in theme).
 abstract final class MfPalette {
-  // Canvas — premium dark gradient endpoints
-  static const Color canvasGradientTop = Color(0xFF0B0F1A);
-  static const Color canvasGradientBottom = Color(0xFF0B0F1A);
-  static const Color canvas = canvasGradientTop;
-  static const Color phoneBg = canvasGradientBottom;
-  static const Color cardBg = Color(0xFF1F2937);
-  static const Color cardBorder = Color(0xFF374151);
+  static const Color canvas = Color(0xFFF9FAFB); // Gray-50
+  static const Color cardBg = Colors.white;
+  static const Color cardBorder = Color(0xFFE5E7EB); // Gray-200
 
   /// Secondary accent
   static const Color accentSoftPurple = Color(0xFF818CF8);
 
   // Brand
-  static const Color primary = Color(0xFF6366F1);
-  static const Color primaryDark = Color(0xFF4F46E5);
-  static const Color primaryLight = Color(0xFF818CF8);
-  static const Color primaryGlow = Color(0xFF6366F1);
-
-  /// Premium fintech neon accent
-  static const Color neonGreen = Color(0xFF10B981);
-  static const Color neonGreenSoft = Color(0xFF34D399);
-  static const Color onNeonGreen = Colors.white;
+  static const Color primary = Color(0xFF4F46E5); // Indigo-600
+  static const Color primaryDark = Color(0xFF4338CA);
+  static const Color primaryLight = Color(0xFF6366F1);
+  static const Color primaryGlow = Color(0x334F46E5);
 
   // Semantic
-  static const Color incomeGreen = Color(0xFF10B981); // Green
-  static const Color expenseRed = Color(0xFFEF4444); // Red
+  static const Color incomeGreen = Color(0xFF22C55E); // Green-500
+  static const Color expenseAmber = Color(0xFFF59E0B); // Amber-500
+  static const Color expenseRed = Color(0xFFF59E0B); // Alias for backwards compat
   static const Color warningAmber = Color(0xFFF59E0B);
-  static const Color insightBlue = Color(0xFF3B82F6);
+  static const Color insightBlue = Color(0xFF4F46E5);
 
   // Expected Gradients
   static const Color heroStart = Color(0xFF1E3A8A);
@@ -66,9 +56,9 @@ abstract final class MfPalette {
   static const Color heroEnd = Color(0xFF3B82F6);
 
   // Text
-  static const Color textPrimary = Colors.white;
-  static const Color textMuted = Color(0xFF9CA3AF);
-  static const Color textHint = Color(0xFF6B7280);
+  static const Color textPrimary = Color(0xFF111827); // Gray-900
+  static const Color textMuted = Color(0xFF6B7280); // Gray-500
+  static const Color textHint = Color(0xFF9CA3AF); // Gray-400
 
   // Legacy aliases
   static const Color lightBg = Color(0xFF0B0F1A);
@@ -80,13 +70,22 @@ abstract final class MfPalette {
 
   /// Backwards-compatible names used by older widgets / light theme.
   static const Color success = incomeGreen;
-  static const Color error = expenseRed;
+  static const Color error = expenseAmber;
   static const Color warning = warningAmber;
   
   // Missing members found during modernize
   static const Color surface = canvas;
   static const Color primaryIndigo = primary;
   static const Color textSecondary = textMuted;
+
+  // Premium / Fintech accents
+  static const Color neonGreen = Color(0xFF3DFF8B);
+  static const Color neonGreenSoft = Color(0xFF4ADE80);
+  static const Color onNeonGreen = Color(0xFF06120E);
+
+  // Gradient anchors
+  static const Color canvasGradientTop = Color(0xFFFFFFFF);
+  static const Color canvasGradientBottom = Color(0xFFF9FAFB);
 }
 
 /// Buddy-style category colors used by icon chips, progress, and charts.
@@ -155,12 +154,12 @@ abstract final class MfSurface {
 /// Buddy shadow system.
 abstract final class MfShadow {
   static const List<BoxShadow> card = [
-    BoxShadow(color: Color(0x22000000), blurRadius: 18, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x1A6B5BFF), blurRadius: 16, offset: Offset(0, 2)),
+    BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)), // shadow-sm
+    BoxShadow(color: Color(0x06000000), blurRadius: 2, offset: Offset(0, 1)),
   ];
 
   static const List<BoxShadow> hero = [
-    BoxShadow(color: Color(0x1E8B7DFF), blurRadius: 26, offset: Offset(0, 10)),
+    BoxShadow(color: Color(0x0F4F46E5), blurRadius: 16, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> fab = [
