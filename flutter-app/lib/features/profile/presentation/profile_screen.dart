@@ -4,11 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../core/application/theme_mode_provider.dart';
 import '../../../core/theme/money_flow_tokens.dart';
-import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/providers.dart';
 import '../../auth/application/session_notifier.dart';
-import '../../expenses/presentation/recurring_management_screen.dart';
-import '../../accounts/presentation/accounts_screen.dart';
+import 'package:moneyflow_ai/features/recurring/presentation/recurring_list_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -18,12 +16,10 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  bool _notificationsEnabled = true;
-
   String _userNameFromEmail(String? email) {
-    if (email == null || email.trim().isEmpty) return 'MoneyFlow User';
+    if (email == null || email.trim().isEmpty) return 'User';
     final local = email.split('@').first.trim();
-    if (local.isEmpty) return 'MoneyFlow User';
+    if (local.isEmpty) return 'User';
     final words = local.split(RegExp(r'[._\-]+'));
     return words
         .where((w) => w.isNotEmpty)
@@ -31,285 +27,153 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         .join(' ');
   }
 
-  Future<void> _onSync() async {
-    await ref.read(ledgerSyncServiceProvider).pullAndFlush();
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sync completed')));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final mode = ref.watch(themeModeProvider);
     final email = ref.watch(tokenStorageProvider).userEmail;
     final userName = _userNameFromEmail(email);
-    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'M';
-    final cs = Theme.of(context).colorScheme;
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
+    final mode = ref.watch(themeModeProvider);
 
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: MfPalette.canvas,
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          'Settings',
-          style: GoogleFonts.manrope(fontWeight: FontWeight.w800, fontSize: 24, color: cs.onSurface),
-        ),
-        centerTitle: false,
+        title: Text('Profile', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
         children: [
           const SizedBox(height: 16),
-          // Profile Card
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundColor: cs.primary,
-                    child: Text(
-                      userInitial,
-                      style: GoogleFonts.manrope(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 24,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userName,
-                          style: GoogleFonts.manrope(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                            color: cs.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email ?? 'user@moneyflow.ai',
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 13,
-                            color: const Color(0xFF9CA3AF),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined, color: const Color(0xFF9CA3AF)),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Edit profile coming soon')),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 24),
-          const _SectionTitle(label: 'FINANCIAL'),
-          const SizedBox(height: 8),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
-            clipBehavior: Clip.antiAlias,
+          Center(
             child: Column(
               children: [
-                _SettingsTile(
-                  icon: Icons.repeat_rounded,
-                  label: 'Recurring Bills',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RecurringManagementScreen()),
-                    );
-                  },
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: MfPalette.primary.withValues(alpha: 0.1),
+                  child: Text(userInitial, style: GoogleFonts.inter(fontSize: 40, fontWeight: FontWeight.w700, color: MfPalette.primary)),
                 ),
-                Divider(height: 1, color: const Color(0xFF374151), indent: 56),
-                _SettingsTile(
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: 'Accounts & Wallets',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AccountsScreen()),
-                    );
-                  },
-                ),
+                const SizedBox(height: 16),
+                Text(userName, style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: MfPalette.textPrimary)),
+                Text(email ?? '', style: GoogleFonts.inter(fontSize: 14, color: MfPalette.textSecondary)),
               ],
             ),
           ),
-
-          const SizedBox(height: 24),
-          const _SectionTitle(label: 'PREFERENCES'),
-          const SizedBox(height: 8),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                _SettingsTile(
-                  icon: Icons.palette_outlined,
-                  label: 'Theme',
-                  trailing: DropdownButtonHideUnderline(
-                    child: DropdownButton<ThemeMode>(
-                      value: mode,
-                      dropdownColor: cs.surfaceContainerHigh,
-                      style: GoogleFonts.inter(color: cs.onSurface, fontSize: 14, fontWeight: FontWeight.w600),
-                      iconEnabledColor: const Color(0xFF9CA3AF),
-                      isDense: true,
-                      items: const [
-                        DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
-                        DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
-                        DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          ref.read(themeModeProvider.notifier).setMode(v);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                Divider(height: 1, color: const Color(0xFF374151), indent: 56),
-                _SettingsTile(
-                  icon: Icons.notifications_none_rounded,
-                  label: 'Notifications',
-                  trailing: Switch(
-                    value: _notificationsEnabled,
-                    activeColor: cs.primary,
-                    activeTrackColor: cs.primary.withValues(alpha: 0.3),
-                    onChanged: (v) => setState(() => _notificationsEnabled = v),
-                  ),
-                ),
-              ],
+          const SizedBox(height: 40),
+          _buildSection('Settings', [
+            _ProfileTile(
+              icon: Icons.palette_outlined,
+              label: 'App Theme',
+              subtitle: mode == ThemeMode.system ? 'System Default' : (mode == ThemeMode.light ? 'Light' : 'Dark'),
+              color: MfPalette.primary,
+              onTap: () => _showThemePicker(context, ref, mode),
             ),
-          ),
-          
-          const SizedBox(height: 24),
-          const _SectionTitle(label: 'SYSTEM'),
-          const SizedBox(height: 8),
-          Card(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(MfRadius.lg)),
-            clipBehavior: Clip.antiAlias,
-            child: Column(
-              children: [
-                _SettingsTile(
-                  icon: Icons.cloud_sync_outlined,
-                  label: 'Sync Data',
-                  onTap: _onSync,
-                ),
-                Divider(height: 1, color: const Color(0xFF374151), indent: 56),
-                _SettingsTile(
-                  icon: Icons.logout_rounded,
-                  label: 'Sign Out',
-                  color: const Color(0xFFEF4444),
-                  hideArrow: true,
-                  onTap: () async {
-                    await ref.read(sessionProvider.notifier).logout();
-                  },
-                ),
-              ],
+            _ProfileTile(
+              icon: Icons.repeat_rounded,
+              label: 'Recurring Payments',
+              subtitle: 'Manage automatic bills',
+              color: MfPalette.incomeGreen,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RecurringListScreen())),
             ),
+          ]),
+          const SizedBox(height: 24),
+          _buildSection('Account', [
+            _ProfileTile(
+              icon: Icons.logout_rounded,
+              label: 'Log Out',
+              subtitle: 'Sign out of your account',
+              color: MfPalette.textSecondary,
+              onTap: () => ref.read(sessionProvider.notifier).logout(),
+            ),
+            _ProfileTile(
+              icon: Icons.delete_forever_rounded,
+              label: 'Delete Account',
+              subtitle: 'Permanently remove all data',
+              color: MfPalette.expenseAmber,
+              onTap: () {},
+            ),
+          ]),
+          const SizedBox(height: 40),
+          Text(
+            'MoneyFlow AI v2.5.0\nSecure • Private • Fast',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(fontSize: 12, color: MfPalette.textHint),
           ),
           const SizedBox(height: 120),
         ],
       ),
     );
   }
-}
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.label});
-  final String label;
+  Widget _buildSection(String title, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(title, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: MfPalette.textSecondary)),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE5E7EB)),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 12, bottom: 4),
-      child: Text(
-        label,
-        style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
-          color: const Color(0xFF9CA3AF), // Tailwind Gray-400
+  void _showThemePicker(BuildContext context, WidgetRef ref, ThemeMode current) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('App Theme', style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 16),
+            _themeTile(ref, 'System Default', ThemeMode.system, current == ThemeMode.system),
+            _themeTile(ref, 'Light', ThemeMode.light, current == ThemeMode.light),
+            _themeTile(ref, 'Dark', ThemeMode.dark, current == ThemeMode.dark),
+          ],
         ),
       ),
     );
   }
+
+  Widget _themeTile(WidgetRef ref, String label, ThemeMode mode, bool selected) {
+    return ListTile(
+      title: Text(label, style: GoogleFonts.inter(fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+      onTap: () { ref.read(themeModeProvider.notifier).setMode(mode); Navigator.pop(context); },
+      trailing: selected ? const Icon(Icons.check, color: MfPalette.primary) : null,
+    );
+  }
 }
 
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile({
-    required this.icon,
-    required this.label,
-    this.trailing,
-    this.color,
-    this.onTap,
-    this.hideArrow = false,
-  });
-
+class _ProfileTile extends StatelessWidget {
+  const _ProfileTile({required this.icon, required this.label, required this.subtitle, required this.color, this.onTap});
   final IconData icon;
   final String label;
-  final Widget? trailing;
-  final Color? color;
+  final String subtitle;
+  final Color color;
   final VoidCallback? onTap;
-  final bool hideArrow;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final fallbackColor = color ?? cs.primary;
-    final textColor = color ?? cs.onSurface;
-
-    return InkWell(
+    return ListTile(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: fallbackColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: fallbackColor, size: 20),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.inter(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: textColor,
-                ),
-              ),
-            ),
-            if (trailing != null) 
-              trailing!
-            else if (!hideArrow && onTap != null)
-              const Icon(
-                Icons.chevron_right_rounded,
-                color: Color(0xFF6B7280), // Tailwind Gray-500
-                size: 20,
-              ),
-          ],
-        ),
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+        child: Icon(icon, color: color, size: 20),
       ),
+      title: Text(label, style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: MfPalette.textPrimary)),
+      subtitle: Text(subtitle, style: GoogleFonts.inter(fontSize: 12, color: MfPalette.textSecondary)),
+      trailing: const Icon(Icons.chevron_right, size: 16, color: Color(0xFFD1D5DB)),
     );
   }
 }

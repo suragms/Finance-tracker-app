@@ -10,6 +10,19 @@ class AccountsLedger {
   final List<Map<String, dynamic>> accounts;
   final Map<String, dynamic> summary;
 
+  double get totalNetWorth {
+    double total = 0;
+    for (final a in accounts) {
+      final bal = a['balance'];
+      if (bal is num) {
+        total += bal;
+      } else if (bal is String) {
+        total += double.tryParse(bal) ?? 0;
+      }
+    }
+    return total;
+  }
+
   factory AccountsLedger.fromJson(Map<String, dynamic> json) {
     final raw = json['accounts'];
     final list = raw is List

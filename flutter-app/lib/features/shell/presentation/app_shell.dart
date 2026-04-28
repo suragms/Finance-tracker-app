@@ -7,41 +7,31 @@ import '../../../core/api_config.dart';
 import '../../../core/theme/money_flow_tokens.dart';
 import '../../../core/offline/sync/ledger_sync_service.dart';
 import '../../../core/providers.dart';
+import '../../accounts/presentation/accounts_screen.dart';
 import '../../dashboard/presentation/money_flow_home_screen.dart';
 import '../../expenses/application/recurring_manager.dart';
-import '../../expenses/presentation/expense_list_screen.dart';
 import '../../onboarding/presentation/demo_get_started_screen.dart';
 import '../../profile/presentation/profile_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
+import '../../transactions/presentation/transactions_screen.dart';
 import 'quick_create_sheet.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  ConsumerState<AppShell> createState() => _AppShellState();
+  ConsumerState<AppShell> createState() => _AddShellState();
 }
 
-class _AppShellState extends ConsumerState<AppShell> {
+class _AddShellState extends ConsumerState<AppShell> {
   int _mobileIndex = 0;
 
   static const _mobileScreens = [
     MoneyFlowHomeScreen(),
-    ExpenseListScreen(),
+    TransactionsScreen(),
     ReportsScreen(),
     ProfileScreen(),
   ];
-
-  String _userNameFromEmail(String? email) {
-    if (email == null || email.trim().isEmpty) return 'User';
-    final local = email.split('@').first.trim();
-    if (local.isEmpty) return 'User';
-    final words = local.split(RegExp(r'[._\-]+'));
-    return words
-        .where((w) => w.isNotEmpty)
-        .map((w) => '${w[0].toUpperCase()}${w.substring(1)}')
-        .join(' ');
-  }
 
   @override
   void initState() {
@@ -60,148 +50,75 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    // Current requirement focusing on Mobile-First Navigation
-    return _buildMobile();
-  }
-
-  Widget _buildMobile() {
-    final email = ref.watch(tokenStorageProvider).userEmail;
-    final userName = _userNameFromEmail(email);
-    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
-
-    return Container(
-      decoration: BoxDecoration(gradient: mfPremiumCanvasGradient),
-      child: Scaffold(
-        extendBody: true,
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: false,
-          title: Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: MfPalette.accentSoftPurple.withValues(alpha: 0.2),
-                child: Text(
-                  userInitial,
-                  style: GoogleFonts.manrope(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'MoneyFlow AI',
-                style: GoogleFonts.manrope(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none_rounded, color: Colors.white38),
-              onPressed: () {},
-            ),
-            const SizedBox(width: 8),
-          ],
+    return Scaffold(
+      extendBody: true,
+      backgroundColor: MfPalette.canvas,
+      body: AnimatedSwitcher(
+        duration: MfMotion.medium,
+        child: KeyedSubtree(
+          key: ValueKey(_mobileIndex),
+          child: _mobileScreens[_mobileIndex],
         ),
-        body: Padding(
-          // BOTTOM PADDING: ensures content never hides behind navbar (navbar ~68px + margins ~32px + safe area)
-          padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewPadding.bottom + 110),
-          child: AnimatedSwitcher(
-            duration: MfMotion.medium,
-            child: KeyedSubtree(
-              key: ValueKey(_mobileIndex),
-              child: _mobileScreens[_mobileIndex],
-            ),
-          ),
-        ),
-        bottomNavigationBar: _FloatingBottomNav(
-          selectedIndex: _mobileIndex,
-          onTap: (index) => setState(() => _mobileIndex = index),
-        ),
+      ),
+      floatingActionButton: _AnimatedFab(
+        onTap: () => showMoneyFlowQuickCreateSheet(context),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: _MoneyFlowBottomNav(
+        selectedIndex: _mobileIndex,
+        onTap: (index) => setState(() => _mobileIndex = index),
       ),
     );
   }
 }
 
-class _FloatingBottomNav extends StatelessWidget {
-  const _FloatingBottomNav({required this.selectedIndex, required this.onTap});
+class _MoneyFlowBottomNav extends StatelessWidget {
+  const _MoneyFlowBottomNav({required this.selectedIndex, required this.onTap});
   final int selectedIndex;
   final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
-    final bottomSafe = MediaQuery.of(context).viewPadding.bottom;
-
-    return Container(
-      // FIXED at bottom, full width, above all content
-      margin: EdgeInsets.fromLTRB(20, 0, 20, bottomSafe + 12),
-      height: 68,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(34),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(34),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1F2937).withValues(alpha: 0.85),
-              borderRadius: BorderRadius.circular(34),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12), width: 1.5),
+    return BottomAppBar(
+      color: Colors.white,
+      shape: const CircularNotchedRectangle(),
+      notchMargin: 8,
+      child: Container(
+        height: 64,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            _NavTab(
+              label: 'Dashboard',
+              icon: Icons.grid_view_outlined,
+              activeIcon: Icons.grid_view_rounded,
+              isSelected: selectedIndex == 0,
+              onTap: () => onTap(0),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _NavTab(
-                  label: 'Home',
-                  icon: Icons.grid_view_outlined,
-                  activeIcon: Icons.grid_view_rounded,
-                  isSelected: selectedIndex == 0,
-                  onTap: () => onTap(0),
-                ),
-                _NavTab(
-                  label: 'Wallet',
-                  icon: Icons.account_balance_wallet_outlined,
-                  activeIcon: Icons.account_balance_wallet_rounded,
-                  isSelected: selectedIndex == 1,
-                  onTap: () => onTap(1),
-                ),
-                _AnimatedFab(
-                  onTap: () => showMoneyFlowQuickCreateSheet(context),
-                ),
-                _NavTab(
-                  label: 'Trends',
-                  icon: Icons.analytics_outlined,
-                  activeIcon: Icons.analytics_rounded,
-                  isSelected: selectedIndex == 2,
-                  onTap: () => onTap(2),
-                ),
-                _NavTab(
-                  label: 'Profile',
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  isSelected: selectedIndex == 3,
-                  onTap: () => onTap(3),
-                ),
-              ],
+            _NavTab(
+              label: 'Transactions',
+              icon: Icons.receipt_long_outlined,
+              activeIcon: Icons.receipt_long_rounded,
+              isSelected: selectedIndex == 1,
+              onTap: () => onTap(1),
             ),
-          ),
+            const SizedBox(width: 48), // Space for FAB
+            _NavTab(
+              label: 'Reports',
+              icon: Icons.analytics_outlined,
+              activeIcon: Icons.analytics_rounded,
+              isSelected: selectedIndex == 2,
+              onTap: () => onTap(2),
+            ),
+            _NavTab(
+              label: 'Profile',
+              icon: Icons.person_outline_rounded,
+              activeIcon: Icons.person_rounded,
+              isSelected: selectedIndex == 3,
+              onTap: () => onTap(3),
+            ),
+          ],
         ),
       ),
     );
@@ -225,116 +142,51 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.symmetric(
-              horizontal: isSelected ? 16 : 12,
-              vertical: 4,
+    final activeColor = MfPalette.primary;
+    final inactiveColor = Color(0xFF9CA3AF);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? activeIcon : icon,
+              color: isSelected ? activeColor : inactiveColor,
+              size: 24,
             ),
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF6366F1).withValues(alpha: 0.15) : Colors.transparent,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              transitionBuilder: (child, animation) => ScaleTransition(scale: animation, child: child),
-              child: Icon(
-                isSelected ? activeIcon : icon,
-                key: ValueKey(isSelected),
-                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
-                size: 24,
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                color: isSelected ? activeColor : inactiveColor,
               ),
             ),
-          ),
-          const SizedBox(height: 4),
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 250),
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
-              letterSpacing: 0.2,
-            ),
-            child: Text(label),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _AnimatedFab extends StatefulWidget {
+class _AnimatedFab extends StatelessWidget {
   const _AnimatedFab({required this.onTap});
   final VoidCallback onTap;
 
   @override
-  State<_AnimatedFab> createState() => _AnimatedFabState();
-}
-
-class _AnimatedFabState extends State<_AnimatedFab> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-       vsync: this,
-       duration: const Duration(milliseconds: 100),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
-       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) {
-         _controller.reverse();
-         widget.onTap();
-      },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFF6366F1), Color(0xFF667EEA)], 
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF6366F1).withValues(alpha: 0.6),
-                offset: const Offset(0, 8),
-                blurRadius: 24,
-                spreadRadius: 2,
-              ),
-            ],
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1.5),
-          ),
-          child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
-        ),
-      ),
+    return FloatingActionButton(
+      onPressed: onTap,
+      backgroundColor: MfPalette.primary,
+      foregroundColor: Colors.white,
+      elevation: 4,
+      shape: const CircleBorder(),
+      child: const Icon(Icons.add_rounded, size: 32),
     );
   }
 }

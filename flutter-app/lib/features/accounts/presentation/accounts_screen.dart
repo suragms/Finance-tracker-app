@@ -17,161 +17,173 @@ class AccountsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: MfPalette.canvas,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'ACCOUNTS',
-                    style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 13, color: Colors.white24, letterSpacing: 1.5),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        LedgerPageRoutes.fadeSlide<void>(
-                          const AccountSetupScreen(isInitialSetup: false),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: const Color(0xFF6366F1).withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
-                      child: Text('ADD ACCOUNT', style: GoogleFonts.inter(fontWeight: FontWeight.w800, fontSize: 11, color: const Color(0xFF6366F1))),
-                    ),
-                  ),
-                ],
+      appBar: AppBar(
+        title: Text('Accounts', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).push(LedgerPageRoutes.fadeSlide<void>(const AccountSetupScreen(isInitialSetup: false))),
+            icon: const Icon(Icons.add_circle_outline, color: MfPalette.primary),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: async.when(
+                data: (ledger) => _NetWorthCard(total: ledger.totalNetWorth),
+                loading: () => const _SkeletonCard(),
+                error: (_, __) => const SizedBox.shrink(),
               ),
             ),
-
-            // LIST: Premium Cards
-            Expanded(
-              child: async.when(
-                loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF6366F1))),
-                error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: Colors.white24))),
-                data: (ledger) {
-                  final list = ledger.accounts;
-                  if (list.isEmpty) {
-                    return Center(child: Text('No accounts found.', style: GoogleFonts.inter(color: Colors.white24, fontWeight: FontWeight.bold)));
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 150),
-                    itemCount: list.length,
-                    itemBuilder: (context, index) {
-                      final a = list[index];
-                      final name = a['name']?.toString() ?? 'Account';
-                      final bal = double.tryParse(a['balance']?.toString() ?? '0') ?? 0;
-                      final type = (a['type']?.toString() ?? 'bank').toLowerCase();
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: _AccountCard(
-                          name: name,
-                          balance: bal,
-                          type: type,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              LedgerPageRoutes.fadeSlide<void>(
-                                ExpenseListScreen(
-                                  accountId: a['id']?.toString() ?? '',
-                                  accountName: name,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+          ),
+          async.when(
+            data: (ledger) => SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final a = ledger.accounts[index];
+                  final id = a['id']?.toString() ?? UniqueKey().toString();
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: _AccountListItem(
+                      key: ValueKey(id),
+                      account: a,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          LedgerPageRoutes.fadeSlide<void>(
+                            ExpenseListScreen(
+                              accountId: id,
+                              accountName: a['name']?.toString() ?? 'Account',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   );
                 },
+                childCount: ledger.accounts.length,
               ),
             ),
-          ],
-        ),
+            loading: () => const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
+            error: (e, __) => SliverFillRemaining(child: Center(child: Text('Error: $e'))),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
     );
   }
 }
 
-class _AccountCard extends StatelessWidget {
-  const _AccountCard({
-    required this.name,
-    required this.balance,
-    required this.type,
-    required this.onTap,
-  });
+class _NetWorthCard extends StatelessWidget {
+  const _NetWorthCard({required this.total});
+  final double total;
 
-  final String name;
-  final double balance;
-  final String type;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: MfPalette.primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: MfPalette.primary.withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'TOTAL NET WORTH',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white.withValues(alpha: 0.7),
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            MfCurrency.formatInr(total),
+            style: GoogleFonts.inter(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountListItem extends StatelessWidget {
+  const _AccountListItem({super.key, required this.account, required this.onTap});
+  final Map<String, dynamic> account;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = _colorForType(type);
+    final name = account['name']?.toString() ?? 'Account';
+    final bal = double.tryParse(account['balance']?.toString() ?? '0') ?? 0;
+    final type = (account['type']?.toString() ?? 'bank').toLowerCase();
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 180,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              color.withValues(alpha: 0.25),
-              color.withValues(alpha: 0.05),
-            ],
-          ),
-          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
-          boxShadow: [
-            BoxShadow(color: color.withValues(alpha: 0.08), blurRadius: 40, spreadRadius: -10),
-          ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
-        child: Stack(
+        child: Row(
           children: [
-            // Ambient Glow
-            Positioned(
-              right: -50,
-              top: -50,
-              child: Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: MfPalette.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(12),
               ),
+              child: Icon(_iconForType(type), color: MfPalette.primary, size: 22),
             ),
-
-            Padding(
-              padding: const EdgeInsets.all(24),
+            const SizedBox(width: 16),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        type.toUpperCase(),
-                        style: GoogleFonts.inter(fontWeight: FontWeight.w900, fontSize: 10, color: color, letterSpacing: 1.2),
-                      ),
-                      Icon(_iconForType(type), color: Colors.white24, size: 20),
-                    ],
-                  ),
-                  const Spacer(),
                   Text(
                     name,
-                    style: GoogleFonts.manrope(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.7)),
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: MfPalette.textPrimary,
+                    ),
                   ),
-                  const SizedBox(height: 4),
                   Text(
-                    MfCurrency.formatInr(balance),
-                    style: GoogleFonts.manrope(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: -0.5),
+                    _subtitleForType(type),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: MfPalette.textSecondary,
+                    ),
                   ),
                 ],
+              ),
+            ),
+            Text(
+              MfCurrency.formatInr(bal),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: MfPalette.textPrimary,
               ),
             ),
           ],
@@ -180,19 +192,32 @@ class _AccountCard extends StatelessWidget {
     );
   }
 
-  Color _colorForType(String t) {
-    if (t.contains('credit')) return const Color(0xFFEF4444); // Red
-    if (t.contains('cash')) return const Color(0xFF10B981); // Green
-    if (t.contains('wallet')) return const Color(0xFFFACC15); // Yellow/Gold
-    if (t.contains('upi')) return const Color(0xFF38BDF8); // Light Blue
-    return const Color(0xFF6366F1); // Indigo (Bank default)
+  IconData _iconForType(String t) {
+    if (t.contains('credit')) return Icons.credit_card;
+    if (t.contains('cash')) return Icons.payments;
+    return Icons.account_balance;
   }
 
-  IconData _iconForType(String t) {
-    if (t.contains('credit')) return Icons.credit_card_rounded;
-    if (t.contains('wallet')) return Icons.account_balance_wallet_rounded;
-    if (t.contains('cash')) return Icons.payments_rounded;
-    if (t.contains('upi')) return Icons.qr_code_scanner_rounded;
-    return Icons.account_balance_rounded; // Bank Default
+  String _subtitleForType(String t) {
+    if (t.contains('credit')) return 'Credit Card';
+    if (t.contains('cash')) return 'Cash Wallet';
+    return 'Bank Account';
+  }
+}
+
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 100,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE5E7EB)),
+      ),
+    );
   }
 }

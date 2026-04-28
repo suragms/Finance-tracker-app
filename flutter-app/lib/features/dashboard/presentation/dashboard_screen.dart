@@ -16,6 +16,8 @@ import '../../expenses/application/expense_providers.dart';
 import '../../expenses/presentation/add_expense_screen.dart';
 import '../../income/application/income_providers.dart';
 import '../../income/presentation/add_income_screen.dart';
+import '../../accounts/application/account_providers.dart';
+import '../../accounts/data/accounts_api.dart';
 import '../application/dashboard_providers.dart';
 import 'dashboard_quick_access.dart';
 
@@ -55,14 +57,12 @@ class DashboardScreen extends ConsumerWidget {
             overview.when(
               data: (dash) {
                 // Real-time total balance linked to accounts system
-                final accounts = accountsAsync.valueOrNull?.accounts ?? [];
+                final ledger = accountsAsync.valueOrNull;
+                final accounts = ledger?.accounts ?? [];
                 double totalBalance = 0;
-                for (final a in accounts) {
-                  totalBalance += double.tryParse(a['balance']?.toString() ?? '0') ?? 0;
-                }
-
-                // Fallback to netWorth from overview if no accounts yet
-                if (accounts.isEmpty) {
+                if (ledger != null) {
+                  totalBalance = ledger.totalNetWorth;
+                } else {
                   totalBalance = double.tryParse(dash['netWorth']?['netWorth']?.toString() ?? '0') ?? 0;
                 }
 
@@ -190,7 +190,7 @@ class _MainHeroCard extends StatelessWidget {
                 child: _StatMiniCard(
                   label: 'Expense',
                   amount: expense,
-                  color: MfPalette.expenseRed,
+                  color: MfPalette.expenseAmber,
                   icon: Icons.north_east_rounded,
                 ),
               ),
@@ -363,7 +363,7 @@ class _MonthlyChart extends StatelessWidget {
                 ),
                 BarChartRodData(
                   toY: expense,
-                  color: MfPalette.expenseRed,
+                  color: MfPalette.expenseAmber,
                   width: 8,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                 ),
@@ -451,28 +451,27 @@ class _TransactionTile extends StatelessWidget {
     final category = isExpense 
         ? (tx['category'] is Map ? tx['category']['name'] : (tx['categoryName'] ?? 'Expense'))
         : (tx['source'] ?? 'Income');
-        
-    final cs = Theme.of(context).colorScheme;
+         
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHigh,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(MfRadius.md),
         boxShadow: MfShadow.card,
-        border: Border.all(color: cs.outlineVariant),
+        border: Border.all(color: MfPalette.cardBorder),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: (isExpense ? MfPalette.expenseRed : MfPalette.incomeGreen).withValues(alpha: 0.1),
+              color: (isExpense ? MfPalette.expenseAmber : MfPalette.incomeGreen).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               isExpense ? Icons.shopping_bag_rounded : Icons.payments_rounded,
-              color: isExpense ? MfPalette.expenseRed : MfPalette.incomeGreen,
+              color: isExpense ? MfPalette.expenseAmber : MfPalette.incomeGreen,
               size: 20,
             ),
           ),
@@ -483,12 +482,12 @@ class _TransactionTile extends StatelessWidget {
               children: [
                 Text(
                   category,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 14, color: MfPalette.textPrimary),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   DateFormat('dd MMM \u2022 hh:mm a').format(date),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: GoogleFonts.inter(fontSize: 11, color: MfPalette.textSecondary),
                 ),
               ],
             ),
@@ -498,8 +497,8 @@ class _TransactionTile extends StatelessWidget {
             children: [
               Text(
                 '${isExpense ? '-' : '+'}${MfCurrency.formatInr(amount)}',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: isExpense ? Theme.of(context).colorScheme.error : Theme.of(context).colorScheme.secondary,
+                style: GoogleFonts.inter(
+                      color: isExpense ? MfPalette.expenseAmber : MfPalette.incomeGreen,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.5,
                     ),
@@ -508,7 +507,7 @@ class _TransactionTile extends StatelessWidget {
                 Text(
                   tx['accountName'].toString().toUpperCase(),
                   style: GoogleFonts.inter(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: MfPalette.textHint,
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
@@ -536,7 +535,7 @@ class _EmptyTransactions extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'No transactions yet',
-            style: Theme.of(context).textTheme.titleMedium,
+            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: MfPalette.textPrimary),
           ),
           const SizedBox(height: 4),
           Text(

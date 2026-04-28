@@ -5,10 +5,10 @@ import 'package:intl/intl.dart';
 
 /// MoneyFlow AI - spacing, radii, motion.
 abstract final class MfRadius {
-  static const double sm = 12; // rounded-xl
-  static const double md = 16; // rounded-2xl
-  static const double lg = 16;
-  static const double xl = 24;
+  static const double sm = 12; 
+  static const double md = 16; 
+  static const double lg = 24;
+  static const double xl = 32;
 }
 
 abstract final class MfSpace {
@@ -30,53 +30,43 @@ abstract final class MfMotion {
 
 /// Brand + semantic colors (use with [ColorScheme] in theme).
 abstract final class MfPalette {
-  static const Color canvas = Color(0xFFF9FAFB); // Gray-50
+  static const Color canvas = Color(0xFFF9FAFB); // gray-50
   static const Color cardBg = Colors.white;
-  static const Color cardBorder = Color(0xFFE5E7EB); // Gray-200
-
-  /// Secondary accent
-  static const Color accentSoftPurple = Color(0xFF818CF8);
+  static const Color cardBorder = Color(0xFFE5E7EB); // gray-200
 
   // Brand
-  static const Color primary = Color(0xFF4F46E5); // Indigo-600
-  static const Color primaryDark = Color(0xFF4338CA);
-  static const Color primaryLight = Color(0xFF6366F1);
+  static const Color primary = Color(0xFF4F46E5); // indigo-600
+  static const Color primaryDark = Color(0xFF4338CA); // indigo-700
+  static const Color primaryLight = Color(0xFF818CF8); // indigo-400
   static const Color primaryGlow = Color(0x334F46E5);
 
   // Semantic
-  static const Color incomeGreen = Color(0xFF22C55E); // Green-500
-  static const Color expenseAmber = Color(0xFFF59E0B); // Amber-500
-  static const Color expenseRed = Color(0xFFF59E0B); // Alias for backwards compat
+  static const Color incomeGreen = Color(0xFF10B981); // green-500
+  static const Color expenseAmber = Color(0xFFF59E0B); // amber-500
   static const Color warningAmber = Color(0xFFF59E0B);
   static const Color insightBlue = Color(0xFF4F46E5);
 
-  // Expected Gradients
-  static const Color heroStart = Color(0xFF1E3A8A);
-  static const Color heroMid = Color(0xFF6366F1);
-  static const Color heroEnd = Color(0xFF3B82F6);
-
   // Text
-  static const Color textPrimary = Color(0xFF111827); // Gray-900
-  static const Color textMuted = Color(0xFF6B7280); // Gray-500
-  static const Color textHint = Color(0xFF9CA3AF); // Gray-400
+  static const Color textPrimary = Color(0xFF111827); // gray-900
+  static const Color textSecondary = Color(0xFF6B7280); // gray-500
+  static const Color textMuted = Color(0xFF6B7280); 
+  static const Color textHint = Color(0xFF9CA3AF); // gray-400
 
-  // Legacy aliases
-  static const Color lightBg = Color(0xFF0B0F1A);
-  static const Color lightBgElevated = Color(0xFF111827);
-  static const Color lightMuted = Color(0xFF9CA3AF);
-  static const Color darkBg = Color(0xFF0B0F1A);
-  static const Color darkBgElevated = Color(0xFF1F2937);
-  static const Color darkMuted = Color(0xFF9CA3AF);
-
-  /// Backwards-compatible names used by older widgets / light theme.
+  // Backwards-compatible aliases
   static const Color success = incomeGreen;
-  static const Color error = expenseAmber;
+  static const Color error = expenseAmber; 
   static const Color warning = warningAmber;
-  
-  // Missing members found during modernize
   static const Color surface = canvas;
   static const Color primaryIndigo = primary;
-  static const Color textSecondary = textMuted;
+  static const Color income = incomeGreen;
+  static const Color expense = expenseAmber;
+  static const Color expenseRed = expenseAmber;
+  static const Color accentIndigo = primary;
+  static const Color accentTeal = Color(0xFF10B981);
+  static const Color accentSoftPurple = Color(0xFF8B5CF6);
+  static const Color heroStart = primary;
+  static const Color heroMid = Color(0xFF6366F1);
+  static const Color heroEnd = Color(0xFF818CF8);
 
   // Premium / Fintech accents
   static const Color neonGreen = Color(0xFF3DFF8B);
@@ -85,22 +75,22 @@ abstract final class MfPalette {
 
   // Gradient anchors
   static const Color canvasGradientTop = Color(0xFFFFFFFF);
-  static const Color canvasGradientBottom = Color(0xFFF9FAFB);
+  static const Color canvasGradientBottom = Color(0xFFF8F9FB);
 }
 
 /// Buddy-style category colors used by icon chips, progress, and charts.
 abstract final class MfCategoryColors {
-  static const Color dailyExpenses = Color(0xFFFF6B6B);
-  static const Color household = Color(0xFF4ECDC4);
+  static const Color dailyExpenses = Color(0xFF667EEA);
+  static const Color household = Color(0xFF006B55);
   static const Color vehicle = Color(0xFF45B7D1);
   static const Color insurance = Color(0xFF96CEB4);
   static const Color financial = Color(0xFF6C5CE7);
   static const Color donations = Color(0xFFFF7675);
   static const Color business = Color(0xFF00B894);
   static const Color custom = Color(0xFFFDAA5A);
-  static const Color food = Color(0xFFE17055);
+  static const Color food = Color(0xFF667EEA);
   static const Color transport = Color(0xFF0984E3);
-  static const Color shopping = Color(0xFFE84393);
+  static const Color shopping = Color(0xFFAA2D32);
   static const Color entertainment = Color(0xFFA29BFE);
   static const Color health = Color(0xFF55EFC4);
   static const Color fuel = Color(0xFFFD79A8);
@@ -144,27 +134,27 @@ abstract final class MfCategoryColors {
 }
 
 abstract final class MfSurface {
-  static const Color base = Color(0xFF0B0F1A);
-  static const Color card = Color(0xFF1F2937);
-  static const Color cardAlt = Color(0xFF111827);
-  static const Color divider = Color(0xFF374151);
-  static const Color inputFill = Color(0xFF111827);
+  static const Color base = Color(0xFFF8F9FB);
+  static const Color card = Colors.white;
+  static const Color cardAlt = Color(0xFFF3F4F6);
+  static const Color divider = Color(0xFFE5E7EB);
+  static const Color inputFill = Colors.white;
 }
 
 /// Buddy shadow system.
 abstract final class MfShadow {
   static const List<BoxShadow> card = [
-    BoxShadow(color: Color(0x0A000000), blurRadius: 4, offset: Offset(0, 1)), // shadow-sm
-    BoxShadow(color: Color(0x06000000), blurRadius: 2, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x0F000000), blurRadius: 16, offset: Offset(0, 4)), 
+    BoxShadow(color: Color(0x05000000), blurRadius: 4, offset: Offset(0, 1)),
   ];
 
   static const List<BoxShadow> hero = [
-    BoxShadow(color: Color(0x0F4F46E5), blurRadius: 16, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x40667EEA), blurRadius: 24, offset: Offset(0, 4)),
   ];
 
   static const List<BoxShadow> fab = [
     BoxShadow(color: Color(0x26000000), blurRadius: 18, offset: Offset(0, 8)),
-    BoxShadow(color: Color(0x2E8B7DFF), blurRadius: 22, offset: Offset(0, 0)),
+    BoxShadow(color: Color(0x2E667EEA), blurRadius: 22, offset: Offset(0, 0)),
   ];
 }
 
@@ -215,7 +205,7 @@ const LinearGradient mfPremiumCanvasGradient = LinearGradient(
 );
 
 const LinearGradient mfBrandGradient = LinearGradient(
-  colors: [Color(0xFF6366F1), Color(0xFF818CF8)],
+  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
   begin: Alignment.topLeft,
   end: Alignment.bottomRight,
 );
@@ -259,7 +249,7 @@ BoxDecoration glassCard({
 /// BUG-T08: theme-aware hero gradient anchors for net worth / balance surfaces.
 ({Color heroStart, Color heroEnd}) heroCardGradientEndpoints(
     BuildContext context) {
-  return (heroStart: const Color(0xFF1F2937), heroEnd: const Color(0xFF111827));
+  return (heroStart: MfPalette.heroStart, heroEnd: MfPalette.heroEnd);
 }
 
 /// True glassmorphism shell for net worth / balance hero cards (blur + frosted gradient).
